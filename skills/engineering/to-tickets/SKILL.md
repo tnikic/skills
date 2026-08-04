@@ -17,7 +17,7 @@ Work from whatever is already in the conversation context. If the user passes a 
 
 ### 2. Validate the source
 
-Check the source issue's `kind:*` label (scope `kind`) before breaking anything down:
+Check the source issue's `kind:*` label (scope `kind`) before breaking anything down. Valid values are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md).
 
 - **`kind:spec`** (scope `kind`, name `spec`) — proceed normally. If the source is missing a `kind:*` label entirely and reads like a spec (has problem statement, user stories, etc.), stamp it with `kind:spec` now and proceed.
 - **`kind:ticket`** (scope `kind`, name `ticket`) — stop. Tell the user: "This is already a ticket (`kind:ticket`). Tickets can't be broken into sub-tickets. If this work is too large for one session, convert it to a spec first."

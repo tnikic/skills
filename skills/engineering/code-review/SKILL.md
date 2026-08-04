@@ -70,7 +70,7 @@ Also locate the [test-type taxonomy](../../shared/test-types.md) — the Coverag
 
 ### 5. Spawn all three sub-agents in parallel
 
-Send a single message with three `subagent` tool calls. Use the `worker` agent for all three.
+Send a single message with three `subagent` tool calls. Use the `worker` agent for all three. Follow the dispatch pattern in [`subagent-dispatch.md`](../../shared/subagent-dispatch.md).
 
 **Standards sub-agent prompt** — include:
 

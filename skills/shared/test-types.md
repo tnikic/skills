@@ -17,7 +17,7 @@ A taxonomy of test types. The agent matches project signals against triggers to 
 
 **Triggers:** Always applies.
 
-**Adding tools:** Check whether `docs/TESTING.md` or existing config files already specify linters. For any language without one, fire a research sub-agent to find the current best-in-class tool. Use the tool's recommended preset — do not build a custom ruleset from scratch. Separate formatting (delegate to an opinionated formatter) from linting (focus on correctness and bug detection). Over-configuration causes alert fatigue.
+**Adding tools:** Check whether `docs/TESTING.md` or existing config files already specify linters. For any language without one, fire a `subagent` to find the current best-in-class tool. Use the tool's recommended preset — do not build a custom ruleset from scratch. Separate formatting (delegate to an opinionated formatter) from linting (focus on correctness and bug detection). Over-configuration causes alert fatigue.
 
 **Not for:** Runtime behaviour, integration contracts. Static analysis cannot tell you the assembled system works.
 

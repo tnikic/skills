@@ -14,39 +14,9 @@ Move issues on the project issue tracker through a small state machine of triage
 
 ## Labels
 
-This skill manages labels across three scopes. All scopes are **exclusive** — only one label per scope per issue.
+Label scopes, values, and colors are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md) — the single source of truth. This skill owns the `triage:*`, `type:*`, and `kind:*` scopes.
 
-### `triage:*` — triage workflow state
-
-Color: [`secondary`](../../shared/color-palette.md).
-
-- `triage:pending` — maintainer needs to evaluate
-- `triage:unanswered` — waiting on reporter for more information
-- `triage:for-agent` — fully specified, ready for an AFK agent
-- `triage:for-human` — needs human implementation
-- `triage:wontfix` — will not be actioned
-
-Every triaged issue carries exactly one `triage:*` label.
-
-### `type:*` — nature of the work
-
-Color: [`primary`](../../shared/color-palette.md).
-
-- `type:bug` — something is broken
-- `type:enhancement` — new feature or improvement
-
-Every triaged issue carries exactly one `type:*` label.
-
-### `kind:*` — artifact shape
-
-Color: [`surface`](../../shared/color-palette.md).
-
-- `kind:spec` — a planning document with problem, solution, and user stories
-- `kind:ticket` — a single unit of agent-sized work
-- `kind:map` — a wayfinder planning map
-- `kind:decision` — a question whose resolution is a decision
-
-The triage agent determines `kind:spec` vs `kind:ticket` during evaluation: `kind:spec` when the work needs planning before building, `kind:ticket` when the build is the plan and it fits in one session.
+All scopes are **exclusive** — only one label per scope per issue. The triage agent determines `kind:spec` vs `kind:ticket` during evaluation: `kind:spec` when the work needs planning before building, `kind:ticket` when the build is the plan and it fits in one session.
 
 Scoped labels use the notation `scope:name`. When calling tracker tools, always pass them as structured labels — `{scope: "scope", name: "name"}` — not as a flat string with a colon.
 
@@ -86,7 +56,7 @@ Show counts and a one-line summary per item. Let the maintainer pick.
 
 3. **Verify the claim.** Before any grilling, check that the claim holds up. For a bug, reproduce it from the reporter's steps. Report what happened: confirmed (with code path), failed, or insufficient detail (a strong `triage:unanswered` signal). A confirmed verification makes a much stronger implementation brief.
 
-4. **Grill (if needed).** If the request needs fleshing out, run the `/grilling` and `/domain-modeling` skills together — grill it into shape one question at a time, sharpening domain terms and updating `docs/CONTEXT.md`/ADRs inline as decisions land.
+4. **Grill (if needed).** If the request needs fleshing out, run the `/grilling` and `/domain-modeling` skills together (pattern: [`grilling-with-domain-modeling.md`](../../shared/grilling-with-domain-modeling.md)) — grill it into shape one question at a time, sharpening domain terms and updating `docs/CONTEXT.md`/ADRs inline as decisions land.
 
 5. **Apply the outcome:**
    - `triage:for-agent` — apply the label plus the confirmed `type:*` and `kind:*`, then post an implementation brief comment using the ticket template from [to-tickets](../to-tickets/SKILL.md) with an added `## Out of scope` section.

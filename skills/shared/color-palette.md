@@ -12,15 +12,7 @@ Central color tokens for skills that produce visual output — Mermaid diagrams,
 
 ## Label scope mapping
 
-When creating scoped issue labels, use these token-to-scope assignments:
-
-| Scope | Token |
-|-------|-------|
-| `type` | `primary` |
-| `triage` | `secondary` |
-| `kind` | `surface` |
-| `wayfinder` | `accent` |
-| *spare* | `muted` |
+Label scope→color assignments are the single source of truth in [`label-taxonomy.md`](label-taxonomy.md). This file defines only the color tokens.
 
 ## Usage in Mermaid
 

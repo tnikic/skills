@@ -110,7 +110,7 @@ Stage `README.md` and any other files changed. Determine the commit prefix:
 - `docs(readme):` when only `README.md` changed
 - `docs:` when `docs/` files were also touched
 
-Write a commit message that summarizes the update in one line — a human reading `git log --oneline` should understand what documentation was brought up to date. Use the [conventional-commits](../../productivity/conventional-commits/SKILL.md) skill to produce the final message, then commit.
+Write a commit message that summarizes the update in one line — a human reading `git log --oneline` should understand what documentation was brought up to date. Use the [conventional-commits](../../engineering/conventional-commits/SKILL.md) skill to produce the final message, then commit.
 
 Do not push. The user decides when to push.
 

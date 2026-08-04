@@ -11,7 +11,7 @@ This skill takes the current conversation context and codebase understanding and
 
 ### Detect source type
 
-Check the source issue's `kind:*` label before synthesizing:
+Check the source issue's `kind:*` label before synthesizing. Valid `kind:*` values are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md).
 
 - **`kind:map`** — this is a Wayfinder map. Activate map-consumer mode (next section).
 - **`kind:spec`** or **`kind:ticket`** — stop. "This is already a `kind:<x>`, not raw material for a spec."

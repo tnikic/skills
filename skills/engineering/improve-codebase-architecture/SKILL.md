@@ -61,9 +61,7 @@ Do NOT propose interfaces yet. After the file is written, ask the user: "Which o
 
 ### 3. Grilling loop
 
-Once the user picks a candidate, run the `/grilling` skill to walk the decision tree with them — constraints, dependencies, the shape of the deepened module, what sits behind the seam, what tests survive.
-
-Side effects happen inline as decisions crystallize — run the `/domain-modeling` skill to keep the domain model current as you go:
+Once the user picks a candidate, run a grilling session interleaved with domain modeling (pattern: [`grilling-with-domain-modeling.md`](../../shared/grilling-with-domain-modeling.md)) — grill to walk the decision tree (constraints, dependencies, the shape of the deepened module, what sits behind the seam, what tests survive), and update the domain model inline as decisions crystallize:
 
 - **Naming a deepened module after a concept not in `docs/CONTEXT.md`?** Add the term to `docs/CONTEXT.md`. Create the file lazily if it doesn't exist.
 - **Sharpening a fuzzy term during the conversation?** Update `docs/CONTEXT.md` right there.

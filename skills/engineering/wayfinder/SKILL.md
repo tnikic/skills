@@ -26,6 +26,8 @@ The map is an **index**, not a store. It lists the decisions made and points at 
 
 The harness provides the operations that drive the map:
 
+Label scopes and values are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md).
+
 - **Map**: create an issue with label `kind:map` (scope `kind`, name `map`).
 - **Child ticket**: create an issue with `parent` set to the map's number, labelled `kind:decision` (scope `kind`, name `decision`) and `wayfinder:<type>` (scope `wayfinder`, name matching the type).
 - **Blocking**: set `blocked_by` on the ticket — a set-replacement of the blocker issue numbers.
@@ -83,9 +85,9 @@ The answer isn't part of the body — it's recorded on resolution (see [Work thr
 
 Every ticket is either **HITL** — human in the loop, worked *with* a human who speaks for themselves — or **AFK**, driven by the agent alone. A HITL ticket only resolves through that live exchange; the agent never stands in for the human's side of it (a grilling agent that answers its own questions has broken this).
 
-- **Research** (AFK): Reading documentation, third-party APIs, or local resources like knowledge bases to surface a fact a decision waits on. Resolved by the `subagent` tool with `agent: "worker"`. Use when knowledge outside the current working directory is required.
+- **Research** (AFK): Reading documentation, third-party APIs, or local resources like knowledge bases to surface a fact a decision waits on. Resolved by the `subagent` tool with `agent: "worker"`. Follow the dispatch pattern in [`subagent-dispatch.md`](../../shared/subagent-dispatch.md). Use when knowledge outside the current working directory is required.
 - **Prototype** (HITL): Raise the fidelity of the discussion by making a cheap, rough, concrete artifact to react to — an outline, a rough take, a stub, or UI/logic code via the /prototype skill. Links the prototype as an asset. Use when "how should it look" or "how should it behave" is the key question.
-- **Grilling** (HITL): Conversation via the /grilling and /domain-modeling skills, one question at a time. The default case.
+- **Grilling** (HITL): Conversation via the /grilling and /domain-modeling skills (pattern: [`grilling-with-domain-modeling.md`](../../shared/grilling-with-domain-modeling.md)), one question at a time. The default case.
 When a decision is blocked by work that must be *executed* before it can be resolved — signing up for a service so its API can be judged, provisioning access, moving data so its shape can be seen — that work is a regular `kind:ticket` (scope `kind`, name `ticket`), not a child of the map. Create it on the tracker, then set the decision's `blocked_by` to reference it. The map holds only decisions; execution lives outside.
 
 ## Fog of war
@@ -119,7 +121,7 @@ Two modes. Either way, **never resolve more than one ticket per session** — wi
 
 User invokes with a loose idea.
 
-1. **Name the destination.** Run a `/grilling` and `/domain-modeling` session to pin down what this map is finding its way to — the spec, decision, or change. The destination fixes the scope, so it's settled first.
+1. **Name the destination.** Run a `/grilling` and `/domain-modeling` session (pattern: [`grilling-with-domain-modeling.md`](../../shared/grilling-with-domain-modeling.md)) to pin down what this map is finding its way to — the spec, decision, or change. The destination fixes the scope, so it's settled first.
 2. **Map the frontier.** Grill again, **breadth-first** this time: fan out across the whole space rather than deep on any one thread, surfacing the open decisions and the first steps takeable now. **If this surfaces no fog** — the way to the destination is already clear, the whole journey small enough for one session — you don't need a map. Stop and ask the user how they'd like to proceed.
 3. **Create the map** (label `kind:map`): Destination and Notes filled in, Decisions-so-far empty, the fog sketched into **Not yet specified**.
 4. **Create the tickets you can specify now** as child issues of the map, each labelled `kind:decision` and the appropriate `wayfinder:<type>` — then wire blocking edges in a **second pass** (issues need ids before they can reference each other). Wiring sorts them into the frontier and the blocked; everything you can't yet specify stays in the fog — the **Not yet specified** section.
@@ -132,7 +134,7 @@ User invokes with a map (URL or number). A ticket is **optional** — without on
 
 1. **Detect stub maps.** Assign the map to @me to claim it. Load the map. If it has a Destination and Notes but no structured **Not yet specified** or **Out of scope** sections — just a raw dump of unresolved threads — this is a stub from a `/grill-with-docs` session. Clean up the body first: categorize every raw item into **Not yet specified** or **Out of scope**, cut the raw dump. If already structured, skip.
 2. Choose the ticket. If the user named one, use it. Otherwise take the first frontier ticket in order. **Claim it**: assign it to yourself before any work.
-3. Resolve it — **zoom as needed**: fetch the full body of any related or closed ticket on demand; invoke the skills the `## Notes` block names. If in doubt, use `/grilling` and `/domain-modeling`. **Update `docs/CONTEXT.md`** as domain terms crystallize, following the [domain-modeling skill](../domain-modeling/SKILL.md).
+3. Resolve it — **zoom as needed**: fetch the full body of any related or closed ticket on demand; invoke the skills the `## Notes` block names. If in doubt, use `/grilling` and `/domain-modeling` (pattern: [`grilling-with-domain-modeling.md`](../../shared/grilling-with-domain-modeling.md)). **Update `docs/CONTEXT.md`** as domain terms crystallize, following the [domain-modeling skill](../domain-modeling/SKILL.md).
 4. Record the resolution: post the answer as a **resolution comment**, **close** the issue, and **append a context pointer** to the map's Decisions-so-far. If this was a **research** ticket, delete the local `research/<name>` branch — the comment is the canonical record.
 5. Add newly-surfaced tickets (create-then-wire); graduate any fog the answer has made specifiable, clearing each graduated patch from **Not yet specified** so it lives only as its new ticket. If the answer reveals a ticket — this one or another — sits beyond the destination, **rule it out of scope** rather than resolving it on the route. If the decision invalidates other parts of the map, update or delete those tickets.
 6. **Check the frontier.** Query open child tickets. If none remain, proceed to **Closing the map**. Otherwise stop — the next session picks up the next frontier ticket.
