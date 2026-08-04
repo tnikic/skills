@@ -13,37 +13,45 @@ Most repos have a single context:
 
 ```
 /
-├── CONTEXT.md
 ├── docs/
+│   ├── CONTEXT.md
 │   └── adr/
 │       ├── 0001-event-sourced-orders.md
 │       └── 0002-postgres-for-write-model.md
 └── src/
 ```
 
-If a `CONTEXT-MAP.md` exists at the root, the repo has multiple contexts. The map points to where each one lives:
+If a `docs/CONTEXT-MAP.md` exists, the repo has multiple contexts. The map points to where each one lives:
 
 ```
 /
-├── CONTEXT-MAP.md
 ├── docs/
+│   ├── CONTEXT-MAP.md
 │   └── adr/                          ← system-wide decisions
 ├── src/
 │   ├── ordering/
-│   │   ├── CONTEXT.md
-│   │   └── docs/adr/                 ← context-specific decisions
+│   │   └── docs/
+│   │       ├── CONTEXT.md
+│   │       └── adr/                  ← context-specific decisions
 │   └── billing/
-│       ├── CONTEXT.md
-│       └── docs/adr/
+│       └── docs/
+│           ├── CONTEXT.md
+│           └── adr/
 ```
 
-Create files lazily — only when you have something to write. If no `CONTEXT.md` exists, create one when the first term is resolved. If no `docs/adr/` exists, create it when the first ADR is needed.
+Create files lazily — only when you have something to write. If no `docs/CONTEXT.md` exists, create one when the first term is resolved. If no `docs/adr/` exists, create it when the first ADR is needed.
+
+When you're exploring the codebase for another skill (not actively domain-modeling) and these files don't exist yet, **proceed silently**. Don't flag their absence or suggest creating them upfront — that's domain-modeling's job when the time is right.
 
 ## During the session
 
+### Use the glossary's vocabulary
+
+In your own output — issue titles, refactor proposals, hypotheses, test names, any artifact that names a domain concept — use the term exactly as defined in `docs/CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids.
+
 ### Challenge against the glossary
 
-When the user uses a term that conflicts with the existing language in `CONTEXT.md`, call it out immediately. "Your glossary defines 'cancellation' as X, but you seem to mean Y — which is it?"
+When the user uses a term that conflicts with the existing language in `docs/CONTEXT.md`, call it out immediately. "Your glossary defines 'cancellation' as X, but you seem to mean Y — which is it?"
 
 ### Sharpen fuzzy language
 
@@ -53,15 +61,21 @@ When the user uses vague or overloaded terms, propose a precise canonical term. 
 
 When domain relationships are being discussed, stress-test them with specific scenarios. Invent scenarios that probe edge cases and force the user to be precise about the boundaries between concepts.
 
+### Flag ADR conflicts
+
+When your output — a spec, a ticket, a refactor proposal, a hypothesis, any artifact — contradicts an existing ADR, surface it explicitly rather than silently overriding:
+
+> _Contradicts ADR-0007 (event-sourced orders) — but worth reopening because…_
+
 ### Cross-reference with code
 
 When the user states how something works, check whether the code agrees. If you find a contradiction, surface it: "Your code cancels entire Orders, but you just said partial cancellation is possible — which is right?"
 
 ### Update CONTEXT.md inline
 
-When a term is resolved, update `CONTEXT.md` right there. Don't batch these up — capture them as they happen. Use the format in [CONTEXT-FORMAT.md](./CONTEXT-FORMAT.md).
+When a term is resolved, update `docs/CONTEXT.md` right there. Don't batch these up — capture them as they happen. Use the format in [CONTEXT-FORMAT.md](./CONTEXT-FORMAT.md).
 
-`CONTEXT.md` should be totally devoid of implementation details. Do not treat `CONTEXT.md` as a spec, a scratch pad, or a repository for implementation decisions. It is a glossary and nothing else.
+`docs/CONTEXT.md` should be totally devoid of implementation details. Do not treat `docs/CONTEXT.md` as a spec, a scratch pad, or a repository for implementation decisions. It is a glossary and nothing else.
 
 ### Offer ADRs sparingly
 
