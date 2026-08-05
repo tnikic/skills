@@ -18,7 +18,10 @@ Give each subagent a self-contained brief. Include:
 - **The exact task** — what to produce, in what format
 - **All source material** — diff, spec contents, file paths, taxonomy, standards. The subagent has no access to the caller's context
 - **A word limit** — e.g. "Under 400 words." Keeps the subagent focused
-- **The agent name** — use `agent: "worker"` as the default
+- **The agent name** — pick the right agent per task type:
+  - `researcher` — fact-finding and investigation (tool research, documentation spelunking, wayfinder research tickets)
+  - `auditor` — analysis, judgment, and compliance checking (code-review axes, standards conformance, spec verification)
+  - `architect` — structural analysis and interface design (codebase exploration, design-it-twice, architecture review)
 
 Do not rely on the subagent having any knowledge of the project structure — pass it everything it needs.
 

@@ -24,7 +24,7 @@ No `docs/TESTING.md` exists. Set up the project's tooling from scratch.
 
 *Completion: language identified.*
 
-**2. Research the tools.** Fire a `subagent` with `agent: "worker"` (dispatch pattern: [`subagent-dispatch.md`](../../shared/subagent-dispatch.md)): "Find the best linter, formatter, and typechecker for a <language> project. For each, report: tool name, exact invocation command, how to install it locally in this project, and the recommended preset or config. Prefer tools that run fast and have opinionated defaults. Separate formatting from linting."
+**2. Research the tools.** Fire a `subagent` with `agent: "researcher"` (dispatch pattern: [`subagent-dispatch.md`](../../shared/subagent-dispatch.md)): "Find the best linter, formatter, and typechecker for a <language> project. For each, report: tool name, exact invocation command, how to install it locally in this project, and the recommended preset or config. Prefer tools that run fast and have opinionated defaults. Separate formatting from linting."
 
 *Completion: research file written with findings for each tool category.*
 
@@ -58,7 +58,7 @@ Ask: "These look right? Adjust any?" The user confirms or modifies.
 
 *Completion: current tool list extracted.*
 
-**2. Research upgrades.** Fire a `subagent` with `agent: "worker"` (dispatch pattern: [`subagent-dispatch.md`](../../shared/subagent-dispatch.md)): "The project currently uses these tools: <list from TESTING.md>. For each, check: is it still the best-in-class choice for this language and ecosystem? Are there newer tools that have overtaken it? Also check: are any of these tools now deprecated, unmaintained, or superseded by a standard library alternative? For any replacement candidate, report the migration cost."
+**2. Research upgrades.** Fire a `subagent` with `agent: "researcher"` (dispatch pattern: [`subagent-dispatch.md`](../../shared/subagent-dispatch.md)): "The project currently uses these tools: <list from TESTING.md>. For each, check: is it still the best-in-class choice for this language and ecosystem? Are there newer tools that have overtaken it? Also check: are any of these tools now deprecated, unmaintained, or superseded by a standard library alternative? For any replacement candidate, report the migration cost."
 
 *Completion: research file written with upgrade candidates and cleanup targets.*
 
@@ -79,7 +79,7 @@ Ask: "These look right? Adjust any?" The user confirms or modifies.
 
 User asks to add a specific tool type ("add a contract test", "add a smoke test").
 
-**1. Research the tool type.** Fire a `subagent` with `agent: "worker"` (dispatch pattern: [`subagent-dispatch.md`](../../shared/subagent-dispatch.md)) for the best tool in that category for this project's language.
+**1. Research the tool type.** Fire a `subagent` with `agent: "researcher"` (dispatch pattern: [`subagent-dispatch.md`](../../shared/subagent-dispatch.md)) for the best tool in that category for this project's language.
 
 *Completion: research file written.*
 
