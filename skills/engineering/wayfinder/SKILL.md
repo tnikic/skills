@@ -26,7 +26,7 @@ The map is an **index**, not a store. It lists the decisions made and points at 
 
 The harness provides the operations that drive the map:
 
-Label scopes and values are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md).
+Label scopes, values, and color tokens are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md); hex values in [`color-palette.md`](../../shared/color-palette.md). When creating a label, always pass `--color` with the scope's hex.
 
 - **Map**: create an issue with label `kind:map` (scope `kind`, name `map`).
 - **Child ticket**: create an issue with `parent` set to the map's number, labelled `kind:decision` (scope `kind`, name `decision`) and `wayfinder:<type>` (scope `wayfinder`, name matching the type).

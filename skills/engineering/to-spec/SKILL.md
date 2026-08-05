@@ -93,4 +93,4 @@ Any further notes about the feature.
 
 </spec-template>
 
-After writing the spec via either mode, publish to the issue tracker with labels `triage:for-agent`, `kind:spec`, `type:enhancement`.
+After writing the spec via either mode, publish to the issue tracker with labels `triage:for-agent`, `kind:spec`, `type:enhancement`. Pass `--color` for each label — resolve the scope's hex from [`color-palette.md`](../../shared/color-palette.md).

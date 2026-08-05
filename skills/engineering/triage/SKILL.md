@@ -14,7 +14,7 @@ Move issues on the project issue tracker through a small state machine of triage
 
 ## Labels
 
-Label scopes, values, and colors are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md) — the single source of truth. This skill owns the `triage:*`, `type:*`, and `kind:*` scopes.
+Label scopes, values, and color tokens are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md); hex values in [`color-palette.md`](../../shared/color-palette.md). This skill owns the `triage:*`, `type:*`, and `kind:*` scopes. When creating a label, always pass `--color` with the scope's hex.
 
 All scopes are **exclusive** — only one label per scope per issue. The triage agent determines `kind:spec` vs `kind:ticket` during evaluation: `kind:spec` when the work needs planning before building, `kind:ticket` when the build is the plan and it fits in one session.
 
