@@ -2,7 +2,7 @@
 
 The reference for what makes a README predictable, navigable, and human. Every rule here is a lever on the root virtue: a reader who knows where to find what they need, in every repo.
 
-The **bold terms** that are about documentation structure are defined here; terms about skill construction live in [`writing-great-skills/GLOSSARY.md`](../../productivity/writing-great-skills/GLOSSARY.md).
+The **bold terms** that are about documentation structure are defined here; terms about writing for agents live in [`writing-for-agents/SKILL.md`](../../productivity/writing-for-agents/SKILL.md).
 
 ## Mandatory sections
 

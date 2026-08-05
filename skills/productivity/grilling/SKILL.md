@@ -3,16 +3,20 @@ name: grilling
 description: Grill the user relentlessly about a plan, decision, or idea. Use when the user wants to stress-test their thinking, or uses any 'grill' trigger phrases.
 ---
 
-Interview me relentlessly about every aspect of this until we reach a shared understanding. Walk down the decision tree. At each branching point, identify which questions are independent of each other, batch them together, and ask them in one round. Resolve each branch before drilling deeper.
+Interview the user relentlessly until you reach a shared understanding. Map this as a **design tree**: every decision branches into the decisions that hang off it.
 
-For each question, provide your recommended answer.
+Work the tree in **rounds**. The **frontier** is every decision whose prerequisites are already settled — the questions you can ask _now_ without guessing at answers you haven't heard yet. Ask the whole frontier in one round: number each question and give your recommended answer. Then wait for the user's answers before the next round.
 
-When batching: aim for ~3–5 questions per batch as a soft guideline, but exceed it if the questions are small and tightly related. Pre-validate that batched questions are truly independent; if you slip, acknowledge it and move on. When presenting a batch, open with a brief preamble like "I have N independent questions for you:" followed by a numbered list with options and a recommendation for each. For open-ended questions, drop the multiple-choice framing and just pose the question directly.
+Each question should be formatted like so:
 
-If there's only one independent question at a branching point, just ask it naturally.
+```
+❓ **Q1** - **<question title>**: <question body, might be multiple paragraphs, including multiple choices>
 
-The user will answer all questions in the batch at once (e.g., "1: yes, 2: B, 3: no"). If the user pushes back or asks for clarification on any question, pause and resolve it before proceeding to the next batch.
+➡️ <your recommended answer>
+```
 
-If a *fact* can be found by exploring the environment (filesystem, tools, etc.), look it up rather than asking me. The *decisions*, though, are mine — put each one to me and wait for my answer.
+Each round the user answers reshapes the tree — settled decisions push the frontier outward and unblock questions that depended on them. Recompute the frontier and ask the next round. A question whose answer depends on another question still open in this round belongs to a _later_ round, not this one.
 
-Do not act on it until I confirm we have reached a shared understanding.
+Finding _facts_ is your job, never the user's. When a frontier question needs a fact from the environment (filesystem, tools, etc.), dispatch a sub-agent to find it — don't ask the user for anything you could look up yourself. Don't block on it: a running exploration is an unsettled prerequisite, so only the questions downstream of it wait for the sub-agent to report — ask the rest of the frontier now. The _decisions_ are the user's — put each to them and wait.
+
+The session is done when the frontier is empty: every branch of the design tree visited, nothing left silently assumed. Do not act on it until the user confirms you have reached a shared understanding.
