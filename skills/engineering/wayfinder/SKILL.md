@@ -125,8 +125,9 @@ User invokes with a loose idea.
 2. **Map the frontier.** Grill again, **breadth-first** this time: fan out across the whole space rather than deep on any one thread, surfacing the open decisions and the first steps takeable now. **If this surfaces no fog** — the way to the destination is already clear, the whole journey small enough for one session — you don't need a map. Stop and ask the user how they'd like to proceed.
 3. **Create the map** (label `kind:map`): Destination and Notes filled in, Decisions-so-far empty, the fog sketched into **Not yet specified**.
 4. **Create the tickets you can specify now** as child issues of the map, each labelled `kind:decision` and the appropriate `wayfinder:<type>` — then wire blocking edges in a **second pass** (issues need ids before they can reference each other). Wiring sorts them into the frontier and the blocked; everything you can't yet specify stays in the fog — the **Not yet specified** section.
-5. **Fire the research subagents.** Claim each `research` ticket (assign to @me), then spin up a `subagent` with `agent: "researcher"` for each to resolve it in parallel, writing findings to a local `research/<name>` branch and capturing them in the resolution comment. The subagent deletes its branch after posting findings — branches stay local, never pushed.
-6. Stop — charting is one session's work; it hand-resolves nothing.
+5. **Fire the research subagents.** Claim each `research` ticket (assign to @me), then spin up a `subagent` with `agent: "researcher"` for each to resolve it in parallel, writing findings to a local `research/<name>` branch and capturing them in the resolution comment.
+6. **Clean up research artifacts.** After every research subagent completes: delete its local `research/<name>` branch and any files it created (e.g. `docs/research/<topic>.md`). The resolution comment is the canonical record — branches stay local, never pushed.
+7. Stop — charting is one session's work; it hand-resolves nothing.
 
 ### Work through the map
 
@@ -135,9 +136,10 @@ User invokes with a map (URL or number). A ticket is **optional** — without on
 1. **Detect stub maps.** Assign the map to @me to claim it. Load the map. If it has a Destination and Notes but no structured **Not yet specified** or **Out of scope** sections — just a raw dump of unresolved threads — this is a stub from a `/grill-with-docs` session. Clean up the body first: categorize every raw item into **Not yet specified** or **Out of scope**, cut the raw dump. If already structured, skip.
 2. Choose the ticket. If the user named one, use it. Otherwise take the first frontier ticket in order. **Claim it**: assign it to yourself before any work.
 3. Resolve it — **zoom as needed**: fetch the full body of any related or closed ticket on demand; invoke the skills the `## Notes` block names. If in doubt, use `/grilling` and `/domain-modeling` (pattern: [`grilling-with-domain-modeling.md`](../../shared/grilling-with-domain-modeling.md)). **Update `docs/CONTEXT.md`** as domain terms crystallize, following the [domain-modeling skill](../domain-modeling/SKILL.md).
-4. Record the resolution: post the answer as a **resolution comment**, **close** the issue, and **append a context pointer** to the map's Decisions-so-far. If this was a **research** ticket, delete the local `research/<name>` branch — the comment is the canonical record.
-5. Add newly-surfaced tickets (create-then-wire); graduate any fog the answer has made specifiable, clearing each graduated patch from **Not yet specified** so it lives only as its new ticket. If the answer reveals a ticket — this one or another — sits beyond the destination, **rule it out of scope** rather than resolving it on the route. If the decision invalidates other parts of the map, update or delete those tickets.
-6. **Check the frontier.** Query open child tickets. If none remain, proceed to **Closing the map**. Otherwise stop — the next session picks up the next frontier ticket.
+4. Record the resolution: post the answer as a **resolution comment**, **close** the issue, and **append a context pointer** to the map's Decisions-so-far.
+5. **Clean up.** If this was a **research** ticket, delete the local `research/<name>` branch **and** any files the subagent created (e.g. `docs/research/<topic>.md`). The resolution comment is the canonical record. Branches stay local, never pushed — delete, don't merge.
+6. Add newly-surfaced tickets (create-then-wire); graduate any fog the answer has made specifiable, clearing each graduated patch from **Not yet specified** so it lives only as its new ticket. If the answer reveals a ticket — this one or another — sits beyond the destination, **rule it out of scope** rather than resolving it on the route. If the decision invalidates other parts of the map, update or delete those tickets.
+7. **Check the frontier.** Query open child tickets. If none remain, proceed to **Closing the map**. Otherwise stop — the next session picks up the next frontier ticket.
 
 The user may run unblocked tickets in parallel, so expect other sessions to be editing the tracker concurrently.
 

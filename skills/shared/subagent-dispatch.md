@@ -42,8 +42,9 @@ The subagent returns its findings. The caller:
 
 ### Cleanup
 
-- If the subagent created a local branch, delete it after capturing findings in the comment or report
-- Branches stay local — never push them
+- If the subagent created a local branch, delete it after capturing findings in the comment or report.
+- Delete any files the subagent created (e.g. `docs/research/<topic>.md`) — the comment or report is the canonical record.
+- Branches stay local — never push them.
 
 ## Anti-pattern
 
