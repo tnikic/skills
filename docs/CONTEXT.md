@@ -11,6 +11,7 @@ Glossary of domain terms for the agent skills ecosystem.
 ## Artifacts
 
 - **language profile** — Per-ecosystem catalog of tools, conventions, and constraints (e.g., Go: golangci-lint, gofumpt via go tool, Makefile). Consumed by bootstrap and CI generation. Not hardcoded commands — declares what to use and constraints; the agent resolves invocation.
+- **base profile** — Fallback language profile for languages without a dedicated profile. Carries language-agnostic defaults (generic CI, README); no ecosystem-specific tooling.
 
 ## Conventions
 
