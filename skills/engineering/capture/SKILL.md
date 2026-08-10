@@ -143,4 +143,15 @@ anvil issue create --repo <target> --title "<title>" --body "<body>" --label tri
 
 Use a descriptive title derived from the user's first sentence. Capitalize the first word, no period at the end.
 
+### Label colors
+
+After creation, fix the auto-created labels' colors. `anvil issue create --label` auto-creates labels that don't exist yet, but with a default color (`#333333`) instead of the taxonomy colors in [`label-taxonomy.md`](../../shared/label-taxonomy.md) and [`color-palette.md`](../../shared/color-palette.md). Run `anvil label update` with the correct scope and color:
+
+```
+anvil label update pending --scope triage --color 84a59d
+anvil label update bug --scope type --color f28482
+```
+
+For idea mode, replace `bug` with `enhancement`. These commands are idempotent — if the label already has the right color, they succeed without change.
+
 After posting, tell the user the issue number and URL.
