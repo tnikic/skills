@@ -67,13 +67,38 @@ Detect the CI platform:
 
 Generate a pipeline that runs the profile's CI command. Research the latest action versions at generation time. Do not hardcode version numbers — fetch them from primary sources.
 
+### Demo visual
+
+Generate an actual demo visual instead of a placeholder. If the asset already exists (`assets/demo.gif` or `assets/demo.png`), skip — it was added intentionally.
+
+**Dependency check.** Check for required tools. Do not install anything — if a tool is missing, report which is needed and tell the user to check the repo README for install instructions.
+
+**CLI projects** (project compiles to a binary):
+
+1. Create `assets/` if it doesn't exist.
+2. Write a VHS `.tape` file demonstrating real project commands — not just `--help`, but actual build/run/test output. Use rapid typing, pauses only after command output.
+3. Render: `vhs assets/demo.tape` → `assets/demo.gif`.
+4. Clean up the `.tape` file and any temporary repos or directories created for the recording.
+
+Requires: `vhs`, `ttyd`.
+
+**Web/lib projects** (no binary):
+
+1. Start the project.
+2. Capture a screenshot to `assets/demo.png`.
+3. Stop the project.
+
+Requires: a screenshot tool (`gnome-screenshot`, `screencapture` on macOS, or equivalent).
+
 ### README
 
 Load `readme-template.md`. Generate a README following the template's section order, badge rules, and voice guidelines.
 
 Detect the visual slot type:
-- Project has a `main.go` in `cmd/` or root that compiles to a binary → CLI (GIF placeholder)
-- Otherwise → web/lib (screenshot placeholder)
+- Project has a `main.go` in `cmd/` or root that compiles to a binary → CLI
+- Otherwise → web/lib
+
+Reference the generated visual: `assets/demo.gif` for CLI, `assets/demo.png` for web/lib. If the asset wasn't generated (missing dependencies), omit the visual section.
 
 Leave the version badge slot empty unless the project version ≥ 0.1.0 (check `go.mod`, `Cargo.toml`, or `package.json`).
 
@@ -117,5 +142,6 @@ Bootstrapped:
   ✓ Makefile (5 targets: check, test, lint, fmt, help)
   ✓ .git/hooks/pre-commit (new)
   ✓ .github/workflows/ci.yml (Go 1.24, golangci-lint latest)
-  ✓ README.md (go profile, CLI visual slot)
+  ✓ assets/demo.gif (CLI demo)
+  ✓ README.md (go profile)
 ```

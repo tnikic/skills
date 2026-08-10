@@ -7,7 +7,7 @@ Bootstrap applies these rules to generate a project README. Not a fill-in-the-bl
 Generate these sections in order:
 
 1. **Title + tagline** — project name as h1, one-line description of what it does
-2. **Visual** — GIF for CLI projects, screenshot for web/libs. Omit if project type is undetermined
+2. **Visual** — `assets/demo.gif` for CLI projects, `assets/demo.png` for web/libs. Omit if no asset was generated
 3. **Quick start** — 2-4 shell commands to install and run. The minimal viable path
 4. **Link index** — pointer to `make help` (or `just help`). Also link to `CONTRIBUTING.md` and `CHANGELOG.md` when those files exist. Skip links to files that don't exist. Do not restate their content
 
