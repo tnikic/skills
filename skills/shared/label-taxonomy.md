@@ -20,3 +20,7 @@ Every label on the issue tracker belongs to exactly one scope. Within a scope, l
 | `wayfinder` | `grilling` | `accent` | HITL: stress-test a decision via interview |
 
 Color tokens are defined in [`color-palette.md`](color-palette.md).
+
+## Usage
+
+To create or update a label, read the scope and value from this table. Always pass `--color` with the token's hex from [`color-palette.md`](color-palette.md). When calling tracker tools, pass labels as structured `{scope: "scope", name: "name"}`, not as a flat colon-separated string.

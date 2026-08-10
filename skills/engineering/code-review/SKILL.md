@@ -36,7 +36,7 @@ Look for the originating spec, in this order:
 
 Anything in the repo that documents how code should be written, such as `CODING_STANDARDS.md` or `CONTRIBUTING.md`.
 
-Also locate the project's linter and formatter — run `make lint`, `make fmt`, and `make check` (the project's standardized targets for linting, formatting, and static analysis). The Standards sub-agent will run these on the changed files.
+Also locate the project's linter and formatter — detect the command runner and run the `lint`, `fmt`, and `check` targets (see [`command-runner.md`](../../shared/command-runner.md) for detection logic and standard targets). The Standards sub-agent will run these on the changed files.
 
 On top of whatever the repo documents, the Standards axis always carries the **smell baseline** below — a fixed set of Fowler code smells (_Refactoring_, ch.3) that applies even when a repo documents nothing. Two rules bind it:
 

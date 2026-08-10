@@ -53,11 +53,7 @@ If the user chooses `n`, unstage the unknown files and proceed. If `d`, show `gi
 
 ## 3. Quality gate
 
-Run the project's `check` target. Detect the command runner:
-
-- `make check` (Makefile exists)
-- `just check` (justfile exists)
-- Skip if neither exists
+Run the project's `check` target. Detect the command runner and invoke it — see [`command-runner.md`](../../shared/command-runner.md) for the detection logic and standard targets.
 
 Parse the output into a structured report:
 
@@ -69,7 +65,7 @@ Parse the output into a structured report:
 
 If any target fails, block the commit. Present the report. Do not proceed.
 
-If no command runner exists, skip the gate with a note: "No check target configured — run /bootstrap to add one."
+If no command runner exists, skip the gate. The command-runner module will report this — relay its message.
 
 ---
 
@@ -117,7 +113,7 @@ If auto-update cannot resolve the gap, block the commit:
 
 Generate the commit message:
 
-- **Normal commit** — invoke `/conventional-commits`. Present the message for approval. User can edit.
+- **Normal commit** — invoke `/conventional-commits`. Note that the quality gate (step 3) already passed — conventional-commits should skip its own lint/format step. Present the message for approval. User can edit.
 - **User provided a message** — use it as-is. Skip generation.
 - **Amend** — present the existing commit message. User edits if needed.
 - **Amend with reword** — invoke `/conventional-commits` anyway.

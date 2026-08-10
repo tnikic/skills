@@ -15,10 +15,7 @@ Watch for signals that the discussion is outgrowing a single session:
 
 When either fires, offer: "This is getting large — want me to create a Wayfinder map to track these threads across sessions?" If the user says yes:
 
-1. Create a **stub map** — a `kind:map` issue with:
-   - **Destination**: the feature or decision this session is driving toward.
-   - **Notes**: domain, skills to consult, standing preferences surfaced so far.
-   - Raw unresolved threads as a fog dump.
+1. Delegate to `/wayfinder` to create a stub map — pass it the destination, domain, skills, preferences, and raw unresolved threads. Wayfinder owns the stub format and will create the `kind:map` issue.
 2. Tell the user to run `/wayfinder` on the new map — Wayfinder will clean up the body and chart tickets properly.
 
 ## Ending the session

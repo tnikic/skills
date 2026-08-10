@@ -27,6 +27,8 @@ Two checks run against every new or modified file in the diff. Both must pass be
 
 **Lint and format.** Check whether the project has lint or format tooling — scan for `.pre-commit-config.yaml`, `lefthook.yml`, `package.json` lint scripts, `eslint`/`prettier`/`ruff`/`black` config, `Makefile` lint targets, or any linter configured in CI. If tooling exists, run the narrowest check that covers the changed files. If it fails, report the failures.
 
+**When invoked from `/commit`:** skip lint and format — the commit gate already ran the quality gate (`check` target). Run only the secrets scan.
+
 When either check fails, block the commit and report what was found. The user can override with "commit anyway" or "skip the checks."
 
 *Completion criterion: both checks pass, or user explicitly overrides.*

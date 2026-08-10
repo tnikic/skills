@@ -14,7 +14,7 @@ Move issues on the project issue tracker through a small state machine of triage
 
 ## Labels
 
-Label scopes, values, and color tokens are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md); hex values in [`color-palette.md`](../../shared/color-palette.md). This skill owns the `triage:*`, `type:*`, and `kind:*` scopes. When creating a label, always pass `--color` with the scope's hex.
+Label scopes, values, colors, and usage are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md). This skill owns the `triage:*`, `type:*`, and `kind:*` scopes.
 
 All scopes are **exclusive** — only one label per scope per issue. The triage agent determines `kind:spec` vs `kind:ticket` during evaluation: `kind:spec` when the work needs planning before building, `kind:ticket` when the build is the plan and it fits in one session.
 
@@ -59,7 +59,7 @@ Show counts and a one-line summary per item. Let the maintainer pick.
 4. **Grill (if needed).** If the request needs fleshing out, run the `/grilling` and `/domain-modeling` skills together (pattern: [`grilling-with-domain-modeling.md`](../../shared/grilling-with-domain-modeling.md)) — grill it into shape one question at a time, sharpening domain terms and updating `docs/CONTEXT.md`/ADRs inline as decisions land.
 
 5. **Apply the outcome:**
-   - `triage:for-agent` — apply the label plus the confirmed `type:*` and `kind:*`, then post an implementation brief comment using the ticket template from [to-tickets](../to-tickets/SKILL.md) with an added `## Out of scope` section.
+   - `triage:for-agent` — apply the label plus the confirmed `type:*` and `kind:*`, then post an implementation brief comment using the ticket template from [`issue-template.md`](../../shared/issue-template.md) with an added `## Out of scope` section.
    - `triage:for-human` — apply the label plus the confirmed `type:*` and `kind:*`. Same structure as an implementation brief, but note why it can't be delegated (judgment calls, external access, design decisions, manual testing).
    - `triage:unanswered` — post triage notes (template below).
    - `triage:wontfix` — close, with the comment depending on *why*:

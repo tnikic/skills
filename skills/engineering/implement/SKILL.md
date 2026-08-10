@@ -35,7 +35,7 @@ Assign the issue to @me to claim it.
 
 ## 2. Implement
 
-Use TDD at pre-agreed seams. Run `make lint`, `make fmt`, and `make check` — the project's standardized targets for static analysis — alongside single test files as you go. Run `make test` once at the end.
+Use TDD at pre-agreed seams. Run the project's standard targets for static analysis alongside single test files as you go — see [`command-runner.md`](../../shared/command-runner.md) for detection and target names. Run the `test` target once at the end.
 
 *Completion: every spec requirement is implemented and all tests pass.*
 
@@ -51,7 +51,7 @@ Read the issue body and all comments for unchecked boxes (`- [ ]` or `* [ ]`). F
 
 For each satisfied criterion, replace `- [ ]` with `- [x]` and update the issue body with `update_issue`. For checkboxes found in comments, post a comment listing which criteria were satisfied. Leave unsatisfied criteria unchecked.
 
-If any criterion is unsatisfied, report which ones and why to the user. Offer to create follow-up tickets using `create_issue`, following the same template structure as `to-tickets` (`## What to build`, `## Acceptance criteria`, `## Blocked by`). Apply the same labels as the current issue. Parent each follow-up to the current issue's parent (if it has one); otherwise create it standalone. Add a comment on the current issue linking each follow-up.
+If any criterion is unsatisfied, report which ones and why to the user. Offer to create follow-up tickets using `create_issue`, following the template in [`issue-template.md`](../../shared/issue-template.md). Apply the same labels as the current issue. Parent each follow-up to the current issue's parent (if it has one); otherwise create it standalone. Add a comment on the current issue linking each follow-up.
 
 If neither the issue body nor comments contain any checkboxes, skip this step.
 

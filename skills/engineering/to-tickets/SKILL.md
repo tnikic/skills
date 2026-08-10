@@ -67,27 +67,10 @@ Iterate until the user approves the breakdown.
 
 Publish the approved tickets as **child issues** of the source spec — set `parent` to the spec's issue number when creating each. Create in dependency order (blockers first). After all tickets are created, do a second pass to set each ticket's `blocked_by` edges — the tracker needs issue identifiers before they can reference each other.
 
-Apply the labels `triage:for-agent` (scope `triage`, name `for-agent`) and `kind:ticket` (scope `kind`, name `ticket`) to each ticket, with `--color` set from the scope's hex in [`color-palette.md`](../../shared/color-palette.md). Also stamp the parent's `type:*` label (scope `type`) on every child (a spec's children inherit its type). Unless instructed otherwise, the tickets are agent-grabbable by construction.
+Apply the labels `triage:for-agent` (scope `triage`, name `for-agent`) and `kind:ticket` (scope `kind`, name `ticket`) to each ticket, with `--color` set from the scope's hex (see [`label-taxonomy.md`](../../shared/label-taxonomy.md) for usage). Also stamp the parent's `type:*` label (scope `type`) on every child (a spec's children inherit its type). Unless instructed otherwise, the tickets are agent-grabbable by construction.
 
 Do NOT close or modify any parent issue.
 
-<issue-template>
-
-## What to build
-
-The end-to-end behaviour this ticket makes work, from the user's perspective — not layer-by-layer implementation.
-
-## Acceptance criteria
-
-- [ ] Criterion 1
-- [ ] Criterion 2
-
-## Blocked by
-
-- A reference to each blocking ticket, or "None — can start immediately".
-
-</issue-template>
-
-Avoid specific file paths or code snippets — they go stale fast. Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it and note briefly that it came from a prototype. Trim to the decision-rich parts — not a working demo, just the important bits.
+Use the issue template from [`issue-template.md`](../../shared/issue-template.md) for every ticket created.
 
 Work the frontier one ticket at a time with `/implement`, clearing context between tickets.

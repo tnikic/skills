@@ -7,7 +7,7 @@ description: Test-driven development. Use when the user wants to build features 
 
 TDD is the red → green loop. This skill is the reference that makes that loop produce tests worth keeping: which test types to write, what a good test is, where tests go, the anti-patterns, and the rules of the loop. Every section applies on every cycle — consult them before and during the loop, not after.
 
-When exploring the codebase, read `docs/CONTEXT.md` (if it exists) so test names and interface vocabulary match the project's domain language, and respect ADRs in the area you're touching. Run `make check` for static analysis and `make test` for the test suite — the project's standardized targets. If neither target exists, warn the user: "No `make check` or `make test` target found. These are the project's standardized targets for static analysis and testing. Set them up before proceeding."
+When exploring the codebase, read `docs/CONTEXT.md` (if it exists) so test names and interface vocabulary match the project's domain language, and respect ADRs in the area you're touching. Run the `check` target for static analysis and `test` for the test suite — see [`command-runner.md`](../../shared/command-runner.md) for detection and standard targets. If neither target exists, the command-runner module will report it — relay its message.
 
 ## What a good test is
 
