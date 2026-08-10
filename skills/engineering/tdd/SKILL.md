@@ -7,7 +7,7 @@ description: Test-driven development. Use when the user wants to build features 
 
 TDD is the red → green loop. This skill is the reference that makes that loop produce tests worth keeping: which test types to write, what a good test is, where tests go, the anti-patterns, and the rules of the loop. Every section applies on every cycle — consult them before and during the loop, not after.
 
-When exploring the codebase, read `docs/CONTEXT.md` (if it exists) so test names and interface vocabulary match the project's domain language, and respect ADRs in the area you're touching. Read `docs/TESTING.md` — it is the authoritative list of test and static-analysis tools with their exact invocation commands. If it does not exist, warn the user: "`docs/TESTING.md` is missing. Run `/tooling` first to set up the project's linting, formatting, and testing tools."
+When exploring the codebase, read `docs/CONTEXT.md` (if it exists) so test names and interface vocabulary match the project's domain language, and respect ADRs in the area you're touching. Run `make check` for static analysis and `make test` for the test suite — the project's standardized targets. If neither target exists, warn the user: "No `make check` or `make test` target found. These are the project's standardized targets for static analysis and testing. Set them up before proceeding."
 
 ## What a good test is
 
@@ -25,7 +25,7 @@ Ask: "What's the public interface, and which seams should we test?"
 
 ## Test types — which tests to write
 
-Not every project needs every kind of test. The [test-type taxonomy](../../shared/test-types.md) defines each type — what it verifies, the project signals that trigger it, and what it is not for. Match the project against the taxonomy before writing tests. `docs/TESTING.md` is the authoritative portfolio — read it, do not re-research unless the user asks.
+Not every project needs every kind of test. The [test-type taxonomy](../../shared/test-types.md) defines each type — what it verifies, the project signals that trigger it, and what it is not for. Match the project against the taxonomy before writing tests. The project's Makefile or justfile is the authoritative portfolio of test targets — run `make help` or `just --list` to see available targets, do not re-research unless the user asks.
 
 ### Per-feature filtering (every cycle)
 

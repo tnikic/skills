@@ -36,13 +36,13 @@ Look for the originating spec, in this order:
 
 Anything in the repo that documents how code should be written, such as `CODING_STANDARDS.md` or `CONTRIBUTING.md`.
 
-Also locate the project's linter and formatter — read `docs/TESTING.md` for the exact tools and their invocation commands. The Standards sub-agent will run these on the changed files.
+Also locate the project's linter and formatter — run `make lint`, `make fmt`, and `make check` (the project's standardized targets for linting, formatting, and static analysis). The Standards sub-agent will run these on the changed files.
 
 On top of whatever the repo documents, the Standards axis always carries the **smell baseline** below — a fixed set of Fowler code smells (_Refactoring_, ch.3) that applies even when a repo documents nothing. Two rules bind it:
 
 - **The repo overrides.** A documented repo standard always wins; where it endorses something the baseline would flag, suppress the smell.
 - **Always a judgement call.** Each smell is a labelled heuristic ("possible Feature Envy"), never a hard violation.
-- **Run the linter and formatter.** Execute the exact commands from `docs/TESTING.md` on the changed files. Report violations. Tooling-caught issues are noted but not re-litigated as smells.
+- **Run the linter and formatter.** Execute `make lint`, `make fmt`, and `make check` on the changed files. Report violations. Tooling-caught issues are noted but not re-litigated as smells.
 
 Each smell reads *what it is* → *how to fix*; match it against the diff:
 
@@ -63,8 +63,8 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 
 Look for the project's test portfolio, in this order:
 
-1. `docs/TESTING.md` — if it exists, read it. This is the authoritative list of expected test types for this project.
-2. If absent, note that no test strategy has been declared — the Coverage sub-agent will infer from project signals instead.
+1. The project's Makefile or justfile — run `make help` or `just --list` to see available test targets. These are the authoritative test types for this project.
+2. If no Makefile/justfile test targets exist, note that no test strategy has been declared — the Coverage sub-agent will infer from project signals instead.
 
 Also locate the [test-type taxonomy](../../shared/test-types.md) — the Coverage sub-agent needs it to match project signals against test-type triggers.
 
@@ -89,11 +89,11 @@ If the spec is missing, skip the Spec sub-agent and note this in the final repor
 **Coverage sub-agent prompt** — include:
 
 - The diff command and commit list.
-- If `docs/TESTING.md` exists, paste its contents — this is the authoritative expected test portfolio.
-- If it does not exist, instruct: "Infer expected test types from project signals (Dockerfile, deploy config, CI config, `package.json` bin entries, existing test suite structure). Use the test-type taxonomy at `../../shared/test-types.md` — match project signals against each type's triggers."
-- The brief: "Report: (a) test types expected for this change that are missing or have no corresponding test in the diff; (b) tests in the diff that look like the wrong type for what they are testing (e.g., a smoke test doing deep integration work, a unit test mocking everything and testing nothing); (c) if `docs/TESTING.md` is absent and you had to infer, note this — the project has no declared test strategy. Under 400 words."
+- If the project has a Makefile or justfile with test targets, paste the relevant targets — this is the authoritative expected test portfolio.
+- If it does not, instruct: "Infer expected test types from project signals (Dockerfile, deploy config, CI config, `package.json` bin entries, existing test suite structure). Use the test-type taxonomy at `../../shared/test-types.md` — match project signals against each type's triggers."
+- The brief: "Report: (a) test types expected for this change that are missing or have no corresponding test in the diff; (b) tests in the diff that look like the wrong type for what they are testing (e.g., a smoke test doing deep integration work, a unit test mocking everything and testing nothing); (c) if no Makefile/justfile test targets exist and you had to infer, note this — the project has no declared test strategy. Under 400 words."
 
-The Coverage sub-agent does **not** create or write `docs/TESTING.md`. If it had to infer, it reports the gap — the `tooling` skill owns creating that file; `improve-codebase-architecture` updates it.
+The Coverage sub-agent does **not** create Makefile targets. If it had to infer, it reports the gap — the project bootstrap owns setting up the Makefile or justfile; `improve-codebase-architecture` updates it.
 
 ### 6. Aggregate
 

@@ -35,7 +35,7 @@ Assign the issue to @me to claim it.
 
 ## 2. Implement
 
-Use TDD at pre-agreed seams. Read `docs/TESTING.md` for the project's linter, formatter, and typechecker — run those exact commands alongside single test files as you go. Run the full test suite once at the end.
+Use TDD at pre-agreed seams. Run `make lint`, `make fmt`, and `make check` — the project's standardized targets for static analysis — alongside single test files as you go. Run `make test` once at the end.
 
 *Completion: every spec requirement is implemented and all tests pass.*
 

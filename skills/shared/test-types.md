@@ -7,7 +7,7 @@ A taxonomy of test types. The agent matches project signals against triggers to 
 1. Read the project's signals — `package.json`, deploy config, Dockerfile, existing test suite.
 2. For each type below, check whether its triggers fire. Start from the top.
 3. Apply the lowest-level principle: write the test at the cheapest level that still gives you the confidence you need. If a unit test catches the bug, do not write an integration test. The most expensive test is the one written at the wrong level.
-4. Present the portfolio to the user, confirm, persist to `docs/TESTING.md`.
+4. Present the portfolio to the user, confirm, add as targets in the project's Makefile or justfile.
 
 ---
 
@@ -17,7 +17,7 @@ A taxonomy of test types. The agent matches project signals against triggers to 
 
 **Triggers:** Always applies.
 
-**Adding tools:** Check whether `docs/TESTING.md` or existing config files already specify linters. For any language without one, fire a `subagent` to find the current best-in-class tool. Use the tool's recommended preset — do not build a custom ruleset from scratch. Separate formatting (delegate to an opinionated formatter) from linting (focus on correctness and bug detection). Over-configuration causes alert fatigue.
+**Adding tools:** Check whether the project's Makefile, justfile, or existing config files already specify a linter. For any language without one, fire a `subagent` to find the current best-in-class tool. Use the tool's recommended preset — do not build a custom ruleset from scratch. Separate formatting (delegate to an opinionated formatter) from linting (focus on correctness and bug detection). Over-configuration causes alert fatigue.
 
 **Not for:** Runtime behaviour, integration contracts. Static analysis cannot tell you the assembled system works.
 
