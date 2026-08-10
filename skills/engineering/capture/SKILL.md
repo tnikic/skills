@@ -96,17 +96,29 @@ Auto-detect environment fields. Ask the user for anything you cannot determine f
 
 ## Sensitive data stripping
 
-Run two layers before posting. If either layer redacts anything, show the cleaned body and ask the user to confirm.
+Run three layers before posting. If any layer redacts anything, show the cleaned body and ask the user to confirm.
+
+### Primary scan: gitleaks
+
+Pipe the body through `gitleaks stdin`. If exit code is 1, secrets were found:
+
+```
+echo "<body>" | gitleaks stdin
+```
+
+Parse the findings. Redact each matched secret with `[REDACTED]`. Show the cleaned body.
+
+If `gitleaks` is not installed, skip this layer and proceed to the pattern layer.
 
 ### Pattern layer
 
-Scan the body for these patterns. Replace matched values with `[REDACTED]`.
+Always run after the gitleaks scan (or as the primary check when gitleaks is absent). This layer catches connection strings, private IPs, and token prefixes gitleaks might miss. Scan the body for these patterns. Replace matched values with `[REDACTED]`.
 
 - `KEY=`, `SECRET=`, `TOKEN=`, `PASSWORD=` followed by any value
 - `--token`, `--api-key`, `--secret` followed by any value
 - `Bearer <value>`, `Authorization: <value>`
 - Connection strings with embedded passwords (`://user:pass@`)
-- `ghp_*`, `github_pat_*` (GitHub tokens)
+- `ghp_*`, `github_pat_*`, `glpat-*` (GitHub and GitLab tokens)
 - AWS key patterns (`AKIA*`, `ASIA*`)
 - Private IPs (`10.x.x.x`, `192.168.x.x`, `172.16-31.x.x`)
 
