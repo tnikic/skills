@@ -24,7 +24,8 @@ Makefile
 | `vet` | `go vet ./...` |
 | `vulncheck` | `go tool govulncheck ./...` |
 | `tidy` | `go mod tidy -diff` |
-| `check` | `fmt` → `vet` → `lint` |
+| `gitleaks` | `gitleaks detect --no-git` |
+| `check` | `fmt` → `vet` → `lint` → `gitleaks` |
 | `test` | `go test -race -cover ./...` → `vulncheck` |
 | `build` | `go build -trimpath -o bin/ ./...` |
 | `clean` | `rm -rf bin/` |

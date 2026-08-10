@@ -21,6 +21,7 @@ justfile
 | `fmt` | `cargo fmt` |
 | `fix` | `cargo clippy --fix --allow-dirty && cargo fmt` |
 | `check` | `cargo check --workspace` |
+| `gitleaks` | `gitleaks detect --no-git` |
 | `test` | `cargo nextest run` |
 | `test-all` | `cargo nextest run --all-targets` |
 | `audit` | `cargo deny check` |

@@ -10,10 +10,10 @@ Detect from the repo. If none exists, use direct shell commands.
 
 | Target | Runs |
 |--------|------|
-| `check` | Lint + format + typecheck using whatever tooling is configured in the project |
+| `check` | Lint + format + typecheck + gitleaks secrets scan. Use whatever tooling is configured; gitleaks is always included |
 | `test` | Run the project's test suite |
 
-If no tooling is configured, `check` and `test` succeed trivially — the bootstrap creates the targets as placeholders.
+If no tooling is configured, `check` still runs gitleaks and `test` succeeds trivially — the bootstrap creates the targets as placeholders for anything not yet configured.
 
 ## Layout
 
