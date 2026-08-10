@@ -9,7 +9,7 @@ Generate these sections in order:
 1. **Title + tagline** — project name as h1, one-line description of what it does
 2. **Visual** — GIF for CLI projects, screenshot for web/libs. Omit if project type is undetermined
 3. **Quick start** — 2-4 shell commands to install and run. The minimal viable path
-4. **Link index** — pointers to `make help` (or `just help`), `CONTRIBUTING.md`, `CHANGELOG.md`. Do not restate their content
+4. **Link index** — pointer to `make help` (or `just help`). Also link to `CONTRIBUTING.md` and `CHANGELOG.md` when those files exist. Skip links to files that don't exist. Do not restate their content
 
 ## Badges
 
