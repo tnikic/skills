@@ -22,6 +22,7 @@ Give each subagent a self-contained brief. Include:
   - `researcher` — fact-finding and investigation (tool research, documentation spelunking, wayfinder research tickets)
   - `auditor` — analysis, judgment, and compliance checking (code-review axes, standards conformance, spec verification)
   - `architect` — structural analysis and interface design (codebase exploration, design-it-twice, architecture review)
+  - `worker` — implementation from a predefined plan or ticket (the execution lane; it dispatches auditor(s) to review its own work)
 
 Do not rely on the subagent having any knowledge of the project structure — pass it everything it needs.
 
@@ -49,3 +50,5 @@ The subagent returns its findings. The caller:
 ## Anti-pattern
 
 Don't nest dispatches: one skill fires a subagent that itself fires another subagent. Cut the middle layer — call `subagent` directly with the brief.
+
+**Carve-out: worker → auditor.** The worker agent (depth 1) dispatches auditor subagent(s) (depth 2) to review its own work. This is depth-2 by design, not the redundant relay the anti-pattern targets — the worker owns the implementation being reviewed, so there is no middle layer to cut.

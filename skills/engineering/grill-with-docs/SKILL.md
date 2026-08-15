@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 Run a `/grilling` session, using the `/domain-modeling` skill (pattern: [`grilling-with-domain-modeling.md`](../../shared/grilling-with-domain-modeling.md)).
 
+This is a discussion: the only files you write are `docs/CONTEXT.md` and `docs/adr/`, and it ends in a plan — implementation happens later, via `/to-spec` or `/implement`.
+
 ## During the session
 
 Watch for signals that the discussion is outgrowing a single session:
