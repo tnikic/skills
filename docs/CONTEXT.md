@@ -9,6 +9,16 @@ Glossary of domain terms for the agent skills ecosystem.
 - **capture** (`/capture`) — User-invoked skill for filing bugs (forensic auto-capture) or ideas (lightweight) into the ticket pipeline. Front door to `triage` → `to-tickets` → `implement`.
 - **handoff** — Named invocation point for compacting the current session into a handoff document for a fresh agent. Used at context-limit boundaries.
 - **tdd** — Skill for test-driven development. After the skills refactor (map 31): feedback-first framing — runnable check before code, smallest provable slice first, E2E as final gate. Test list as transient external state. Cheating defenses. Refactoring in green only.
+- **github skill** — Model-invoked skill for GitHub forge actions, backed by the `gh` CLI. Authoritative command-recipe catalog for GitHub.
+- **gitlab skill** — Model-invoked skill for GitLab forge actions, backed by the `glab` CLI. Authoritative command-recipe catalog for GitLab.
+
+## Forge access
+
+- **forge action** — An operation against a git forge: creating, viewing, commenting, editing, closing, reopening, assigning issues; applying labels; PR operations; repository create/delete/list.
+- **command recipe** — An exact CLI invocation (tool, flags, args) documented for a forge action, so the agent runs it directly instead of deriving it. The unit of the github and gitlab skills.
+- **model-invoked** — A skill the model picks up automatically from its description, not only when the user explicitly invokes it.
+- **issue hierarchy** — Parent/child and blocked-by/blocking relationships between tickets; queried by wayfinder, to-tickets, and implement.
+- **ticket pipeline** — capture → triage → to-tickets → implement; the journey of a bug or idea to a merged change. Front door is `capture`.
 
 ## Conventions (TDD)
 
