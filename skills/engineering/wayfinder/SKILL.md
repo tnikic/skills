@@ -24,7 +24,7 @@ The map is a single issue on this repo's issue tracker, labelled `kind:map` — 
 
 The map is an **index**, not a store. It lists the decisions made and points at the tickets that hold their detail; a decision lives in exactly one place — its ticket — so the map never restates it, only gists it and links.
 
-The harness provides the operations that drive the map:
+Forge operations (issue create/label/comment/assign/close, frontier queries, blocking edges) are executed with the [`github`](../github/SKILL.md) or [`gitlab`](../gitlab/SKILL.md) skill, whichever forge the map lives on.
 
 Label scopes, values, colors, and usage are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md).
 

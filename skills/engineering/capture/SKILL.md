@@ -34,7 +34,7 @@ Resolve the target repo from the user's words:
 - `"for owner/repo"` → `owner/repo`
 - `"on this repo"` or no repo mentioned → the current repo
 
-If the target repo is not the current repo, create the issue there. `gh issue create --repo <target>`.
+If the target repo is not the current repo, create the issue there. `gh issue create --repo <target>`. Forge calls follow the recipes in the [`github`](../github/SKILL.md) skill (or [`gitlab`](../gitlab/SKILL.md) for GitLab targets).
 
 ---
 

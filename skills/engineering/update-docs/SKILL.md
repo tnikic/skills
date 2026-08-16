@@ -23,7 +23,7 @@ If no such commit exists (new project, no README yet), treat the entire history 
 Collect everything that happened since that commit:
 
 - **Commits**: `git log --oneline <last-readme-commit>..HEAD`
-- **Closed issues**: query the issue tracker for issues closed since the date of that commit. Include their titles and any `kind:spec` or `kind:ticket` labels.
+- **Closed issues**: query the issue tracker for issues closed since the date of that commit (via the [`github`](../github/SKILL.md) or [`gitlab`](../gitlab/SKILL.md) skill, whichever forge the repo lives on). Include their titles and any `kind:spec` or `kind:ticket` labels.
 - **Diffs**: if a commit message is vague, inspect its diff for context. Do not read every diff up front — only drill into commits whose message does not make the change clear.
 
 **Completion:** Every commit and closed issue since the last README touch has been collected and understood well enough to describe to a human.

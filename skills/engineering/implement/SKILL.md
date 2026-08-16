@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 Implement the work in the given issue, or pick the next unblocked one.
 
+Forge operations (issue lifecycle, claims, hierarchy queries, follow-ups) run through the [`github`](../github/SKILL.md) or [`gitlab`](../gitlab/SKILL.md) skill matching the repo's forge.
+
 ## 1. Pick the work
 
 If the user passed a spec or issue, use it directly. Read its full body. If it's empty or a vague one-liner with no clear spec, warn and ask whether to proceed anyway. If the user confirms, skip to step 2. If the user says no, fall through to the query path below.
@@ -49,9 +51,9 @@ If the review comes back clean, report it briefly.
 
 Read the issue body and all comments for unchecked boxes (`- [ ]` or `* [ ]`). For each, judge whether the implementation satisfied it. Presume satisfied unless you know a criterion was skipped, blocked, or impossible.
 
-For each satisfied criterion, replace `- [ ]` with `- [x]` and update the issue body with `update_issue`. For checkboxes found in comments, post a comment listing which criteria were satisfied. Leave unsatisfied criteria unchecked.
+For each satisfied criterion, replace `- [ ]` with `- [x]` and update the issue body via the forge skill's issue-edit recipe. For checkboxes found in comments, post a comment listing which criteria were satisfied. Leave unsatisfied criteria unchecked.
 
-If any criterion is unsatisfied, report which ones and why to the user. Offer to create follow-up tickets using `create_issue`, following the template in [`issue-template.md`](../../shared/issue-template.md). Apply the same labels as the current issue. Parent each follow-up to the current issue's parent (if it has one); otherwise create it standalone. Add a comment on the current issue linking each follow-up.
+If any criterion is unsatisfied, report which ones and why to the user. Offer to create follow-up tickets via the forge skill's issue-create recipe, following the template in [`issue-template.md`](../../shared/issue-template.md). Apply the same labels as the current issue. Parent each follow-up to the current issue's parent (if it has one); otherwise create it standalone. Add a comment on the current issue linking each follow-up.
 
 If neither the issue body nor comments contain any checkboxes, skip this step.
 
@@ -63,7 +65,7 @@ Create a single commit. Instruct conventional-commits to include `Closes #N` as 
 
 Push: `git push -u origin HEAD`. If the push fails, report the failure and stop — do not close the issue.
 
-Verify closure: poll the issue state every 3 seconds, up to 3 attempts. If the issue is now closed, stop. If still open after 3 attempts, close it manually with `update_issue(state: "closed")`.
+Verify closure: poll the issue state every 3 seconds, up to 3 attempts. If the issue is now closed, stop. If still open after 3 attempts, close it manually via the forge skill's issue-close recipe.
 
 *Completion: one commit pushed, issue closed.*
 

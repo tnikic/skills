@@ -93,4 +93,4 @@ Any further notes about the feature.
 
 </spec-template>
 
-After writing the spec via either mode, publish to the issue tracker with labels `triage:for-agent`, `kind:spec`, `type:enhancement`. Pass `--color` for each label — see [`label-taxonomy.md`](../../shared/label-taxonomy.md) for scope hex values.
+After writing the spec via either mode, publish to the issue tracker with labels `triage:for-agent`, `kind:spec`, `type:enhancement`. Pass `--color` for each label — see [`label-taxonomy.md`](../../shared/label-taxonomy.md) for scope hex values. Publish via the [`github`](../github/SKILL.md) or [`gitlab`](../gitlab/SKILL.md) skill, whichever forge the repo lives on.

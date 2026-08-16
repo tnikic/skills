@@ -18,7 +18,7 @@ Label scopes, values, colors, and usage are defined in [`label-taxonomy.md`](../
 
 All scopes are **exclusive** — only one label per scope per issue. The triage agent determines `kind:spec` vs `kind:ticket` during evaluation: `kind:spec` when the work needs planning before building, `kind:ticket` when the build is the plan and it fits in one session.
 
-Scoped labels use the notation `scope:name`. When calling tracker tools, always pass them as structured labels — `{scope: "scope", name: "name"}` — not as a flat string with a colon.
+Scoped labels use the notation `scope:name`. When calling tracker tools, always pass them as structured labels — `{scope: "scope", name: "name"}` — not as a flat string with a colon. Tracker calls are executed with the [`github`](../github/SKILL.md) or [`gitlab`](../gitlab/SKILL.md) skill, whichever forge the repo lives on.
 
 ---
 

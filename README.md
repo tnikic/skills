@@ -22,6 +22,8 @@ Some skills depend on external tools. Install with [mise](https://mise.jdx.dev/)
 
 | Tool | Used by | Install (mise) |
 |------|---------|----------------|
+| [gh](https://github.com/cli/cli) | github (forge actions) | `mise use gh` |
+| [glab](https://github.com/glab-cli/glab) | gitlab (forge actions) | `mise use glab` |
 | [gitleaks](https://github.com/gitleaks/gitleaks) | capture (secrets stripping), bootstrap (check target) | `mise use gitleaks` |
 | [lychee](https://github.com/lycheeverse/lychee) | repo `make check` (skill link resolution) | `mise use lychee` |
 | [vhs](https://github.com/charmbracelet/vhs) | bootstrap (CLI demo GIFs) | `mise use vhs` |
