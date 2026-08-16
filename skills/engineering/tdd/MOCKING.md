@@ -1,5 +1,7 @@
 # When to Mock
 
+**Agents: mocks are a cheating vector.** Prefer real seams for the vertical check — the thinnest runnable check through real seams (see [SKILL.md](SKILL.md)) needs no mocks. Never author a mock that fabricates the pass; a mock that makes a test pass trivially proves nothing. Use mocks only where a real seam is impractical (third-party services, time/randomness).
+
 Mock at **system boundaries** only:
 
 - External APIs (payment, email, etc.)
