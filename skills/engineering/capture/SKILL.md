@@ -34,7 +34,7 @@ Resolve the target repo from the user's words:
 - `"for owner/repo"` → `owner/repo`
 - `"on this repo"` or no repo mentioned → the current repo
 
-If the target repo is not the current repo, create the issue there. `anvil issue create --repo <target>`.
+If the target repo is not the current repo, create the issue there. `gh issue create --repo <target>`.
 
 ---
 
@@ -150,18 +150,18 @@ No `source:` or other marker labels. Triage reads the body, not the source.
 Create the issue on the target repo:
 
 ```
-anvil issue create --repo <target> --title "<title>" --body "<body>" --label triage:pending --label type:bug
+gh issue create --repo <target> --title "<title>" --body "<body>" --label triage:pending --label type:bug
 ```
 
 Use a descriptive title derived from the user's first sentence. Capitalize the first word, no period at the end.
 
 ### Label colors
 
-After creation, fix the auto-created labels' colors. `anvil issue create --label` auto-creates labels that don't exist yet, but with a default color (`#333333`) instead of the taxonomy colors. See [`label-taxonomy.md`](../../shared/label-taxonomy.md) for the correct scope and color for each label. Run `anvil label update` with the correct scope and color:
+After creation, fix the auto-created labels' colors. `gh issue create --label` auto-creates labels that don't exist yet, but with a default color (`#333333`) instead of the taxonomy colors. See [`label-taxonomy.md`](../../shared/label-taxonomy.md) for the correct scope and color for each label. Run `gh label create` with the correct scope and color:
 
 ```
-anvil label update pending --scope triage --color 84a59d
-anvil label update bug --scope type --color f28482
+gh label create triage:pending --color 84A59D --force
+gh label create type:bug --color F28482 --force
 ```
 
 For idea mode, replace `bug` with `enhancement`. These commands are idempotent — if the label already has the right color, they succeed without change.
