@@ -8,6 +8,15 @@ Glossary of domain terms for the agent skills ecosystem.
 - **commit skill** — Universal choke point that gates quality (lint, fmt, typecheck) and docs (freshness check) before any `git commit`. Calls `conventional-commits` for the message.
 - **capture** (`/capture`) — User-invoked skill for filing bugs (forensic auto-capture) or ideas (lightweight) into the ticket pipeline. Front door to `triage` → `to-tickets` → `implement`.
 - **handoff** — Named invocation point for compacting the current session into a handoff document for a fresh agent. Used at context-limit boundaries.
+- **tdd** — Skill for test-driven development. After the skills refactor (map 31): feedback-first framing — runnable check before code, smallest provable slice first, E2E as final gate. Test list as transient external state. Cheating defenses. Refactoring in green only.
+
+## Conventions (TDD)
+
+- **feedback-first** — The agent needs a runnable pass/fail check before code, at the smallest provable slice; E2E/acceptance is the final gate, never the first step. Replaces type-first framing (unit tests first, E2E trailing).
+- **smallest provable slice** — The thinnest runnable vertical check through real seams that proves a ticket's slice works (one request, one assertion, happy path). Not a full E2E browser test; not a mocked unit test.
+- **test list** — Transient external state (`test-list.md`) listing the tests to write, derived from a ticket's acceptance criteria. Drives ordering one test at a time; prevents coding ahead and cheating. Never committed — the skill carries an explicit delete rule: the committed tests are the record, the plan file is deleted when the ticket is done (mirrors the research-dispatch cleanup pattern).
+- **cheating defenses** — Agent anti-patterns: deleting/disabling a red test to pass, "looks done" without a run, coding ahead of the test list, authoring mocks so a test passes trivially.
+- **test-first pairing** — Escalation pattern: for larger slices or long runs, dispatch a separate agent to write tests and another to implement to pass them. Not the default; coverage review already provides post-hoc fresh-context scrutiny.
 
 ## Shared modules
 

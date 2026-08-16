@@ -1,0 +1,3 @@
+# Split skill validation between lychee and a taxonomy grep, wired into make check
+
+The repo shipped a bespoke `scripts/validate-skills` (regex link parser + taxonomy consistency). Research showed platforms already validate frontmatter at load, and real skill ecosystems ship no validation gates — but intra-skill relative links are validated by no platform, and broken ones silently degrade agents mid-task. We kept validation but split it: lychee (local-only) for link resolution, a ~15-line grep against `shared/label-taxonomy.md` for label vocabulary, both under `make check` so the commit skill gates on them. The bespoke script was retired because its regex parser missed real markdown link forms and false-flagged code blocks.

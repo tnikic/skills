@@ -1,0 +1,3 @@
+# Feedback-first TDD ordering for agent-driven implementation
+
+The tdd skill taught classic unit-first TDD (spec-driving unit/integration tests first, E2E trailing). Research (Beck's Canon TDD, Anthropic's agentic coding guidance) reframed it: an agent needs a runnable pass/fail check before code, at the smallest provable slice, with E2E as the final gate — never the first step. We adopted this framing because unit tests written by an agent without a runnable check invite green-washing, while a thin vertical check through real seams gives the agent real feedback. The test-type taxonomy remains the reference for what to write, not the order to write it in.
