@@ -9,6 +9,72 @@ assert_file "$implement_skill"
 assert_file "$readiness_script"
 assert_file "$code_review_skill"
 assert_file "$review_analysis_skill"
+assert_file "$merge_conflict_repair_skill"
+
+assert_contains_many "$merge_conflict_repair_skill" \
+  'name: merge-conflict-repair' \
+  'description: Repair stale or conflicted open PRs' \
+  '## Inputs' \
+  'open PR' \
+  'current head SHA' \
+  'base branch' \
+  'linked ticket' \
+  '## Detect' \
+  'get_pr' \
+  'rebase detection' \
+  'stale' \
+  '## Isolate' \
+  'git worktree add --detach' \
+  'trap' \
+  'isolated worktree' \
+  'source worktree remains untouched' \
+  '## Rebase' \
+  'git fetch origin' \
+  'git rebase' \
+  'rather than merging' \
+  'git rebase --abort' \
+  '## Classify' \
+  'git diff --name-only --diff-filter=U' \
+  'git show ":2:$path"' \
+  'git show ":3:$path"' \
+  "tr -d '[:space:]'" \
+  'diff -q' \
+  'git checkout --ours' \
+  'Non-text paths' \
+  'ticket scope' \
+  'mechanical' \
+  'semantic' \
+  'ambiguous' \
+  'unrelated' \
+  'scope-expanding' \
+  'evidence' \
+  '## Repair' \
+  'git add' \
+  'git rebase --continue' \
+  'only clear mechanical' \
+  '## Validate' \
+  'make check' \
+  'make test' \
+  'status_for_head' \
+  'exact current PR head' \
+  '## Lifecycle' \
+  'ticket remains open and assigned' \
+  'does not reopen, close, or reassign' \
+  'force-with-lease' \
+  'PR remains open'
+
+assert_order "$merge_conflict_repair_skill" \
+  'get_pr' \
+  'git worktree add --detach' \
+  'git fetch origin' \
+  'git rebase' \
+  'git diff --name-only --diff-filter=U' \
+  'git add' \
+  'git rebase --continue' \
+  'make check' \
+  'make test' \
+  'git push --force-with-lease' \
+  'status_for_head'
 
 assert_contains_many "$review_analysis_skill" \
   '## Invocation' \
