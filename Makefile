@@ -24,7 +24,7 @@ gitleaks:
 	$(MISE_EXEC) gitleaks detect --no-git
 
 links:
-	$(MISE_EXEC) lychee --offline --no-progress --exclude-path 'skills/generated/' skills
+	$(MISE_EXEC) lychee --offline --no-progress --exclude-path 'skills/generated/' README.md docs skills
 
 taxonomy:
 	@valid=$$(awk -F'|' '/^\| `[a-z]+` \| `[a-z-]+` \|/ {gsub(/[ `]/, "", $$2); gsub(/[ `]/, "", $$3); print $$2 ":" $$3}' skills/shared/label-taxonomy.md); \

@@ -8,6 +8,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/test_helpers.sh"
 assert_file "$makefile"
 assert_file "$workflow"
 assert_file "$readme"
+assert_file "$context"
 assert_file "$test_runner"
 assert_file "$(dirname "$test_runner")/tests/test_helpers.sh"
 assert_file "$(dirname "$test_runner")/tests/repository-contracts.sh"
@@ -101,6 +102,27 @@ assert_job_runs test 'make test'
 assert_contains "$readme" '## Quality gates'
 assert_contains "$readme" 'authoritative merge gate'
 assert_contains "$readme" 'required status checks'
+assert_contains_many "$readme" \
+  '## Introduction' \
+  '## How It Works' \
+  '## Documentation Index' \
+  'HUMAN_REVIEWER' \
+  'exact current PR head' \
+  'human reviewer' \
+  'squash merge' \
+  'docs/CONTEXT.md' \
+  'skills/shared/pr-delivery-contracts.md' \
+  'skills/shared/label-taxonomy.md'
+assert_contains "$makefile" 'lychee --offline --no-progress --exclude-path'
+assert_contains "$makefile" 'README.md docs skills'
+assert_contains_many "$context" \
+  'HUMAN_REVIEWER' \
+  'exact current PR head SHA' \
+  'configuration gap' \
+  'optional checks remain informational' \
+  '30-minute default' \
+  'adr/0014-ci-results-bind-to-pr-head.md' \
+  'skills/shared/pr-template.md'
 
 runner_fixture="$(mktemp -d)"
 trap 'rm -rf "$temporary_dir" "$runner_fixture"' EXIT

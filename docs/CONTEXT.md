@@ -40,13 +40,15 @@ Glossary of domain terms for the agent skills ecosystem.
 ## PR-based workflow
 
 - **PR-based workflow** — Work lands via PR, not direct push to main: `implement` pushes a feature branch and opens a PR; CI gates the merge, not the commit. Replaces the old push-and-close flow where CI ran after a closed ticket left a broken main.
+- **PR handoff** — After local gates, pre-PR Standards and Spec review, `/commit`, and the final test pass, `implement` pushes the branch and opens the PR. It requires an explicit `HUMAN_REVIEWER`, requests review, transfers ticket assignment at handoff, and leaves the PR and ticket open.
 - **fleet manager** — Future skill that spawns subagents to run `implement` in parallel across unblocked tickets, using worktrees so branches do not interfere. Owns merge ordering and renumbers PR titles when the set changes. Too big for one decision ticket; charted separately.
 - **stacked PRs** — A chain of PRs where each targets the branch of the one below it, so overlapping work lands bottom-up. Native in GitHub (`gh stack`, public preview 2026) and GitLab (stacked MRs); the forge handles rebase, retargeting, and merge order — not reimplemented by skills.
 - **PR title numbering** — `[<slug> <n>/<N>]` prefix on PR titles: slug groups a spec's PRs in the list view, n is merge position (stack depth; same-n merge in any order), N is the spec's ticket count (stable). `implement` stamps a provisional n at PR-open; the fleet manager normalizes after the run settles and after deletions.
 - **Conventional Branch** — The `<type>/<description>` branch-naming spec (v1.1.0) adopted for agent-created branches; inspired by Conventional Commits, ships a machine-readable `spec.json` with the authoritative validation regex and enforcement configs (GitHub rulesets, GitLab push rules, pre-push hook, AGENTS.md snippet).
 - **branch naming convention** — Per-ticket branch: `<type>/<ticket-number>-<spec-slug>` (e.g. `feat/42-pr-workflow`); combined single-spec branch: `<type>/<spec-slug>` (e.g. `feat/pr-workflow`). Type is a Conventional Branch purpose prefix mapped from the ticket's dominant commit type (`chore/` fallback; `refactor/` as a documented team extension). `n/N` merge-order numbers ride in PR titles only, never in branches.
 - **spec slug** — Kebab-cased spec name used as the branch description and the PR-title slug; the single source of naming for a spec's branches and PRs, so the branch and PR title always agree.
-- **ready for review** — The state where the agent's work on a PR is done: branch pushed, PR open, CI green, conflicts resolved. `implement` hands it over by assigning the ticket to the human; the human reviews from here and merges; the agent never merges.
+- **ready for review** — The state where the agent's work on a PR is done: the branch is pushed, the PR is open, every required check passes for the exact current PR head SHA, and conflicts are resolved. Optional checks remain informational. `implement` hands it over by assigning the ticket to the human; the human reviews from here and merges; the agent never merges.
+- **exact-head readiness** — Readiness is evaluated only after `get_pr` records the current head SHA, required checks are discovered, and `status_for_head` reports success for that exact current PR head SHA. A newer head invalidates the result, and a missing required-check configuration is a configuration gap rather than success.
 - **merge** — Human-only step in the PR-based workflow: the human reviews the PR in the forge UI and merges (squash). Issue closes at merge-to-main.
 - **merge-conflict sweep** — After any merge to `main`, every open PR is checked for conflicts against the new head; stale or conflicted branches are rebased and re-CI'd before they can be reviewed again. Owned by merge-conflict repair and the fleet manager.
 - **merge-conflict repair** — Policy-driven maintenance of an open PR after its branch becomes stale or conflicts with the current base. It rebases in an isolated worktree, resolves only clear in-scope conflicts, reruns checks and CI, and leaves semantic ambiguity for the human.
@@ -76,8 +78,19 @@ Glossary of domain terms for the agent skills ecosystem.
 - **quality gate** — Enforced at two points: fast local `make check` (pre-commit hook) as feedback, and the authoritative **merge gate** in CI. Hard block — failures block commit locally and merge upstream.
 - **docs gate** — Agent check: does the diff invalidate any existing doc file (README, CONTRIBUTING, CHANGELOG)? Auto-updates. Runs pre-commit for feedback and as an agent step at PR-open/update under the PR-based workflow. Hard block.
 - **merge gate** — The authoritative gate at the merge barrier: CI runs `make check` + `make test` on the PR head, required and green on latest-on-branch; a stale or failing check blocks merge. Pre-commit checks are convenience, not the source of truth.
-- **required CI check** — A forge status explicitly required by branch protection or rulesets. Every required check must pass before a PR is ready for review; optional checks are informational. Missing required checks are a repository configuration gap, not an implicit pass.
+- **required CI check** — A forge status explicitly required by branch protection or rulesets. Every required check must pass before a PR is ready for review; optional checks remain informational. Missing required checks are a repository configuration gap, not an implicit pass.
 - **CI head binding** — A CI result is valid only for the exact PR head SHA it observed. A newer branch commit invalidates older pending or passing results and requires checks on the new head.
 - **CI failure classification** — A deterministic, branch-caused defect covered by the ticket specification may be auto-fixed; infrastructure, flaky, ambiguous, unrelated, or scope-expanding failures are handed to the human with evidence.
-- **CI wait window** — The bounded period `implement` waits for required checks after PR creation or a branch update. It is configurable, with a 30-minute default; timeout leaves the PR open and not ready for review.
+- **CI wait window** — The bounded period `implement` waits for required checks after PR creation or a branch update. It is configurable, with a 30-minute default; timeout leaves the PR open and not ready for review. Deterministic ticket-scoped failures may be repaired for at most two cycles; infrastructure, flaky, ambiguous, unrelated, and scope-expanding failures remain with the human.
 - **universal commit gate** — Any skill that produces a commit goes through the `commit` skill. No single skill owns code changes; the gate owns them.
+
+## Repository References
+
+- [PR delivery contracts](../skills/shared/pr-delivery-contracts.md) define branch names, delivery modes, titles, impact labels, and lifecycle.
+- [PR template](../skills/shared/pr-template.md) defines the projected handoff body and `Closes #N` footer.
+- [Issue template](../skills/shared/issue-template.md) defines agent-ready ticket structure and acceptance criteria.
+- [Label taxonomy](../skills/shared/label-taxonomy.md) and [color palette](../skills/shared/color-palette.md) define tracker vocabulary.
+- [Command runner](../skills/shared/command-runner.md) defines `make` or `just` target detection.
+- [PR-head binding ADR](adr/0014-ci-results-bind-to-pr-head.md) records exact-head readiness and failure boundaries.
+- [Review identity ADR](adr/0016-review-comments-have-an-identity-boundary.md) records trusted and external commenter handling.
+- [Merge-conflict repair ADR](adr/0015-dedicated-merge-conflict-repair.md) records isolated rebase repair and ticket-state preservation.
