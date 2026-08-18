@@ -112,8 +112,11 @@ decisions.
 
 ```bash
 # create_pr — source branch must be pushed; use the declared impact or `normal` when absent
-glab mr create -R $R -t "Title" -d "body" -s SOURCE_BRANCH -b main \
-  -l impact:$IMPACT --reviewer REVIEWER -y
+BASE_BRANCH="$(glab api "projects/GROUP%2FREPO" | jq -r '.default_branch')"
+MR_URL="$(glab mr create -R $R -t "Title" -d "body" -s SOURCE_BRANCH -b "$BASE_BRANCH" \
+  -l impact:$IMPACT --reviewer REVIEWER -y)"
+glab mr view "$MR_URL" -R $R -F json \
+  --jq '{number:.iid,url:.web_url,state,base_branch:.target_branch,head_branch:.source_branch,head_sha:.sha}'
 glab mr view N -R $R -F json
 
 # get_pr — the source SHA is the exact head SHA used for readiness
@@ -131,7 +134,7 @@ glab mr note create N -R $R --reply DISCUSSION_ID \
   -m "Reply [review-analysis processed:$BATCH_ID]"
 
 # discover_required_checks — pipeline success is the required project merge check
-glab api "projects/GROUP%2FREPO" --jq '.only_allow_merge_if_pipeline_succeeds'
+glab api "projects/GROUP%2FREPO" | jq -r '.only_allow_merge_if_pipeline_succeeds'
 
 # status_for_head — query pipelines for the exact SHA from get_pr
 glab api "projects/GROUP%2FREPO/pipelines?sha=$HEAD_SHA&per_page=100"

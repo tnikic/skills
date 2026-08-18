@@ -52,6 +52,9 @@ Create or adopt the Conventional Branch before editing tracked files:
 - Derive `<type>` from the ticket's dominant commit type, using `chore` when no type is declared. Use the spec slug as the lowercase kebab-case description.
 - If the current branch already matches the documented name, adopt it. Otherwise create or switch to the documented branch before continuing.
 
+The default path is one per-ticket branch and one PR for this ticket. Use the
+combined form only when the spec explicitly opts into combined delivery.
+
 Use TDD at pre-agreed seams. Run the project's standard targets for static analysis alongside single test files as you go — see [`command-runner.md`](../../shared/command-runner.md) for detection and target names. Run the local gates in this order:
 
 1. Run the project `check` target.
@@ -87,21 +90,59 @@ If neither the issue body nor comments contain any checkboxes, skip this step.
 
 *Completion: every satisfied body criterion is checked in the issue body, every satisfied comment-only criterion is checked in its source comment, and unsatisfied criteria are reported to the user with follow-up tickets offered.*
 
-## 4. Deliver the gated change
+## 4. Open the reviewable PR
 
-After `/commit` succeeds, the universal-gate commit is ready to deliver. Keep
-forge-specific issue-closing metadata out of the commit; the PR body carries
-`Closes #N` instead. Amend an earlier commit if one was already made.
+After `/commit` succeeds, push the Conventional Branch with `git push -u origin HEAD`.
+If the push fails, report the failure and leave the ticket open and assigned.
 
-Push: `git push -u origin HEAD`. If the push fails, report the failure and stop — do not close the issue.
+Render the PR body from the shared [PR template](../../shared/pr-template.md):
 
-Verify closure: poll the issue state every 3 seconds, up to 3 attempts. If the issue is now closed, stop. If still open after 3 attempts, close it manually via the forge skill's issue-close recipe.
+1. State the ticket's user-visible purpose in `What this does`.
+2. List the resulting implementation changes in `Changes`.
+3. Mirror every ticket acceptance criterion without changing its wording.
+4. Add `Closes #N` as the final relationship footer.
 
-*Completion: one commit pushed, issue closed.*
+Resolve the ticket's declared review impact, defaulting to `normal` when it is
+omitted. Apply the declared `impact` value, defaulting to `impact:normal`, as
+the PR label. Impact is review triage only and never gates the handoff.
 
-## 5. Parent check
+Require `HUMAN_REVIEWER` as explicit workflow input. Read it from the invocation context or ask the user. If it is absent, keep the ticket open and
+assigned until the user provides it. Never substitute the agent identity for the human reviewer.
 
-If the closed issue has a `parent`, list the parent's sub-issues. When all are closed, tell the user: "All sub-issues of #<parent> are closed. Close it as well?" The user confirms or declines. If confirmed and that parent itself has a parent, recurse.
+Create one PR through the matching forge skill's `create_pr` recipe, using the
+current branch as `head`, the repository default branch as `base`, the
+provisional `[<spec-slug> <n>/<N>] <summary>` title form, and the rendered PR
+body. The recipe must return the PR number, URL, base and head branches,
+current head SHA, and open state.
+
+Pass the PR number and current head SHA to the exact-head readiness workflow.
+It discovers required checks through `discover_required_checks`, waits within
+its bounded window, and maps `status_for_head` success for that exact SHA to
+ready for review. Stop only after that workflow reports the PR ready for
+review. A non-success outcome leaves the PR open and not ready, keeps the
+ticket assigned, and is reported with its evidence.
+
+Assign `HUMAN_REVIEWER` and request review through the forge skill's
+`assign_reviewer` recipe. Use the forge issue-edit recipe to transfer the
+ticket assignment to that reviewer while keeping the ticket open. Report the
+PR URL and stop at the ready-for-review handoff; the human owns approval and
+squash merge.
+
+Keep forge-specific issue-closing metadata out of the commit. The ticket
+closes only when the PR merges through its `Closes #N` relationship. The exact
+PR-head readiness wait is a later workflow stage, so a newly opened PR remains
+open while that stage evaluates its required checks.
+
+*Completion: one commit is pushed, one PR is open with the projected ticket,
+impact, reviewer request, and open assigned ticket state.*
+
+## 5. Post-merge parent check
+
+After the human merges the PR and the linked ticket is closed, if this
+workflow is invoked for post-merge cleanup and the closed issue has a
+`parent`, list the parent's sub-issues. When all are closed, tell the user:
+"All sub-issues of #<parent> are closed. Close it as well?" The user confirms
+or declines. If confirmed and that parent itself has a parent, recurse.
 
 *Completion: parent closure offered where applicable; user decision handled.*
 

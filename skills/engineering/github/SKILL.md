@@ -113,8 +113,11 @@ GitHub responses to the shared outcomes instead of making workflow decisions.
 
 ```bash
 # create_pr — head branch must be pushed; use the declared impact or `normal` when absent
-gh pr create -R $R --title "Title" --body "body" --head HEADBRANCH --base main \
-  --label impact:$IMPACT --reviewer REVIEWER
+BASE_BRANCH="$(gh repo view -R $R --json defaultBranchRef --jq '.defaultBranchRef.name')"
+PR_URL="$(gh pr create -R $R --title "Title" --body "body" --head HEADBRANCH --base "$BASE_BRANCH" \
+  --label impact:$IMPACT --reviewer REVIEWER)"
+gh pr view "$PR_URL" -R $R --json number,url,state,headRefName,baseRefName,headRefOid \
+  --jq '{number,url,state,base_branch:.baseRefName,head_branch:.headRefName,head_sha:.headRefOid}'
 gh pr view N -R $R --json number,url,state,headRefName,baseRefName,headRefOid
 
 # get_pr — headRefOid is the exact head SHA used for readiness
