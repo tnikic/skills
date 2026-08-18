@@ -35,7 +35,12 @@ Other package managers (Homebrew, apt, go install) work fine — mise is what th
 
 Run `make check` for fast local feedback before committing. The GitHub Actions workflow runs `make check` and `make test` on every pull request; configure both `check` and `test` as required status checks for the authoritative merge gate.
 
-`make test` runs the executable repository validation suite. It fails with a clear error if the configured test path is missing.
+`make test` runs the executable repository validation suite through sequential
+repository, skill/workflow, and forge-adapter concern suites. It reports the
+failing concern and preserves a non-zero aggregate status. See
+[`docs/adr/0017-modular-repository-test-suite.md`](docs/adr/0017-modular-repository-test-suite.md)
+for the assertion map, alternatives, and rollback boundary. It fails with a
+clear error if the configured test path is missing.
 
 ## Credits
 
