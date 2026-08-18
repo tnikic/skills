@@ -6,6 +6,7 @@ makefile="$repo_root/Makefile"
 workflow="$repo_root/.github/workflows/ci.yml"
 readme="$repo_root/README.md"
 implement_skill="$repo_root/skills/engineering/implement/SKILL.md"
+code_review_skill="$repo_root/skills/engineering/code-review/SKILL.md"
 github_skill="$repo_root/skills/engineering/github/SKILL.md"
 gitlab_skill="$repo_root/skills/engineering/gitlab/SKILL.md"
 
@@ -30,6 +31,19 @@ assert_not_contains() {
   ! grep -Fq -- "$text" "$file" || fail "$file unexpectedly contains $text"
 }
 
+assert_order() {
+  local file="$1"
+  shift
+  local previous=0
+  local text line
+  for text in "$@"; do
+    line="$(awk -v text="$text" -v previous="$previous" 'NR > previous && index($0, text) { print NR; exit }' "$file")"
+    [ -n "$line" ] || fail "$file is missing ordered step $text"
+    [ "$line" -gt "$previous" ] || fail "$file has out-of-order step $text"
+    previous="$line"
+  done
+}
+
 assert_job_runs() {
   local job="$1"
   local command="$2"
@@ -45,6 +59,7 @@ assert_file "$makefile"
 assert_file "$workflow"
 assert_file "$readme"
 assert_file "$implement_skill"
+assert_file "$code_review_skill"
 assert_file "$github_skill"
 assert_file "$gitlab_skill"
 
@@ -143,6 +158,33 @@ assert_contains "$implement_skill" 'every satisfied comment-only criterion is ch
 assert_not_contains "$implement_skill" 'leave the source comment unchanged'
 assert_not_contains "$implement_skill" 'post one concise comment listing the satisfied criteria and their source comment'
 assert_not_contains "$implement_skill" 'For each satisfied criterion, replace `- [ ]` with `- [x]` and update the issue body via the forge skill'
+assert_contains "$implement_skill" 'Select the per-ticket or explicitly combined form from the shared [delivery contracts]'
+assert_contains "$implement_skill" 'Derive `<type>` from the ticket'
+assert_contains "$implement_skill" 'If the current branch already matches the documented name, adopt it.'
+assert_contains "$implement_skill" 'Otherwise create or switch to the documented branch before continuing.'
+assert_contains "$implement_skill" 'Invoke `/code-review` with the scope `Standards and Spec`'
+assert_contains "$implement_skill" 'complete working-tree diff from the branch merge-base'
+assert_contains "$implement_skill" 'Coverage remains owned by `improve-codebase-architecture`'
+assert_contains "$implement_skill" 'Do not derive `Closes` or `Refs` metadata from branch names'
+assert_contains "$implement_skill" 'leave the ticket open and assigned'
+assert_contains "$implement_skill" 'judgment-dependent finding'
+assert_contains "$implement_skill" 'universal commit-quality and documentation gate'
+assert_not_contains "$implement_skill" 'Run Coverage review'
+assert_order "$implement_skill" \
+  'Create or adopt the Conventional Branch before editing tracked files' \
+  '1. Run the project `check` target.' \
+  '2. Invoke `/code-review` with the scope `Standards and Spec`' \
+  '3. Fix clear-cut review findings.' \
+  '4. Run the project `check` target again after corrections.' \
+  '5. Run the project `test` target once at the end of the implementation loop.' \
+  '6. Invoke `/commit` as the universal commit-quality and documentation gate.' \
+  'If any local gate fails, stop without committing, pushing, or closing the ticket' \
+  'A judgment-dependent finding has the same outcome'
+assert_contains "$code_review_skill" 'The caller may narrow the review scope to named axes.'
+assert_contains "$code_review_skill" 'when `implement` requests `Standards and Spec`, skip'
+assert_contains "$code_review_skill" 'one `subagent` tool call for each requested axis'
+assert_contains "$code_review_skill" 'omit the unrequested axes'
+assert_contains "$code_review_skill" 'Requested axes run as **parallel sub-agents**'
 assert_contains "$implement_skill" 'Automatic selection includes only open issues labeled `triage:for-agent`.'
 assert_contains "$implement_skill" 'Exclude `triage:pending`, `triage:unanswered`, unlabeled, `triage:for-human`, and `triage:wontfix` issues.'
 assert_contains "$implement_skill" 'Query open `triage:pending` issues separately and report them in a `requires triage` section.'

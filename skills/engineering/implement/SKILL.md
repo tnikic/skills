@@ -44,15 +44,32 @@ Assign the issue to @me to claim it.
 
 *Completion: an issue with a clear spec is confirmed and assigned.*
 
-## 2. Implement
+## 2. Implement and prepare the change
 
-Use TDD at pre-agreed seams. Run the project's standard targets for static analysis alongside single test files as you go — see [`command-runner.md`](../../shared/command-runner.md) for detection and target names. Run the `test` target once at the end.
+Create or adopt the Conventional Branch before editing tracked files:
 
-*Completion: every spec requirement is implemented and all tests pass.*
+- Select the per-ticket or explicitly combined form from the shared [delivery contracts](../../shared/pr-delivery-contracts.md), then create or adopt that branch.
+- Derive `<type>` from the ticket's dominant commit type, using `chore` when no type is declared. Use the spec slug as the lowercase kebab-case description.
+- If the current branch already matches the documented name, adopt it. Otherwise create or switch to the documented branch before continuing.
+
+Use TDD at pre-agreed seams. Run the project's standard targets for static analysis alongside single test files as you go — see [`command-runner.md`](../../shared/command-runner.md) for detection and target names. Run the local gates in this order:
+
+1. Run the project `check` target.
+2. Invoke `/code-review` with the scope `Standards and Spec` against the complete working-tree diff from the branch merge-base and the originating issue or spec. Coverage remains owned by `improve-codebase-architecture` and is not part of this workflow.
+3. Fix clear-cut review findings. Pause for human input on any judgment-dependent finding.
+4. Run the project `check` target again after corrections.
+5. Run the project `test` target once at the end of the implementation loop.
+6. Invoke `/commit` as the universal commit-quality and documentation gate. Do not derive `Closes` or `Refs` metadata from branch names or add forge-specific issue relationships to the commit message.
+
+If any local gate fails, stop without committing, pushing, or closing the ticket; leave the ticket open and assigned.
+
+A judgment-dependent finding has the same outcome until the human provides a decision.
+
+*Completion: every spec requirement is implemented, every local gate passes in order, and one universal-gate commit is created.*
 
 ## 3. Review, fix, and check acceptance criteria
 
-Run code-review against the spec. Fix clear-cut findings directly — naming, duplication, and any linter or formatter violations. For architectural judgement calls — Feature Envy, Shotgun Surgery, Divergent Change — pause and present them for approval with a recommendation.
+The pre-PR review follows the scope and diff boundary in step 2. Fix clear-cut findings directly — naming, duplication, and any linter or formatter violations. For architectural judgment calls — Feature Envy, Shotgun Surgery, Divergent Change — pause and present them for approval with a recommendation.
 
 If the review comes back clean, report it briefly.
 
@@ -70,11 +87,11 @@ If neither the issue body nor comments contain any checkboxes, skip this step.
 
 *Completion: every satisfied body criterion is checked in the issue body, every satisfied comment-only criterion is checked in its source comment, and unsatisfied criteria are reported to the user with follow-up tickets offered.*
 
-## 4. Commit, push, and close
+## 4. Deliver the gated change
 
-Create a single Conventional Commit. Keep forge-specific issue-closing
-metadata out of the commit; the PR body carries `Closes #N` instead. Amend an
-earlier commit if one was already made.
+After `/commit` succeeds, the universal-gate commit is ready to deliver. Keep
+forge-specific issue-closing metadata out of the commit; the PR body carries
+`Closes #N` instead. Amend an earlier commit if one was already made.
 
 Push: `git push -u origin HEAD`. If the push fails, report the failure and stop — do not close the issue.
 

@@ -1,19 +1,23 @@
 ---
 name: code-review
-description: Review the changes since a fixed point (commit, branch, tag, or merge-base) along three axes — Standards (does the code follow this repo's documented coding standards?), Spec (does the code match what the originating issue/PRD asked for?), and Coverage (does the change have the right kinds of tests?). Runs all three reviews in parallel sub-agents and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to "review since X".
+description: Review the changes since a fixed point (commit, branch, tag, or merge-base) along requested axes — Standards (does the code follow this repo's documented coding standards?), Spec (does the code match what the originating issue/PRD asked for?), and Coverage (does the change have the right kinds of tests?). Runs each requested review in parallel sub-agents and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to "review since X".
 ---
 
-Three-axis review of the diff between `HEAD` and a fixed point the user supplies:
+Review of the diff between `HEAD` and a fixed point the user supplies, using the requested axes:
 
 - **Standards** — does the code conform to this repo's documented coding standards?
 - **Spec** — does the code faithfully implement the originating issue / PRD / spec?
 - **Coverage** — does the change include the right kinds of tests?
 
-All three axes run as **parallel sub-agents** so they don't pollute each other's context, then this skill aggregates their findings.
+Requested axes run as **parallel sub-agents** so they don't pollute each other's context, then this skill aggregates their findings.
 
 
 
 ## Process
+
+The caller may narrow the review scope to named axes. Run all three axes when
+no scope is supplied; when `implement` requests `Standards and Spec`, skip
+Coverage because it is owned by `improve-codebase-architecture`.
 
 ### 1. Pin the fixed point
 
@@ -68,9 +72,9 @@ Look for the project's test portfolio, in this order:
 
 Also locate the [test-type taxonomy](../../shared/test-types.md) — the Coverage sub-agent needs it to match project signals against test-type triggers.
 
-### 5. Spawn all three sub-agents in parallel
+### 5. Spawn the requested sub-agents in parallel
 
-Send a single message with three `subagent` tool calls. Use the `auditor` agent for all three. Follow the dispatch pattern in [`subagent-dispatch.md`](../../shared/subagent-dispatch.md).
+Send a single message with one `subagent` tool call for each requested axis. Use the `auditor` agent for every requested axis. Follow the dispatch pattern in [`subagent-dispatch.md`](../../shared/subagent-dispatch.md). When the caller narrows the scope, omit the unrequested axes rather than running them and discarding their reports.
 
 **Standards sub-agent prompt** — include:
 
@@ -97,9 +101,9 @@ The Coverage sub-agent does **not** create Makefile targets. If it had to infer,
 
 ### 6. Aggregate
 
-Present the three reports under `## Standards`, `## Spec`, and `## Coverage` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings — the three axes are deliberately separate (see _Why three axes_).
+Present each requested report under its matching heading, verbatim or lightly cleaned. Do **not** merge or rerank findings — the axes are deliberately separate (see _Why three axes_).
 
-End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes — that's the reranking the separation exists to prevent.
+End with a one-line summary: total findings per requested axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes — that's the reranking the separation exists to prevent.
 
 ## Why three axes
 
