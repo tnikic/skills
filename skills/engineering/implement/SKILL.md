@@ -20,8 +20,8 @@ If the user passed a spec or issue, use it directly. Read its full body. If it's
 Otherwise, query open issues:
 
 1. Automatic selection includes only open issues labeled `triage:for-agent`.
-2. Start with unassigned and unblocked agent-ready issues, sorted by priority then age.
-3. If none, use the assigned-to-@me fallback, still requiring `triage:for-agent` and no blockers.
+2. Start with unassigned and unblocked agent-ready issues, sorted by priority then age. An issue is unblocked only when every issue in its `blockedBy` relationship is closed. Inspect each blocker state; closed links do not block selection, while any open blocker excludes the candidate.
+3. If none, use the assigned-to-@me fallback, still requiring `triage:for-agent` and no open blockers.
 4. Exclude `triage:pending`, `triage:unanswered`, unlabeled, `triage:for-human`, and `triage:wontfix` issues.
 5. Query open `triage:pending` issues separately and report them in a `requires triage` section.
 

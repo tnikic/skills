@@ -56,6 +56,14 @@ assert_job_runs() {
   ' "$workflow" || fail "workflow job $job does not run $command"
 }
 
+assert_unblocked_by_state() {
+  local blockers="$1"
+  local expected="$2"
+  local actual
+  actual="$(jq -r 'all(.[]; .state == "CLOSED")' <<< "$blockers")"
+  [ "$actual" = "$expected" ] || fail "blocker state resolved to $actual, expected $expected"
+}
+
 assert_delivery_branch() {
   local mode="$1"
   local expected_branch="$2"
@@ -299,10 +307,14 @@ assert_contains "$code_review_skill" 'Requested axes run as **parallel sub-agent
 assert_contains "$implement_skill" 'Automatic selection includes only open issues labeled `triage:for-agent`.'
 assert_contains "$implement_skill" 'Exclude `triage:pending`, `triage:unanswered`, unlabeled, `triage:for-human`, and `triage:wontfix` issues.'
 assert_contains "$implement_skill" 'Query open `triage:pending` issues separately and report them in a `requires triage` section.'
-assert_contains "$implement_skill" 'If none, use the assigned-to-@me fallback, still requiring `triage:for-agent` and no blockers.'
+assert_contains "$implement_skill" 'If none, use the assigned-to-@me fallback, still requiring `triage:for-agent` and no open blockers.'
 assert_contains "$implement_skill" 'If no eligible issue remains, report that no implementation-ready issue exists and stop without claiming one.'
+assert_contains "$implement_skill" 'An issue is unblocked only when every issue in its `blockedBy` relationship is closed.'
+assert_contains "$implement_skill" 'Inspect each blocker state; closed links do not block selection, while any open blocker excludes the candidate.'
 assert_not_contains "$implement_skill" 'Unassigned and unblocked — sort by priority then age.'
 assert_not_contains "$implement_skill" 'If none, assigned to @me and unblocked.'
+assert_unblocked_by_state '[{"state":"CLOSED"},{"state":"CLOSED"}]' true
+assert_unblocked_by_state '[{"state":"CLOSED"},{"state":"OPEN"}]' false
 assert_contains "$github_skill" 'gh api "/repos/$R/issues/comments/COMMENT_ID" --jq '\''.body'\'''
 assert_contains "$github_skill" 'gh api --method PATCH "/repos/$R/issues/comments/COMMENT_ID" -f body="COMPLETE_UPDATED_BODY"'
 assert_contains "$gitlab_skill" 'glab api "projects/GROUP%2FREPO/issues/N/notes?activity_filter=only_comments" --paginate'
