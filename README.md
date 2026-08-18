@@ -31,6 +31,12 @@ Some skills depend on external tools. Install with [mise](https://mise.jdx.dev/)
 
 Other package managers (Homebrew, apt, go install) work fine — mise is what the examples use.
 
+## Quality gates
+
+Run `make check` for fast local feedback before committing. The GitHub Actions workflow runs `make check` and `make test` on every pull request; configure both `check` and `test` as required status checks for the authoritative merge gate.
+
+`make test` runs the executable repository validation suite. It fails with a clear error if the configured test path is missing.
+
 ## Credits
 
 - [Kun Chen](https://github.com/kunchen) — the [AXI](https://github.com/kunchen/axi) principles and repository, which shaped the ergonomic standards for agent-facing CLIs used throughout these skills

@@ -1,7 +1,15 @@
-.PHONY: check contracts gitleaks links taxonomy help
+.PHONY: check test contracts gitleaks links taxonomy help
 
 check: gitleaks links taxonomy contracts
 	@echo "check: ok"
+
+test:
+	@if [ -x scripts/test.sh ]; then \
+		./scripts/test.sh; \
+	else \
+		printf 'test: no executable test suite found at scripts/test.sh\n' >&2; \
+		exit 1; \
+	fi
 
 contracts:
 	bash scripts/validate-pr-contracts.sh
@@ -25,6 +33,7 @@ taxonomy:
 
 help:
 	@echo "check      Run gitleaks secrets scan, lychee link check, taxonomy, and contract validation"
+	@echo "test       Run the executable repository test suite"
 	@echo "contracts  Validate shared PR delivery contracts"
 	@echo "gitleaks   Run gitleaks secrets scan"
 	@echo "links      Run lychee link check (local-only, offline)"
