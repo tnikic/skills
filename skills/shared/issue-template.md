@@ -7,8 +7,6 @@ Canonical template for agent-grabbable tickets. Used by the pipeline stages that
 
 The end-to-end behaviour this ticket makes work, from the user's perspective — not layer-by-layer implementation.
 
-**Review impact:** critical | high | normal | low (omit to default to normal)
-
 ## Acceptance criteria
 
 - [ ] Criterion 1

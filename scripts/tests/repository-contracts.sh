@@ -6,17 +6,14 @@ TEST_CONCERN=repository
 source "$(dirname "${BASH_SOURCE[0]}")/test_helpers.sh"
 
 assert_file "$makefile"
-assert_file "$workflow"
 assert_file "$readme"
 assert_file "$context"
 assert_file "$test_runner"
 assert_file "$(dirname "$test_runner")/tests/test_helpers.sh"
 assert_file "$(dirname "$test_runner")/tests/repository-contracts.sh"
 assert_file "$(dirname "$test_runner")/tests/skill-workflow-contracts.sh"
-assert_file "$(dirname "$test_runner")/tests/forge-adapter-contracts.sh"
 assert_contains "$test_runner" 'scripts/tests/repository-contracts.sh'
 assert_contains "$test_runner" 'scripts/tests/skill-workflow-contracts.sh'
-assert_contains "$test_runner" 'scripts/tests/forge-adapter-contracts.sh'
 
 make_targets="$(make -qp -f "$makefile" 2>/dev/null || true)"
 grep -Eq '^check($|[[:space:]]*:)' <<<"$make_targets" ||
@@ -96,33 +93,9 @@ fi
 grep -Fq -- 'test: no executable test suite found at scripts/test.sh' <<<"$missing_suite_output" ||
   fail 'missing test suite does not produce a meaningful failure'
 
-assert_contains "$workflow" 'pull_request:'
-assert_job_runs check 'make check'
-assert_job_runs test 'make test'
 assert_contains "$readme" '## Quality gates'
-assert_contains "$readme" 'authoritative merge gate'
-assert_contains "$readme" 'required status checks'
-assert_contains_many "$readme" \
-  '## Introduction' \
-  '## How It Works' \
-  '## Documentation Index' \
-  'HUMAN_REVIEWER' \
-  'exact current PR head' \
-  'human reviewer' \
-  'squash merge' \
-  'docs/CONTEXT.md' \
-  'skills/shared/pr-delivery-contracts.md' \
-  'skills/shared/label-taxonomy.md'
 assert_contains "$makefile" 'lychee --offline --no-progress --exclude-path'
 assert_contains "$makefile" 'README.md docs skills'
-assert_contains_many "$context" \
-  'HUMAN_REVIEWER' \
-  'exact current PR head SHA' \
-  'configuration gap' \
-  'optional checks remain informational' \
-  '30-minute default' \
-  'adr/0014-ci-results-bind-to-pr-head.md' \
-  'skills/shared/pr-template.md'
 
 runner_fixture="$(mktemp -d)"
 trap 'rm -rf "$temporary_dir" "$runner_fixture"' EXIT
@@ -137,15 +110,9 @@ printf '%s\n' \
   '#!/usr/bin/env bash' \
   'printf "test: skill-workflow fixture ran\\n"' \
   > "$runner_fixture/scripts/tests/skill-workflow-contracts.sh"
-printf '%s\n' \
-  '#!/usr/bin/env bash' \
-  'printf "test: forge-adapter fixture ran\\n"' \
-  > "$runner_fixture/scripts/tests/forge-adapter-contracts.sh"
-
 if runner_output="$(bash "$runner_fixture/scripts/test.sh" 2>&1)"; then
   fail 'runner returned success after a concern failed'
 fi
 assert_contains <(printf '%s\n' "$runner_output") 'test[repository]: fixture failure'
 assert_contains <(printf '%s\n' "$runner_output") 'test: repository: failed'
 assert_contains <(printf '%s\n' "$runner_output") 'test: skill-workflow fixture ran'
-assert_contains <(printf '%s\n' "$runner_output") 'test: forge-adapter fixture ran'

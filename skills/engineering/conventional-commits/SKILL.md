@@ -79,8 +79,7 @@ For each commit, build the message following the spec:
 Rules:
 - **Description** is imperative, present tense, sentence-case, no period at the end. It completes the sentence "This commit will…"
 - **Body** (when tier dictates) explains *what* changed and *why*, wrapped at 72 characters, separated from the description by one blank line.
-- **Issue relationships** — commit messages must not contain forge-specific issue-closing metadata such as `Closes #N` or `Refs #N`. Put the issue relationship in the pull request body instead.
-- **Footers** — add `BREAKING CHANGE: <description>` if a breaking change was detected and isn't fully captured by `!`. Separate footers from the body by one blank line.
+- **Footers** — auto-detect `Closes #N` or `Refs #N` from the branch name (e.g. `feat/42-parser` → `Refs: #42`). Add `BREAKING CHANGE: <description>` if a breaking change was detected and isn't fully captured by `!`. Separate footers from the body by one blank line.
 
 *Completion criterion: one complete message per commit, formatted per spec.*
 
@@ -94,6 +93,8 @@ feat(parser): add array literal support
 Introduce support for parsing array literals. Previously, arrays
 would cause a parse error. This change handles square bracket
 syntax and nested arrays.
+
+Refs: #42
 ```
 
 Ask "Ready to commit?" The user can accept, edit the message inline, or reject. If they edit, show the updated message and confirm again.

@@ -102,82 +102,11 @@ gh issue view N -R $R --json parent,subIssues,blockedBy,blocking
 gh api "/repos/$R/issues/N/sub_issues" --paginate   # plain REST list of child issue numbers
 ```
 
-## Pull Requests And Status
-
-Workflow skills read the normalized operations and outcomes in
-[`forge-pr-status-contract.md`](../../shared/forge-pr-status-contract.md) when
-creating or updating PRs, assigning reviewers, processing comments, or polling
-required checks.
-These recipes are the GitHub adapter: they preserve the PR head SHA and map
-GitHub responses to the shared outcomes instead of making workflow decisions.
+## Pull requests
 
 ```bash
-# create_pr — head branch must be pushed; use the declared impact or `normal` when absent
-BASE_BRANCH="$(gh repo view -R $R --json defaultBranchRef --jq '.defaultBranchRef.name')"
-PR_URL="$(gh pr create -R $R --title "Title" --body "body" --head HEADBRANCH --base "$BASE_BRANCH" \
-  --label impact:$IMPACT --reviewer REVIEWER)"
-gh pr view "$PR_URL" -R $R --json number,url,state,headRefName,baseRefName,headRefOid \
-  --jq '{number,url,state,base_branch:.baseRefName,head_branch:.headRefName,head_sha:.headRefOid}'
-gh pr view N -R $R --json number,url,state,headRefName,baseRefName,headRefOid
-
-# get_pr — return normalized metadata; head_sha is the exact value used for readiness
-gh pr view N -R $R --json number,url,state,headRefName,baseRefName,headRefOid,body,reviewRequests \
-  --jq '{number,url,state,base_branch:.baseRefName,head_branch:.headRefName,head_sha:.headRefOid,body,reviewRequests}'
-
-# list_open_prs — return normalized metadata for every open PR without a page cap
-gh api "/repos/$R/pulls?state=open&per_page=100" --paginate \
-  --jq '.[] | {number,url:.html_url,state,base_branch:.base.ref,head_branch:.head.ref,head_sha:.head.sha,body}'
-
-# find_pr — find the open PR for a combined head branch
-gh pr list -R $R --head HEADBRANCH --state open \
-  --json number,url,state,headRefName,baseRefName,headRefOid \
-  --jq 'if length > 1 then error("multiple open PRs for head branch") elif length == 0 then empty else .[0] | {number,url,state,base_branch:.baseRefName,head_branch:.headRefName,head_sha:.headRefOid} end'
-
-# update_pr — update an existing combined PR and return its current metadata
-gh pr edit N -R $R --title "Title" --body "body" --add-label "impact:$IMPACT"
-gh pr view N -R $R --json number,url,state,headRefName,baseRefName,headRefOid \
-  --jq '{number,url,state,base_branch:.baseRefName,head_branch:.headRefName,head_sha:.headRefOid}'
-
-# retarget_pr — use GitHub's native stack behavior; do not simulate stack
-# ordering, rebases, or merges in a workflow skill
-gh pr edit N -R $R --base "$BASE_BRANCH"
-gh pr view N -R $R --json number,url,state,headRefName,baseRefName,headRefOid \
-  --jq '{number,url,state,base_branch:.baseRefName,head_branch:.headRefName,head_sha:.headRefOid}'
-
-# assign_reviewer — request or re-request a human reviewer
-gh pr edit N -R $R --add-reviewer REVIEWER
-
-# list_review_comments — include inline review comments and PR conversation comments
-gh api "/repos/$R/pulls/N/comments?per_page=100" --paginate
-gh api "/repos/$R/issues/N/comments?per_page=100" --paginate
-# Resolve workflow_author from the authenticated account before classification.
-gh api user --jq '.login'
-# Normalize each returned comment with comment_id=.id, author=.user.login,
-# body=.body, timestamp=.created_at, processed=<audit rule>, and discussion_id
-# equal to the root ID reached by walking each .in_reply_to_id chain, otherwise .id. For issue comments
-# without native threads, match processed markers by the listed comment IDs.
-
-# reply_and_mark_processed — reply to an inline comment or add a PR-thread marker
-gh api --method POST "/repos/$R/pulls/N/comments/COMMENT_ID/replies" \
-  -f body="Processed comment IDs: COMMENT_ID\nReply [review-analysis processed:$BATCH_ID]"
-gh api --method POST "/repos/$R/issues/N/comments" \
-  -f body="Processed comment IDs: COMMENT_ID\nReply [review-analysis processed:$BATCH_ID]"
-
-# reply — reply without changing processed state (used for clarification)
-gh api --method POST "/repos/$R/pulls/N/comments/COMMENT_ID/replies" \
-  -f body="[review-analysis clarification:$BATCH_ID]\nClarification comment IDs: COMMENT_ID\nQuestion"
-gh api --method POST "/repos/$R/issues/N/comments" \
-  -f body="[review-analysis clarification:$BATCH_ID]\nClarification comment IDs: COMMENT_ID\nQuestion"
-
-# discover_required_checks — inspect protection and rulesets; absence means configuration-gap
-gh api -X GET "/repos/$R/branches/BASE_BRANCH/protection/required_status_checks" \
-  --jq '{required: .contexts}'
-gh api -X GET "/repos/$R/rulesets?per_page=100"
-gh api -X GET "/repos/$R/rulesets/RULESET_ID"
-
-# status_for_head — query checks for the exact SHA from get_pr
-gh api -X GET "/repos/$R/commits/$HEAD_SHA/check-runs?per_page=100"
-gh api -X GET "/repos/$R/commits/$HEAD_SHA/status?per_page=100"
+# create — head branch must be pushed; base is the target branch
+gh pr create -R $R --title "Title" --body "body" --head HEADBRANCH --base main -l scope:name
 
 # list / view
 gh pr list -R $R --json number,title,state,labels,headRefName,baseRefName --limit 100
@@ -190,20 +119,6 @@ gh pr review N -R $R --comment -b "text"
 # merge — squash keeps history clean; --delete-branch removes head branch
 gh pr merge N -R $R --squash --delete-branch
 ```
-
-For each returned comment, set `processed=true` when its own body contains the
-shared `[review-analysis processed:<batch-id>]` marker, or when a batch reply
-explicitly lists that comment ID. A marker never processes unrelated comments
-in the same discussion. Accept either condition only when the comment or
-reply author equals workflow_author. Omit audit comments from the actionable review queue.
-Replies retain the root discussion ID for inline review threads.
-Map GitHub's check-runs and combined-status fields through the shared status
-matrix. Ruleset-only repositories are valid; return `configuration-gap` only
-when neither branch protection nor applicable ruleset requirements can be
-discovered. Optional checks remain evidence only.
-
-The adapter reports only the shared outcomes: `pending`, `success`, `failure`,
-`cancelled`, `stale`, `timeout`, and `configuration-gap`.
 
 ## Raw API escape hatch
 

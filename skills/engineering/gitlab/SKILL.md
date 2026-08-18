@@ -100,78 +100,11 @@ glab api "projects/GROUP%2FREPO/issues/N/links"
 
 GitLab treats "blocked" as a workflow signal, not a hard gate — closing a blocker does not auto-close the blocked issue.
 
-## Merge Requests And Status
-
-Workflow skills read the normalized operations and outcomes in
-[`forge-pr-status-contract.md`](../../shared/forge-pr-status-contract.md) when
-creating or updating merge requests, assigning reviewers, processing comments,
-or polling required checks.
-These recipes are the GitLab adapter: they preserve the merge request SHA and
-map GitLab responses to the shared outcomes instead of making workflow
-decisions.
+## Merge requests
 
 ```bash
-# create_pr — source branch must be pushed; use the declared impact or `normal` when absent
-BASE_BRANCH="$(glab api "projects/GROUP%2FREPO" | jq -r '.default_branch')"
-MR_URL="$(glab mr create -R $R -t "Title" -d "body" -s SOURCE_BRANCH -b "$BASE_BRANCH" \
-  -l impact:$IMPACT --reviewer REVIEWER -y)"
-glab mr view "$MR_URL" -R $R -F json \
-  --jq '{number:.iid,url:.web_url,state,base_branch:.target_branch,head_branch:.source_branch,head_sha:.sha}'
-glab mr view N -R $R -F json
-
-# get_pr — the source SHA is the exact head SHA used for readiness
-glab mr view N -R $R -F json \
-  --jq '{number:.iid,url:.web_url,state,base_branch:.target_branch,head_branch:.source_branch,head_sha:.sha,body:.description}'
-
-# list_open_prs — return normalized metadata for every open MR without a page cap
-glab api "projects/GROUP%2FREPO/merge_requests?state=opened&per_page=100" --paginate \
-  --jq '.[] | {number:.iid,url:.web_url,state,base_branch:.target_branch,head_branch:.source_branch,head_sha:(.sha // .diff_refs.head_sha),body:.description}'
-
-# find_pr — find the open MR for a combined source branch
-glab mr list -R $R --source-branch SOURCE_BRANCH -F json \
-  --jq 'if length > 1 then error("multiple open MRs for source branch") elif length == 0 then empty else .[0] | {number:.iid,url:.web_url,state,base_branch:.target_branch,head_branch:.source_branch,head_sha:.sha} end'
-
-# update_pr — update an existing combined MR and return its current metadata
-glab mr update N -R $R -t "Title" -d "body" -l "impact:$IMPACT"
-glab mr view N -R $R -F json \
-  --jq '{number:.iid,url:.web_url,state,base_branch:.target_branch,head_branch:.source_branch,head_sha:.sha}'
-
-# retarget_pr — use GitLab's native stack behavior; do not simulate stack
-# ordering, rebases, or merges in a workflow skill
-glab mr update N -R $R --target-branch "$BASE_BRANCH"
-glab mr view N -R $R -F json \
-  --jq '{number:.iid,url:.web_url,state,base_branch:.target_branch,head_branch:.source_branch,head_sha:.sha}'
-
-# assign_reviewer — request or replace a human reviewer
-glab mr update N -R $R --reviewer REVIEWER
-
-# list_review_comments — include notes and discussion IDs
-glab mr note list N -R $R -F json
-glab api "projects/GROUP%2FREPO/merge_requests/N/notes?sort=asc&per_page=100" --paginate
-# Resolve workflow_author from the authenticated account before classification.
-glab api user | jq -r '.username'
-# Normalize each note with comment_id=.id, author=.author.username,
-# body=.body, timestamp=.created_at, processed=<audit rule>, and
-# discussion_id=.discussion_id. Use the comment ID when GitLab does not
-# provide a discussion ID.
-
-# reply_and_mark_processed — reply using a discussion ID, or create a note for a standalone comment
-glab mr note create N -R $R --reply DISCUSSION_ID \
-  -m "Processed comment IDs: COMMENT_ID\nReply [review-analysis processed:$BATCH_ID]"
-glab mr note create N -R $R \
-  -m "Processed comment IDs: COMMENT_ID\nReply [review-analysis processed:$BATCH_ID]"
-
-# reply — reply without changing processed state (used for clarification)
-glab mr note create N -R $R --reply DISCUSSION_ID \
-  -m "[review-analysis clarification:$BATCH_ID]\nClarification comment IDs: COMMENT_ID\nQuestion"
-glab mr note create N -R $R \
-  -m "[review-analysis clarification:$BATCH_ID]\nClarification comment IDs: COMMENT_ID\nQuestion"
-
-# discover_required_checks — pipeline success is the required project merge check
-glab api "projects/GROUP%2FREPO" | jq -r '.only_allow_merge_if_pipeline_succeeds'
-
-# status_for_head — query pipelines for the exact SHA from get_pr
-glab api "projects/GROUP%2FREPO/pipelines?sha=$HEAD_SHA&per_page=100"
+# create — source branch must be pushed; -b is the target branch
+glab mr create -R $R -t "Title" -d "body" -s SOURCE_BRANCH -b main -l scope:name --remove-source-branch -y
 
 # list / view
 glab mr list -R $R -F json
@@ -180,26 +113,11 @@ glab mr view N -R $R -F json
 
 # approve / comment
 glab mr approve N -R $R
-glab mr note create N -R $R -m "text"
+glab mr note N -R $R -m "text"
 
 # merge — squash keeps history clean; -d removes the source branch
 glab mr merge N -R $R -s -d -y
 ```
-
-For each returned note, set `processed=true` when its own body contains the
-shared `[review-analysis processed:<batch-id>]` marker, or when a batch note
-explicitly lists that comment ID. A marker never processes unrelated notes in
-the same discussion. Accept either condition only when the note or audit
-author equals workflow_author. This rule also handles standalone notes because the
-audit note lists their original comment ID.
-Select the newest pipeline created for the requested SHA and map its state
-through the shared status matrix. Return `configuration-gap` when
-`only_allow_merge_if_pipeline_succeeds` is disabled or cannot be read.
-Optional jobs remain evidence only; GitLab's required pipeline is normalized as
-the `pipeline` check.
-
-The adapter reports only the shared outcomes: `pending`, `success`, `failure`,
-`cancelled`, `stale`, `timeout`, and `configuration-gap`.
 
 ## Raw API escape hatch
 

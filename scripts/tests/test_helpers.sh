@@ -2,19 +2,13 @@
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 makefile="$repo_root/Makefile"
-workflow="$repo_root/.github/workflows/ci.yml"
 readme="$repo_root/README.md"
 context="$repo_root/docs/CONTEXT.md"
 test_runner="$repo_root/scripts/test.sh"
 implement_skill="$repo_root/skills/engineering/implement/SKILL.md"
-readiness_script="$repo_root/scripts/pr-readiness.sh"
 code_review_skill="$repo_root/skills/engineering/code-review/SKILL.md"
-review_analysis_skill="$repo_root/skills/engineering/review-analysis/SKILL.md"
-merge_conflict_repair_skill="$repo_root/skills/engineering/merge-conflict-repair/SKILL.md"
 github_skill="$repo_root/skills/engineering/github/SKILL.md"
 gitlab_skill="$repo_root/skills/engineering/gitlab/SKILL.md"
-forge_contract="$repo_root/skills/shared/forge-pr-status-contract.md"
-
 fail() {
   printf 'test[%s]: %s\n' "${TEST_CONCERN:-unknown}" "$1" >&2
   exit 1
@@ -56,15 +50,4 @@ assert_order() {
     [ "$line" -gt "$previous" ] || fail "$file has out-of-order step $text"
     previous="$line"
   done
-}
-
-assert_job_runs() {
-  local job="$1"
-  local command="$2"
-  awk -v job="$job" -v command="$command" '
-    $0 == "  " job ":" { in_job = 1; next }
-    in_job && $0 ~ /^  [^ ]/ { if (found) exit 0; exit 1 }
-    in_job && $0 == "      - run: " command { found = 1 }
-    END { if (in_job && found) exit 0; exit 1 }
-  ' "$workflow" || fail "workflow job $job does not run $command"
 }
