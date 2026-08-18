@@ -68,7 +68,12 @@ timeout_seconds="${PR_READINESS_TIMEOUT_SECONDS:-1800}"
 poll_seconds="${PR_READINESS_POLL_SECONDS:-30}"
 
 case "${1:-}" in
-  ''|--help|-h)
+  '')
+    [ "$#" -eq 0 ] || emit_error 'unexpected argument' 'pr-readiness --help'
+    print_help
+    ;;
+  --help|-h)
+    [ "$#" -eq 1 ] || emit_error 'unexpected argument after --help' 'pr-readiness --help'
     print_help
     ;;
   defaults)

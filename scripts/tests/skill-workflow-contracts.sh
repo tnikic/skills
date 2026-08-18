@@ -249,6 +249,9 @@ grep -Fqx -- 'poll_seconds: 30' <<< "$defaults_output" ||
 if bash "$readiness_script" defaults unexpected >/dev/null 2>&1; then
   fail 'readiness defaults accepted an unexpected argument'
 fi
+if bash "$readiness_script" --help unexpected >/dev/null 2>&1; then
+  fail 'readiness help accepted an unexpected argument'
+fi
 missing_sha_output="$(bash "$readiness_script" transition success '' abc 0 false false check,test evidence 2>&1 || true)"
 grep -Fq -- 'error:' <<< "$missing_sha_output" || fail 'missing SHA error was not structured on stdout'
 assert_readiness_transition pending pending abc abc 0 false false check,test pending
