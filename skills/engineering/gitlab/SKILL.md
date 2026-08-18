@@ -122,6 +122,21 @@ glab mr view N -R $R -F json
 # get_pr — the source SHA is the exact head SHA used for readiness
 glab mr view N -R $R -F json
 
+# find_pr — find the open MR for a combined source branch
+glab mr list -R $R --source-branch SOURCE_BRANCH -F json \
+  --jq 'if length > 1 then error("multiple open MRs for source branch") elif length == 0 then empty else .[0] | {number:.iid,url:.web_url,state,base_branch:.target_branch,head_branch:.source_branch,head_sha:.sha} end'
+
+# update_pr — update an existing combined MR and return its current metadata
+glab mr update N -R $R -t "Title" -d "body" -l "impact:$IMPACT"
+glab mr view N -R $R -F json \
+  --jq '{number:.iid,url:.web_url,state,base_branch:.target_branch,head_branch:.source_branch,head_sha:.sha}'
+
+# retarget_pr — use GitLab's native stack behavior; do not simulate stack
+# ordering, rebases, or merges in a workflow skill
+glab mr update N -R $R --target-branch "$BASE_BRANCH"
+glab mr view N -R $R -F json \
+  --jq '{number:.iid,url:.web_url,state,base_branch:.target_branch,head_branch:.source_branch,head_sha:.sha}'
+
 # assign_reviewer — request or replace a human reviewer
 glab mr update N -R $R --reviewer REVIEWER
 

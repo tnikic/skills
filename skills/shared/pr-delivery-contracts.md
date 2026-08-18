@@ -39,6 +39,36 @@ Example: `feat/pr-delivery-contracts`.
 Merge-order numbers never appear in branch names. They belong only in PR
 titles, where they can be renumbered without changing the branch identity.
 
+## Delivery Modes
+
+Per-ticket delivery is the default. A spec may opt into one of the other modes
+with an explicit metadata line:
+
+```text
+delivery: combined
+```
+
+The combined mode uses one branch and one PR for every ticket in the spec. The
+branch follows `<type>/<spec-slug>`, where `<type>` is derived once from the
+spec's dominant commit type and falls back to `chore`. Each ticket contributes
+an incremental push to that branch until the PR merges. The PR body lists
+every ticket and contains one `Closes #N` relationship for each of them.
+
+A spec may instead request native forge stacking with:
+
+```text
+delivery: stacked
+```
+
+Stacked mode keeps one per-ticket branch and PR per ticket, but each PR targets
+the previous stack branch until the forge retargets it to the default branch.
+The forge owns stack ordering, retargeting, and merge behavior; workflow skills
+must not simulate those operations with custom merge or rebase logic.
+
+The delivery mode is read from the originating spec. It is never inferred from
+the number of tickets, branch names, or an existing PR. An omitted or unknown
+mode uses the default per-ticket path.
+
 ## PR Titles
 
 PR titles use the provisional merge-position form:

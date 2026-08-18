@@ -123,6 +123,22 @@ gh pr view N -R $R --json number,url,state,headRefName,baseRefName,headRefOid
 # get_pr — headRefOid is the exact head SHA used for readiness
 gh pr view N -R $R --json number,url,state,headRefName,baseRefName,headRefOid,reviewRequests
 
+# find_pr — find the open PR for a combined head branch
+gh pr list -R $R --head HEADBRANCH --state open \
+  --json number,url,state,headRefName,baseRefName,headRefOid \
+  --jq 'if length > 1 then error("multiple open PRs for head branch") elif length == 0 then empty else .[0] | {number,url,state,base_branch:.baseRefName,head_branch:.headRefName,head_sha:.headRefOid} end'
+
+# update_pr — update an existing combined PR and return its current metadata
+gh pr edit N -R $R --title "Title" --body "body" --add-label "impact:$IMPACT"
+gh pr view N -R $R --json number,url,state,headRefName,baseRefName,headRefOid \
+  --jq '{number,url,state,base_branch:.baseRefName,head_branch:.headRefName,head_sha:.headRefOid}'
+
+# retarget_pr — use GitHub's native stack behavior; do not simulate stack
+# ordering, rebases, or merges in a workflow skill
+gh pr edit N -R $R --base "$BASE_BRANCH"
+gh pr view N -R $R --json number,url,state,headRefName,baseRefName,headRefOid \
+  --jq '{number,url,state,base_branch:.baseRefName,head_branch:.headRefName,head_sha:.headRefOid}'
+
 # assign_reviewer — request or re-request a human reviewer
 gh pr edit N -R $R --add-reviewer REVIEWER
 

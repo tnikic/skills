@@ -12,6 +12,9 @@ Adapters expose these operations conceptually:
 |-----------|-------|-----------------|
 | `create_pr` | title, body, base, head, labels, reviewers | PR number, URL, base branch, head branch, head SHA, state |
 | `get_pr` | PR number | the same PR metadata, including the current head SHA |
+| `find_pr` | open head branch | zero or one matching PR with the normalized metadata |
+| `update_pr` | PR number, title, body, labels | updated PR metadata, including the current head SHA |
+| `retarget_pr` | PR number, base branch | updated PR metadata with the new base branch |
 | `assign_reviewer` | PR number, reviewer | updated reviewer assignment |
 | `list_review_comments` | PR number, optional cursor | comment ID, author, body, timestamp, and processed state |
 | `reply_and_mark_processed` | PR number, comment or discussion ID, reply, batch ID | a tracker reply containing the audit marker |

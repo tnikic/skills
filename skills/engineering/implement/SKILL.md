@@ -48,12 +48,17 @@ Assign the issue to @me to claim it.
 
 Create or adopt the Conventional Branch before editing tracked files:
 
-- Select the per-ticket or explicitly combined form from the shared [delivery contracts](../../shared/pr-delivery-contracts.md), then create or adopt that branch.
-- Derive `<type>` from the ticket's dominant commit type, using `chore` when no type is declared. Use the spec slug as the lowercase kebab-case description.
-- If the current branch already matches the documented name, adopt it. Otherwise create or switch to the documented branch before continuing.
+- Read the originating spec delivery mode from the shared [delivery contracts](../../shared/pr-delivery-contracts.md) before selecting the branch. Per-ticket delivery is the default; use the combined form only when the spec explicitly opts into `delivery: combined`, or the stacked form when it explicitly opts into `delivery: stacked`.
+- Derive `<type>` from the ticket's dominant commit type, using `chore` when no type is declared. In combined mode, derive `<type>` once from the spec's dominant commit type so every ticket uses the same branch. Use the spec slug as the lowercase kebab-case description.
+- For the default per-ticket mode, if the current branch already matches `<type>/<ticket-number>-<spec-slug>`, adopt it. Otherwise create or switch to that branch before continuing.
+- For `delivery: combined`, use one `<type>/<spec-slug>` branch for every ticket in the spec.
+- Adopt the existing combined branch when present and keep its PR open.
+- Deliver later tickets with incremental pushes instead of creating new ticket branches or PRs.
+- For `delivery: stacked`, retain the per-ticket branch name.
+- The first ticket in the spec's declared order uses the repository default branch as `base`.
+- Each later ticket uses the preceding ticket's branch as the previous stack branch. Retarget the PR through the forge skill when that predecessor merges to the default branch; do not implement stack ordering, merge, or rebase behavior in this workflow.
 
-The default path is one per-ticket branch and one PR for this ticket. Use the
-combined form only when the spec explicitly opts into combined delivery.
+The default path is one per-ticket branch and one PR for this ticket. Combined and stacked paths are opt-in and leave the default path unchanged.
 
 Use TDD at pre-agreed seams. Run the project's standard targets for static analysis alongside single test files as you go — see [`command-runner.md`](../../shared/command-runner.md) for detection and target names. Run the local gates in this order:
 
@@ -100,7 +105,8 @@ Render the PR body from the shared [PR template](../../shared/pr-template.md):
 1. State the ticket's user-visible purpose in `What this does`.
 2. List the resulting implementation changes in `Changes`.
 3. Mirror every ticket acceptance criterion without changing its wording.
-4. Add `Closes #N` as the final relationship footer.
+4. Add `Closes #N` as the final relationship footer. In combined mode, add one
+   footer for each ticket carried by the shared PR.
 
 Resolve the ticket's declared review impact, defaulting to `normal` when it is
 omitted. Apply the declared `impact` value, defaulting to `impact:normal`, as
@@ -109,11 +115,19 @@ the PR label. Impact is review triage only and never gates the handoff.
 Require `HUMAN_REVIEWER` as explicit workflow input. Read it from the invocation context or ask the user. If it is absent, keep the ticket open and
 assigned until the user provides it. Never substitute the agent identity for the human reviewer.
 
-Create one PR through the matching forge skill's `create_pr` recipe, using the
-current branch as `head`, the repository default branch as `base`, the
-provisional `[<spec-slug> <n>/<N>] <summary>` title form, and the rendered PR
-body. The recipe must return the PR number, URL, base and head branches,
-current head SHA, and open state.
+Create or update one PR through the matching forge skill's `find_pr`, `create_pr`,
+or `update_pr` recipe.
+Use the current branch as `head`, the repository default branch as `base` for
+per-ticket and combined delivery, or the previous stack branch as `base` for
+stacked delivery. Use the provisional `[<spec-slug> <n>/<N>] <summary>` title form
+and the rendered PR body. In combined mode, call `find_pr` by the shared head
+branch before creating; if one open PR exists, read its body and all tickets in
+the spec's declared order, render the cumulative changes, criteria, and
+`Closes #N` footers, then use `update_pr` and push incrementally instead of
+opening another PR. More than one match is an error. In stacked mode, use
+`retarget_pr` when the predecessor merges to the default branch. Each recipe
+must return the PR number, URL, base and head branches, current head SHA, and
+open state.
 
 Pass the PR number and current head SHA to the exact-head readiness workflow.
 It discovers required checks through `discover_required_checks`, waits within

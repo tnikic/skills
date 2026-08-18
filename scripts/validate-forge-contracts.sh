@@ -35,8 +35,8 @@ assert_file "$contract"
 assert_file "$github_skill"
 assert_file "$gitlab_skill"
 
-for operation in create_pr get_pr assign_reviewer list_review_comments \
-  reply_and_mark_processed discover_required_checks status_for_head; do
+for operation in create_pr get_pr find_pr update_pr retarget_pr assign_reviewer \
+  list_review_comments reply_and_mark_processed discover_required_checks status_for_head; do
   assert_contains "$contract" "\`$operation\`"
   assert_contains "$github_skill" "$operation"
   assert_contains "$gitlab_skill" "$operation"
