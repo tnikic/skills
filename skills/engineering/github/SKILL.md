@@ -120,8 +120,13 @@ gh pr view "$PR_URL" -R $R --json number,url,state,headRefName,baseRefName,headR
   --jq '{number,url,state,base_branch:.baseRefName,head_branch:.headRefName,head_sha:.headRefOid}'
 gh pr view N -R $R --json number,url,state,headRefName,baseRefName,headRefOid
 
-# get_pr — headRefOid is the exact head SHA used for readiness
-gh pr view N -R $R --json number,url,state,headRefName,baseRefName,headRefOid,reviewRequests
+# get_pr — return normalized metadata; head_sha is the exact value used for readiness
+gh pr view N -R $R --json number,url,state,headRefName,baseRefName,headRefOid,body,reviewRequests \
+  --jq '{number,url,state,base_branch:.baseRefName,head_branch:.headRefName,head_sha:.headRefOid,body,reviewRequests}'
+
+# list_open_prs — return normalized metadata for every open PR without a page cap
+gh api "/repos/$R/pulls?state=open&per_page=100" --paginate \
+  --jq '.[] | {number,url:.html_url,state,base_branch:.base.ref,head_branch:.head.ref,head_sha:.head.sha,body}'
 
 # find_pr — find the open PR for a combined head branch
 gh pr list -R $R --head HEADBRANCH --state open \
@@ -145,12 +150,24 @@ gh pr edit N -R $R --add-reviewer REVIEWER
 # list_review_comments — include inline review comments and PR conversation comments
 gh api "/repos/$R/pulls/N/comments?per_page=100" --paginate
 gh api "/repos/$R/issues/N/comments?per_page=100" --paginate
+# Resolve workflow_author from the authenticated account before classification.
+gh api user --jq '.login'
+# Normalize each returned comment with comment_id=.id, author=.user.login,
+# body=.body, timestamp=.created_at, processed=<audit rule>, and discussion_id
+# equal to the root ID reached by walking each .in_reply_to_id chain, otherwise .id. For issue comments
+# without native threads, match processed markers by the listed comment IDs.
 
 # reply_and_mark_processed — reply to an inline comment or add a PR-thread marker
 gh api --method POST "/repos/$R/pulls/N/comments/COMMENT_ID/replies" \
-  -f body="Reply [review-analysis processed:$BATCH_ID]"
+  -f body="Processed comment IDs: COMMENT_ID\nReply [review-analysis processed:$BATCH_ID]"
 gh api --method POST "/repos/$R/issues/N/comments" \
-  -f body="Reply [review-analysis processed:$BATCH_ID]"
+  -f body="Processed comment IDs: COMMENT_ID\nReply [review-analysis processed:$BATCH_ID]"
+
+# reply — reply without changing processed state (used for clarification)
+gh api --method POST "/repos/$R/pulls/N/comments/COMMENT_ID/replies" \
+  -f body="[review-analysis clarification:$BATCH_ID]\nClarification comment IDs: COMMENT_ID\nQuestion"
+gh api --method POST "/repos/$R/issues/N/comments" \
+  -f body="[review-analysis clarification:$BATCH_ID]\nClarification comment IDs: COMMENT_ID\nQuestion"
 
 # discover_required_checks — inspect protection and rulesets; absence means configuration-gap
 gh api -X GET "/repos/$R/branches/BASE_BRANCH/protection/required_status_checks" \
@@ -174,8 +191,12 @@ gh pr review N -R $R --comment -b "text"
 gh pr merge N -R $R --squash --delete-branch
 ```
 
-For each returned comment, set `processed=true` when its body contains the
-shared `[review-analysis processed:<batch-id>]` marker in tracker history.
+For each returned comment, set `processed=true` when its own body contains the
+shared `[review-analysis processed:<batch-id>]` marker, or when a batch reply
+explicitly lists that comment ID. A marker never processes unrelated comments
+in the same discussion. Accept either condition only when the comment or
+reply author equals workflow_author. Omit audit comments from the actionable review queue.
+Replies retain the root discussion ID for inline review threads.
 Map GitHub's check-runs and combined-status fields through the shared status
 matrix. Ruleset-only repositories are valid; return `configuration-gap` only
 when neither branch protection nor applicable ruleset requirements can be

@@ -120,7 +120,12 @@ glab mr view "$MR_URL" -R $R -F json \
 glab mr view N -R $R -F json
 
 # get_pr — the source SHA is the exact head SHA used for readiness
-glab mr view N -R $R -F json
+glab mr view N -R $R -F json \
+  --jq '{number:.iid,url:.web_url,state,base_branch:.target_branch,head_branch:.source_branch,head_sha:.sha,body:.description}'
+
+# list_open_prs — return normalized metadata for every open MR without a page cap
+glab api "projects/GROUP%2FREPO/merge_requests?state=opened&per_page=100" --paginate \
+  --jq '.[] | {number:.iid,url:.web_url,state,base_branch:.target_branch,head_branch:.source_branch,head_sha:(.sha // .diff_refs.head_sha),body:.description}'
 
 # find_pr — find the open MR for a combined source branch
 glab mr list -R $R --source-branch SOURCE_BRANCH -F json \
@@ -143,10 +148,24 @@ glab mr update N -R $R --reviewer REVIEWER
 # list_review_comments — include notes and discussion IDs
 glab mr note list N -R $R -F json
 glab api "projects/GROUP%2FREPO/merge_requests/N/notes?sort=asc&per_page=100" --paginate
+# Resolve workflow_author from the authenticated account before classification.
+glab api user | jq -r '.username'
+# Normalize each note with comment_id=.id, author=.author.username,
+# body=.body, timestamp=.created_at, processed=<audit rule>, and
+# discussion_id=.discussion_id. Use the comment ID when GitLab does not
+# provide a discussion ID.
 
-# reply_and_mark_processed — reply using the discussion ID returned above
+# reply_and_mark_processed — reply using a discussion ID, or create a note for a standalone comment
 glab mr note create N -R $R --reply DISCUSSION_ID \
-  -m "Reply [review-analysis processed:$BATCH_ID]"
+  -m "Processed comment IDs: COMMENT_ID\nReply [review-analysis processed:$BATCH_ID]"
+glab mr note create N -R $R \
+  -m "Processed comment IDs: COMMENT_ID\nReply [review-analysis processed:$BATCH_ID]"
+
+# reply — reply without changing processed state (used for clarification)
+glab mr note create N -R $R --reply DISCUSSION_ID \
+  -m "[review-analysis clarification:$BATCH_ID]\nClarification comment IDs: COMMENT_ID\nQuestion"
+glab mr note create N -R $R \
+  -m "[review-analysis clarification:$BATCH_ID]\nClarification comment IDs: COMMENT_ID\nQuestion"
 
 # discover_required_checks — pipeline success is the required project merge check
 glab api "projects/GROUP%2FREPO" | jq -r '.only_allow_merge_if_pipeline_succeeds'
@@ -167,8 +186,12 @@ glab mr note create N -R $R -m "text"
 glab mr merge N -R $R -s -d -y
 ```
 
-For each returned discussion, set `processed=true` when its notes contain the
-shared `[review-analysis processed:<batch-id>]` marker in tracker history.
+For each returned note, set `processed=true` when its own body contains the
+shared `[review-analysis processed:<batch-id>]` marker, or when a batch note
+explicitly lists that comment ID. A marker never processes unrelated notes in
+the same discussion. Accept either condition only when the note or audit
+author equals workflow_author. This rule also handles standalone notes because the
+audit note lists their original comment ID.
 Select the newest pipeline created for the requested SHA and map its state
 through the shared status matrix. Return `configuration-gap` when
 `only_allow_merge_if_pipeline_succeeds` is disabled or cannot be read.
