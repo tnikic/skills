@@ -289,6 +289,26 @@ assert_order "$implement_skill" \
   'maps `status_for_head` success for that exact SHA' \
   'Assign `HUMAN_REVIEWER` and request review'
 assert_not_contains "$implement_skill" 'Run Coverage review'
+assert_contains "$implement_skill" 'Pre-PR Implementation Loop Policy'
+assert_contains "$implement_skill" 'post-PR `review-analysis` batching remains out of scope'
+assert_contains "$implement_skill" 'batch all clear-cut findings from one review pass'
+assert_contains "$implement_skill" 'Mechanical corrections stay in the current loop'
+assert_contains "$implement_skill" 'Semantic or user-directed changes start a new Standards/Spec review'
+assert_contains "$implement_skill" 're-enters at the narrowest applicable gate'
+assert_contains "$implement_skill" 'unchanged checks remain valid'
+assert_contains "$implement_skill" 'does not weaken required quality, documentation, security, or final test gates'
+assert_contains "$implement_skill" 'A `check` failure is corrected and rechecked.'
+assert_contains "$implement_skill" 'A failed corrective `check` is corrected and rechecked'
+assert_contains "$implement_skill" 'A `test` failure is corrected and the test is rerun.'
+assert_contains "$implement_skill" 'A commit-gate failure is corrected and the commit gate is rerun.'
+assert_order "$implement_skill" \
+  'The sequence above is one bounded pass:' \
+  '1. Run the initial `check`.' \
+  '2. Run one Standards/Spec review.' \
+  '3. The correction step must batch all clear-cut findings' \
+  '4. Run one corrective `check` for the batch.' \
+  '5. Run the final `test`.' \
+  '6. Run the commit gate.'
 assert_order "$implement_skill" \
   'Create or adopt the Conventional Branch before editing tracked files' \
   '1. Run the project `check` target.' \
