@@ -1,5 +1,8 @@
 .PHONY: check test contracts gitleaks links taxonomy help
 
+MISE ?= $(shell command -v mise 2>/dev/null)
+MISE_EXEC = $(if $(strip $(MISE)),$(MISE) exec --,)
+
 check: gitleaks links taxonomy contracts
 	@echo "check: ok"
 
@@ -15,10 +18,10 @@ contracts:
 	bash scripts/validate-pr-contracts.sh
 
 gitleaks:
-	gitleaks detect --no-git
+	$(MISE_EXEC) gitleaks detect --no-git
 
 links:
-	lychee --offline --no-progress --exclude-path 'skills/generated/' skills
+	$(MISE_EXEC) lychee --offline --no-progress --exclude-path 'skills/generated/' skills
 
 taxonomy:
 	@valid=$$(awk -F'|' '/^\| `[a-z]+` \| `[a-z-]+` \|/ {gsub(/[ `]/, "", $$2); gsub(/[ `]/, "", $$3); print $$2 ":" $$3}' skills/shared/label-taxonomy.md); \

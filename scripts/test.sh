@@ -48,6 +48,66 @@ grep -Fq -- './scripts/test.sh' <<<"$make_test_recipe" ||
 
 temporary_dir="$(mktemp -d)"
 trap 'rm -rf "$temporary_dir"' EXIT
+
+managed_bin="$temporary_dir/managed-bin"
+runner_bin="$temporary_dir/runner-bin"
+managed_tool_log="$temporary_dir/managed-tools.log"
+mise_log="$temporary_dir/mise.log"
+mkdir -p "$managed_bin" "$runner_bin"
+
+for tool in gitleaks lychee; do
+  printf '%s\n' \
+    '#!/usr/bin/env bash' \
+    'set -euo pipefail' \
+    'printf "%s %s\n" "$0" "$*" >> "$TOOL_LOG"' \
+    > "$managed_bin/$tool"
+  chmod +x "$managed_bin/$tool"
+done
+
+printf '%s\n' \
+  '#!/usr/bin/env bash' \
+  'set -euo pipefail' \
+  'printf "%s\n" "$*" >> "$MISE_LOG"' \
+  '[ "$1" = exec ] && [ "$2" = -- ] || exit 1' \
+  'shift 2' \
+  'PATH="$MANAGED_BIN:$PATH" "$@"' \
+  > "$runner_bin/mise"
+chmod +x "$runner_bin/mise"
+
+if ! PATH="$runner_bin:/usr/bin:/bin" MANAGED_BIN="$managed_bin" MISE_LOG="$mise_log" TOOL_LOG="$managed_tool_log" \
+  make -f "$makefile" check >/dev/null 2>&1; then
+  fail 'check target could not run tools supplied by mise'
+fi
+grep -Fq -- 'exec -- gitleaks detect --no-git' "$mise_log" ||
+  fail 'check target did not invoke gitleaks through mise'
+grep -Fq -- 'exec -- lychee --offline --no-progress --exclude-path' "$mise_log" ||
+  fail 'check target did not invoke lychee through mise'
+grep -Fq -- "$managed_bin/gitleaks" "$managed_tool_log" ||
+  fail 'mise did not supply gitleaks to check'
+grep -Fq -- "$managed_bin/lychee" "$managed_tool_log" ||
+  fail 'mise did not supply lychee to check'
+
+direct_bin="$temporary_dir/direct-bin"
+direct_tool_log="$temporary_dir/direct-tools.log"
+mkdir -p "$direct_bin"
+for tool in gitleaks lychee; do
+  printf '%s\n' \
+    '#!/usr/bin/env bash' \
+    'set -euo pipefail' \
+    'printf "%s %s\n" "$0" "$*" >> "$TOOL_LOG"' \
+    > "$direct_bin/$tool"
+  chmod +x "$direct_bin/$tool"
+done
+
+if ! PATH="$direct_bin:/usr/bin:/bin" TOOL_LOG="$direct_tool_log" \
+  make -f "$makefile" MISE= check >/dev/null 2>&1; then
+  fail 'check target could not run without mise'
+fi
+grep -Fq -- "$direct_bin/gitleaks" "$direct_tool_log" ||
+  fail 'fallback check did not run gitleaks directly'
+grep -Fq -- "$direct_bin/lychee" "$direct_tool_log" ||
+  fail 'fallback check did not run lychee directly'
+
 if missing_suite_output="$(cd "$temporary_dir" && make -f "$makefile" test 2>&1)"; then
   fail 'missing test suite unexpectedly passed'
 fi
