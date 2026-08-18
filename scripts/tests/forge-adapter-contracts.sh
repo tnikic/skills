@@ -46,6 +46,9 @@ assert_adapter_find_pr "$gitlab_skill" \
   '[{"iid":55},{"iid":59}]'
 assert_contains_many "$github_skill" \
   'gh api -X GET "/repos/$R/commits/$HEAD_SHA/check-runs?per_page=100"' \
+  'list_open_prs' \
+  'headRefOid,body' \
+  'pulls?state=open&per_page=100' \
   'configuration-gap' \
   'native stack behavior' \
   'gh pr list -R $R --head HEADBRANCH --state open' \
@@ -75,12 +78,16 @@ assert_contains_many "$gitlab_skill" \
   "--jq '{number:.iid,url:.web_url,state,base_branch:.target_branch,head_branch:.source_branch,head_sha:.sha}'" \
   'glab mr update N -R $R --reviewer REVIEWER' \
   'pipelines?sha=$HEAD_SHA' \
+  'list_open_prs' \
+  'merge_requests?state=opened&per_page=100' \
+  'head_sha:(.sha // .diff_refs.head_sha)' \
   'configuration-gap' \
   'native stack behavior' \
   'glab mr list -R $R --source-branch SOURCE_BRANCH -F json' \
   'if length > 1 then error' \
   'elif length == 0 then empty' \
   'glab mr update N -R $R --target-branch "$BASE_BRANCH"' \
+  'reply — reply without changing processed state' \
   'review-analysis processed:$BATCH_ID'
 
 assert_contains_many "$forge_contract" \
@@ -99,6 +106,27 @@ assert_contains_many "$forge_contract" \
   '`timeout`' \
   '`configuration-gap`' \
   'review-analysis processed:'
+assert_contains "$forge_contract" 'discussion ID (root discussion ID, or comment ID when no thread exists)'
+assert_contains "$forge_contract" 'Processed comment IDs'
+assert_contains "$forge_contract" 'authenticated workflow identity'
+assert_contains "$forge_contract" 'clarification:<batch-id>'
+assert_contains "$github_skill" 'discussion_id'
+assert_contains "$github_skill" 'walking each .in_reply_to_id chain'
+assert_contains "$github_skill" 'author=.user.login'
+assert_contains "$github_skill" 'gh api user --jq'
+assert_contains "$github_skill" '.login'
+assert_contains "$github_skill" 'timestamp=.created_at'
+assert_contains "$github_skill" 'base_branch:.baseRefName'
+assert_contains "$github_skill" 'processed markers by the listed comment IDs'
+assert_contains "$github_skill" 'Omit audit comments from the actionable review queue'
+assert_contains "$gitlab_skill" 'discussion_id=.discussion_id'
+assert_contains "$gitlab_skill" 'author=.author.username'
+assert_contains "$gitlab_skill" 'glab api user | jq -r'
+assert_contains "$github_skill" 'reply — reply without changing processed state'
+assert_contains "$gitlab_skill" 'reply — reply without changing processed state'
+assert_contains "$gitlab_skill" '.username'
+assert_contains "$gitlab_skill" 'timestamp=.created_at'
+assert_contains "$gitlab_skill" 'standalone comment'
 
 bash "$repo_root/scripts/validate-forge-contracts.sh"
 bash "$repo_root/scripts/validate-pr-contracts.sh"

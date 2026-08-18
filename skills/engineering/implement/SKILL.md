@@ -46,6 +46,21 @@ Assign the issue to @me to claim it.
 
 ## 2. Implement and prepare the change
 
+### Review-update invocation
+
+`review-analysis` may invoke this skill with an explicit ticket, open PR,
+existing head branch, and approved review feedback. Read the ticket and adopt that existing branch before editing. Keep the linked ticket open and assigned, and keep the existing PR as the delivery boundary. After the universal commit
+gate, push the existing branch and use the forge `update_pr` recipe with the
+current head; do not create a second PR. Return the updated PR metadata to `review-analysis`,
+which then runs the exact-head readiness flow.
+
+This review-update path is authoritative: after adopting the supplied branch,
+skip the generic branch derivation below even when its name differs from the
+derived Conventional Branch. The existing PR branch must not be replaced.
+
+*Completion: approved feedback is implemented on the supplied branch and
+existing PR, with ticket state unchanged.*
+
 Create or adopt the Conventional Branch before editing tracked files:
 
 - Read the originating spec delivery mode from the shared [delivery contracts](../../shared/pr-delivery-contracts.md) before selecting the branch. Per-ticket delivery is the default; use the combined form only when the spec explicitly opts into `delivery: combined`, or the stacked form when it explicitly opts into `delivery: stacked`.

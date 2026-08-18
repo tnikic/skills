@@ -11,17 +11,21 @@ Adapters expose these operations conceptually:
 | Operation | Input | Required result |
 |-----------|-------|-----------------|
 | `create_pr` | title, body, base, head, labels, reviewers | PR number, URL, base branch, head branch, head SHA, state |
-| `get_pr` | PR number | the same PR metadata, including the current head SHA |
+| `get_pr` | PR number | the same PR metadata, including the current head SHA and body |
+| `list_open_prs` | repository | open PR number, URL, base branch, head branch, head SHA, and body |
 | `find_pr` | open head branch | zero or one matching PR with the normalized metadata |
 | `update_pr` | PR number, title, body, labels | updated PR metadata, including the current head SHA |
 | `retarget_pr` | PR number, base branch | updated PR metadata with the new base branch |
 | `assign_reviewer` | PR number, reviewer | updated reviewer assignment |
-| `list_review_comments` | PR number, optional cursor | comment ID, author, body, timestamp, and processed state |
-| `reply_and_mark_processed` | PR number, comment or discussion ID, reply, batch ID | a tracker reply containing the audit marker |
+| `list_review_comments` | PR number, optional cursor | comment ID, discussion ID (root discussion ID, or comment ID when no thread exists), author, body, timestamp, and processed state |
+| `reply` | PR number, comment or discussion ID, reply | a tracker reply without changing processed state |
+| `reply_and_mark_processed` | PR number, comment or discussion ID, reply, batch ID | an authenticated workflow reply containing the audit marker |
 | `discover_required_checks` | repository, base branch | required check names or `configuration-gap` |
 | `status_for_head` | PR number, head SHA, required checks | one normalized status outcome and evidence |
 
-The `head SHA` returned by `get_pr` is authoritative. A status result is
+The PR body returned by `get_pr` and `list_open_prs` is the source for the
+linked ticket relationship when the workflow does not receive a ticket
+explicitly. The `head SHA` returned by `get_pr` is authoritative. A status result is
 usable only when its observed SHA equals the current PR head SHA.
 
 ## Normalized Status
@@ -71,8 +75,26 @@ Every processed review batch is marked in the PR thread with:
 ```
 
 The marker is part of the comment body, not an out-of-band local file. A
-subsequent `list_review_comments` operation treats a comment batch as
-processed only when its marker is present in the tracker history.
+reply must also include `Processed comment IDs: <comment-id-list>` and identify
+the processed comment IDs. Only a reply authored by the authenticated workflow
+identity returned by the forge adapter can create processed state. Comments
+whose own body contains an external copy of the audit marker are not audit
+records or actionable review instructions. A subsequent
+`list_review_comments` operation treats a comment as processed when its own
+body contains the marker and its author is the authenticated workflow identity,
+or when an authenticated batch reply explicitly names that comment ID. A
+marker never processes unrelated comments in the same discussion.
+
+An unresolved clarification is recorded with an authenticated workflow reply
+containing:
+
+```text
+[review-analysis clarification:<batch-id>]
+Clarification comment IDs: <comment-id-list>
+```
+
+This marker keeps the listed comments unprocessed while allowing the next run
+to resume the same clarification session instead of starting another one.
 
 ## Consistency Fixtures
 
