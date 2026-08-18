@@ -67,6 +67,10 @@ gh issue list -R $R --search 'is:open no:assignee sort:created-asc' --json numbe
 # comment
 gh issue comment N -R $R -b "text"
 
+# edit an issue comment — read it, change only satisfied markers, then send the complete body
+gh api "/repos/$R/issues/comments/COMMENT_ID" --jq '.body'
+gh api --method PATCH "/repos/$R/issues/comments/COMMENT_ID" -f body="COMPLETE_UPDATED_BODY"
+
 # edit — labels and assignees are additive; the label must exist first
 gh issue edit N -R $R --title "New title" --body "New body"
 gh issue edit N -R $R --add-label scope:name --remove-label scope:name

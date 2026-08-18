@@ -56,13 +56,15 @@ If the review comes back clean, report it briefly.
 
 Read the issue body and all comments for unchecked boxes (`- [ ]` or `* [ ]`). For each, judge whether the implementation satisfied it. Presume satisfied unless you know a criterion was skipped, blocked, or impossible.
 
-For each satisfied criterion, replace `- [ ]` with `- [x]` and update the issue body via the forge skill's issue-edit recipe. For checkboxes found in comments, post a comment listing which criteria were satisfied. Leave unsatisfied criteria unchecked.
+Treat the issue body as the canonical source for body checkboxes. Update the original issue body in place via the forge skill's issue-edit recipe, preserving all unrelated text and replacing only satisfied `- [ ]` or `* [ ]` markers with checked markers. Record each criterion only in its source container.
+
+For checkboxes that exist only in comments, edit the original comment in place via the forge skill's comment-edit recipe, preserving all unrelated text and replacing only satisfied markers. This keeps comment-only criteria in their source comment while body criteria remain in the issue body. Leave unsatisfied criteria unchecked.
 
 If any criterion is unsatisfied, report which ones and why to the user. Offer to create follow-up tickets via the forge skill's issue-create recipe, following the template in [`issue-template.md`](../../shared/issue-template.md). Apply the same labels as the current issue. Parent each follow-up to the current issue's parent (if it has one); otherwise create it standalone. Add a comment on the current issue linking each follow-up.
 
 If neither the issue body nor comments contain any checkboxes, skip this step.
 
-*Completion: every satisfied criterion checked off in the issue body; unsatisfied criteria reported to the user with follow-up tickets offered.*
+*Completion: every satisfied body criterion is checked in the issue body, every satisfied comment-only criterion is checked in its source comment, and unsatisfied criteria are reported to the user with follow-up tickets offered.*
 
 ## 4. Commit, push, and close
 

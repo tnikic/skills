@@ -8,7 +8,7 @@ compatibility: Requires the glab CLI (glab-cli/glab) and GitLab authentication.
 
 Command recipes for every GitLab operation the pipeline needs. Run the recipe as written — the agent's thinking belongs to the result, not the syntax.
 
-> **Status**: recipes were compiled from `glab --help` and follow the GitHub equivalents 1:1, but were not exercised against a live GitLab instance. If a recipe fails, fall back to `glab <command> --help` and fix the invocation.
+> **Status**: CLI recipes were compiled from `glab --help`; raw note operations follow the [GitLab Notes REST API](https://docs.gitlab.com/api/notes/) and were not exercised against a live GitLab instance. If a recipe fails, fall back to `glab <command> --help` or the linked API reference and fix the invocation.
 
 ## Setup and auth
 
@@ -58,6 +58,7 @@ glab issue create -R $R -t "Title" -d "body" -l scope:name -l scope:name -y
 # view — comments and activity
 glab issue view N -R $R --comments
 glab issue view N -R $R -O json
+glab api "projects/GROUP%2FREPO/issues/N/notes?activity_filter=only_comments" --paginate
 
 # list — state filters; combine with --search, --label, --not-label, --assignee
 glab issue list -R $R -O json
@@ -68,6 +69,9 @@ glab issue list -R $R --all --not-assignee login --order created_at --sort asc -
 
 # comment
 glab issue note N -R $R -m "text"
+
+# edit an issue note — read it, change only satisfied markers, then send the complete body
+glab api -X PUT "projects/GROUP%2FREPO/issues/N/notes/COMMENT_ID" -f body="COMPLETE_UPDATED_BODY"
 
 # update — labels are replaced wholesale; assignees replace unless prefixed with +/-
 glab issue update N -R $R -t "New title" -d "New body"

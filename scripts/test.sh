@@ -5,6 +5,9 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 makefile="$repo_root/Makefile"
 workflow="$repo_root/.github/workflows/ci.yml"
 readme="$repo_root/README.md"
+implement_skill="$repo_root/skills/engineering/implement/SKILL.md"
+github_skill="$repo_root/skills/engineering/github/SKILL.md"
+gitlab_skill="$repo_root/skills/engineering/gitlab/SKILL.md"
 
 fail() {
   printf 'test: %s\n' "$1" >&2
@@ -21,6 +24,12 @@ assert_contains() {
   grep -Fq -- "$text" "$file" || fail "$file is missing $text"
 }
 
+assert_not_contains() {
+  local file="$1"
+  local text="$2"
+  ! grep -Fq -- "$text" "$file" || fail "$file unexpectedly contains $text"
+}
+
 assert_job_runs() {
   local job="$1"
   local command="$2"
@@ -35,6 +44,9 @@ assert_job_runs() {
 assert_file "$makefile"
 assert_file "$workflow"
 assert_file "$readme"
+assert_file "$implement_skill"
+assert_file "$github_skill"
+assert_file "$gitlab_skill"
 
 make_targets="$(make -qp -f "$makefile" 2>/dev/null || true)"
 grep -Eq '^check($|[[:space:]]*:)' <<<"$make_targets" ||
@@ -120,6 +132,21 @@ assert_job_runs test 'make test'
 assert_contains "$readme" '## Quality gates'
 assert_contains "$readme" 'authoritative merge gate'
 assert_contains "$readme" 'required status checks'
+assert_contains "$implement_skill" 'Treat the issue body as the canonical source for body checkboxes.'
+assert_contains "$implement_skill" 'Update the original issue body in place'
+assert_contains "$implement_skill" 'preserving all unrelated text and replacing only satisfied'
+assert_contains "$implement_skill" 'Record each criterion only in its source container.'
+assert_contains "$implement_skill" 'edit the original comment in place via the forge skill'
+assert_contains "$implement_skill" 'comment-edit recipe'
+assert_contains "$implement_skill" 'body criteria remain in the issue body'
+assert_contains "$implement_skill" 'every satisfied comment-only criterion is checked in its source comment'
+assert_not_contains "$implement_skill" 'leave the source comment unchanged'
+assert_not_contains "$implement_skill" 'post one concise comment listing the satisfied criteria and their source comment'
+assert_not_contains "$implement_skill" 'For each satisfied criterion, replace `- [ ]` with `- [x]` and update the issue body via the forge skill'
+assert_contains "$github_skill" 'gh api "/repos/$R/issues/comments/COMMENT_ID" --jq '\''.body'\'''
+assert_contains "$github_skill" 'gh api --method PATCH "/repos/$R/issues/comments/COMMENT_ID" -f body="COMPLETE_UPDATED_BODY"'
+assert_contains "$gitlab_skill" 'glab api "projects/GROUP%2FREPO/issues/N/notes?activity_filter=only_comments" --paginate'
+assert_contains "$gitlab_skill" 'glab api -X PUT "projects/GROUP%2FREPO/issues/N/notes/COMMENT_ID" -f body="COMPLETE_UPDATED_BODY"'
 
 bash "$repo_root/scripts/validate-pr-contracts.sh"
 printf 'test: ok\n'
