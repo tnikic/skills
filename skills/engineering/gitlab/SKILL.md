@@ -100,11 +100,41 @@ glab api "projects/GROUP%2FREPO/issues/N/links"
 
 GitLab treats "blocked" as a workflow signal, not a hard gate — closing a blocker does not auto-close the blocked issue.
 
-## Merge requests
+## Merge Requests And Status
+
+Workflow skills read the normalized operations and outcomes in
+[`forge-pr-status-contract.md`](../../shared/forge-pr-status-contract.md) when
+creating or updating merge requests, assigning reviewers, processing comments,
+or polling required checks.
+These recipes are the GitLab adapter: they preserve the merge request SHA and
+map GitLab responses to the shared outcomes instead of making workflow
+decisions.
 
 ```bash
-# create — source branch must be pushed; -b is the target branch
-glab mr create -R $R -t "Title" -d "body" -s SOURCE_BRANCH -b main -l scope:name --remove-source-branch -y
+# create_pr — source branch must be pushed; use the declared impact or `normal` when absent
+glab mr create -R $R -t "Title" -d "body" -s SOURCE_BRANCH -b main \
+  -l impact:$IMPACT --reviewer REVIEWER -y
+glab mr view N -R $R -F json
+
+# get_pr — the source SHA is the exact head SHA used for readiness
+glab mr view N -R $R -F json
+
+# assign_reviewer — request or replace a human reviewer
+glab mr update N -R $R --reviewer REVIEWER
+
+# list_review_comments — include notes and discussion IDs
+glab mr note list N -R $R -F json
+glab api "projects/GROUP%2FREPO/merge_requests/N/notes?sort=asc&per_page=100" --paginate
+
+# reply_and_mark_processed — reply using the discussion ID returned above
+glab mr note create N -R $R --reply DISCUSSION_ID \
+  -m "Reply [review-analysis processed:$BATCH_ID]"
+
+# discover_required_checks — pipeline success is the required project merge check
+glab api "projects/GROUP%2FREPO" --jq '.only_allow_merge_if_pipeline_succeeds'
+
+# status_for_head — query pipelines for the exact SHA from get_pr
+glab api "projects/GROUP%2FREPO/pipelines?sha=$HEAD_SHA&per_page=100"
 
 # list / view
 glab mr list -R $R -F json
@@ -113,11 +143,22 @@ glab mr view N -R $R -F json
 
 # approve / comment
 glab mr approve N -R $R
-glab mr note N -R $R -m "text"
+glab mr note create N -R $R -m "text"
 
 # merge — squash keeps history clean; -d removes the source branch
 glab mr merge N -R $R -s -d -y
 ```
+
+For each returned discussion, set `processed=true` when its notes contain the
+shared `[review-analysis processed:<batch-id>]` marker in tracker history.
+Select the newest pipeline created for the requested SHA and map its state
+through the shared status matrix. Return `configuration-gap` when
+`only_allow_merge_if_pipeline_succeeds` is disabled or cannot be read.
+Optional jobs remain evidence only; GitLab's required pipeline is normalized as
+the `pipeline` check.
+
+The adapter reports only the shared outcomes: `pending`, `success`, `failure`,
+`cancelled`, `stale`, `timeout`, and `configuration-gap`.
 
 ## Raw API escape hatch
 

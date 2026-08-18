@@ -102,11 +102,46 @@ gh issue view N -R $R --json parent,subIssues,blockedBy,blocking
 gh api "/repos/$R/issues/N/sub_issues" --paginate   # plain REST list of child issue numbers
 ```
 
-## Pull requests
+## Pull Requests And Status
+
+Workflow skills read the normalized operations and outcomes in
+[`forge-pr-status-contract.md`](../../shared/forge-pr-status-contract.md) when
+creating or updating PRs, assigning reviewers, processing comments, or polling
+required checks.
+These recipes are the GitHub adapter: they preserve the PR head SHA and map
+GitHub responses to the shared outcomes instead of making workflow decisions.
 
 ```bash
-# create — head branch must be pushed; base is the target branch
-gh pr create -R $R --title "Title" --body "body" --head HEADBRANCH --base main -l scope:name
+# create_pr — head branch must be pushed; use the declared impact or `normal` when absent
+gh pr create -R $R --title "Title" --body "body" --head HEADBRANCH --base main \
+  --label impact:$IMPACT --reviewer REVIEWER
+gh pr view N -R $R --json number,url,state,headRefName,baseRefName,headRefOid
+
+# get_pr — headRefOid is the exact head SHA used for readiness
+gh pr view N -R $R --json number,url,state,headRefName,baseRefName,headRefOid,reviewRequests
+
+# assign_reviewer — request or re-request a human reviewer
+gh pr edit N -R $R --add-reviewer REVIEWER
+
+# list_review_comments — include inline review comments and PR conversation comments
+gh api "/repos/$R/pulls/N/comments?per_page=100" --paginate
+gh api "/repos/$R/issues/N/comments?per_page=100" --paginate
+
+# reply_and_mark_processed — reply to an inline comment or add a PR-thread marker
+gh api --method POST "/repos/$R/pulls/N/comments/COMMENT_ID/replies" \
+  -f body="Reply [review-analysis processed:$BATCH_ID]"
+gh api --method POST "/repos/$R/issues/N/comments" \
+  -f body="Reply [review-analysis processed:$BATCH_ID]"
+
+# discover_required_checks — inspect protection and rulesets; absence means configuration-gap
+gh api -X GET "/repos/$R/branches/BASE_BRANCH/protection/required_status_checks" \
+  --jq '{required: .contexts}'
+gh api -X GET "/repos/$R/rulesets?per_page=100"
+gh api -X GET "/repos/$R/rulesets/RULESET_ID"
+
+# status_for_head — query checks for the exact SHA from get_pr
+gh api -X GET "/repos/$R/commits/$HEAD_SHA/check-runs?per_page=100"
+gh api -X GET "/repos/$R/commits/$HEAD_SHA/status?per_page=100"
 
 # list / view
 gh pr list -R $R --json number,title,state,labels,headRefName,baseRefName --limit 100
@@ -119,6 +154,16 @@ gh pr review N -R $R --comment -b "text"
 # merge — squash keeps history clean; --delete-branch removes head branch
 gh pr merge N -R $R --squash --delete-branch
 ```
+
+For each returned comment, set `processed=true` when its body contains the
+shared `[review-analysis processed:<batch-id>]` marker in tracker history.
+Map GitHub's check-runs and combined-status fields through the shared status
+matrix. Ruleset-only repositories are valid; return `configuration-gap` only
+when neither branch protection nor applicable ruleset requirements can be
+discovered. Optional checks remain evidence only.
+
+The adapter reports only the shared outcomes: `pending`, `success`, `failure`,
+`cancelled`, `stale`, `timeout`, and `configuration-gap`.
 
 ## Raw API escape hatch
 

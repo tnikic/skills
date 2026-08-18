@@ -9,6 +9,7 @@ implement_skill="$repo_root/skills/engineering/implement/SKILL.md"
 code_review_skill="$repo_root/skills/engineering/code-review/SKILL.md"
 github_skill="$repo_root/skills/engineering/github/SKILL.md"
 gitlab_skill="$repo_root/skills/engineering/gitlab/SKILL.md"
+forge_contract="$repo_root/skills/shared/forge-pr-status-contract.md"
 
 fail() {
   printf 'test: %s\n' "$1" >&2
@@ -62,6 +63,7 @@ assert_file "$implement_skill"
 assert_file "$code_review_skill"
 assert_file "$github_skill"
 assert_file "$gitlab_skill"
+assert_file "$forge_contract"
 
 make_targets="$(make -qp -f "$makefile" 2>/dev/null || true)"
 grep -Eq '^check($|[[:space:]]*:)' <<<"$make_targets" ||
@@ -196,6 +198,25 @@ assert_contains "$github_skill" 'gh api "/repos/$R/issues/comments/COMMENT_ID" -
 assert_contains "$github_skill" 'gh api --method PATCH "/repos/$R/issues/comments/COMMENT_ID" -f body="COMPLETE_UPDATED_BODY"'
 assert_contains "$gitlab_skill" 'glab api "projects/GROUP%2FREPO/issues/N/notes?activity_filter=only_comments" --paginate'
 assert_contains "$gitlab_skill" 'glab api -X PUT "projects/GROUP%2FREPO/issues/N/notes/COMMENT_ID" -f body="COMPLETE_UPDATED_BODY"'
+
+assert_contains "$forge_contract" '## Normalized Operations'
+assert_contains "$forge_contract" 'create_pr'
+assert_contains "$forge_contract" 'discover_required_checks'
+assert_contains "$forge_contract" 'status_for_head'
+for outcome in pending success failure cancelled stale timeout configuration-gap; do
+  assert_contains "$forge_contract" "\`$outcome\`"
+done
+assert_contains "$forge_contract" 'review-analysis processed:'
+assert_contains "$github_skill" 'gh api -X GET "/repos/$R/commits/$HEAD_SHA/check-runs?per_page=100"'
+assert_contains "$github_skill" 'configuration-gap'
+assert_contains "$github_skill" 'gh pr edit N -R $R --add-reviewer REVIEWER'
+assert_contains "$github_skill" 'review-analysis processed:$BATCH_ID'
+assert_contains "$gitlab_skill" 'glab mr update N -R $R --reviewer REVIEWER'
+assert_contains "$gitlab_skill" 'pipelines?sha=$HEAD_SHA'
+assert_contains "$gitlab_skill" 'configuration-gap'
+assert_contains "$gitlab_skill" 'review-analysis processed:$BATCH_ID'
+
+bash "$repo_root/scripts/validate-forge-contracts.sh"
 
 bash "$repo_root/scripts/validate-pr-contracts.sh"
 printf 'test: ok\n'

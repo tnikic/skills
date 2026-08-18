@@ -1,9 +1,9 @@
-.PHONY: check test contracts gitleaks links taxonomy help
+.PHONY: check test contracts forge-contracts gitleaks links taxonomy help
 
 MISE ?= $(shell command -v mise 2>/dev/null)
 MISE_EXEC = $(if $(strip $(MISE)),$(MISE) exec --,)
 
-check: gitleaks links taxonomy contracts
+check: gitleaks links taxonomy contracts forge-contracts
 	@echo "check: ok"
 
 test:
@@ -16,6 +16,9 @@ test:
 
 contracts:
 	bash scripts/validate-pr-contracts.sh
+
+forge-contracts:
+	bash scripts/validate-forge-contracts.sh
 
 gitleaks:
 	$(MISE_EXEC) gitleaks detect --no-git
