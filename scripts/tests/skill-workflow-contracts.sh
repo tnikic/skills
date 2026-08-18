@@ -6,7 +6,33 @@ TEST_CONCERN=skill-workflow
 source "$(dirname "${BASH_SOURCE[0]}")/test_helpers.sh"
 
 assert_file "$implement_skill"
+assert_file "$implement_skill_work"
+assert_file "$improve_skill"
+assert_file "$review_skill"
 assert_file "$code_review_skill"
+
+assert_contains_many "$implement_skill_work" \
+  'name: implement-skill' \
+  'disable-model-invocation: true' \
+  'writing-for-agents' \
+  '## 1. Establish the contract' \
+  '## 4. Verify'
+
+assert_contains_many "$improve_skill" \
+  'name: improve-skill' \
+  'disable-model-invocation: true' \
+  'writing-for-agents' \
+  '## 2. Explore the skill' \
+  '## 3. Present candidates' \
+  'Do not edit until the user picks a candidate.'
+
+assert_contains_many "$review_skill" \
+  'name: review-skill' \
+  'Standards' \
+  'Spec' \
+  'Coverage' \
+  'Use fresh parallel review agents' \
+  'Do not edit the skill'
 
 assert_contains_many "$implement_skill" \
   'Treat the issue body as the canonical source for body checkboxes.' \

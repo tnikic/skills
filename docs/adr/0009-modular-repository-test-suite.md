@@ -25,12 +25,12 @@ The selected design is the smallest durable improvement for this repository:
 
 ## Concern Map
 
-The former `scripts/test.sh` assertions map as follows:
+The original `scripts/test.sh` assertions map as follows:
 
 | Concern | Module | Preserved assertion groups |
 | --- | --- | --- |
 | Repository/Makefile | `scripts/tests/repository-contracts.sh` | Required files; `check` and `test` targets; `make test` wiring; mise and direct-tool execution; missing-suite diagnostics; README quality-gate references |
-| Skill/workflow | `scripts/tests/skill-workflow-contracts.sh` | `implement` checkbox ownership; issue selection and blocker state; code-review behavior |
+| Skill/workflow | `scripts/tests/skill-workflow-contracts.sh` | `implement` checkbox ownership; issue selection and blocker state; code-review behavior; existence and basic invocation/structure of `implement-skill` and `improve-skill` |
 
 The modules retain the old assertion order within each concern and use the
 same literal expectations. The former assertion locations are inventoried
@@ -45,7 +45,9 @@ the remaining modules before returning failure.
   tool assertions; 190-196 direct-tool fallback assertions; 199-203 missing
   suite assertions; 208-210 README quality-gate assertions.
 - Skill/workflow: former checkbox source and negative assertions, issue selection,
-  blocker-state fixtures, and code-review assertions.
+  blocker-state fixtures, and code-review assertions. Current additions also
+  check the dedicated skill-workflow files exist and retain their invocation
+  and writing-guide pointers.
 
 The repository suite also runs a temporary two-suite runner fixture: one
 failing concern must produce a concern-specific diagnostic, later concerns
