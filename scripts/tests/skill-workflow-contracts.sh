@@ -6,6 +6,7 @@ TEST_CONCERN=skill-workflow
 source "$(dirname "${BASH_SOURCE[0]}")/test_helpers.sh"
 
 assert_file "$implement_skill"
+assert_file "$readiness_script"
 assert_file "$code_review_skill"
 
 assert_unblocked_by_state() {
@@ -93,6 +94,116 @@ assert_contains_many "$implement_skill" \
   'previous stack branch as `base`' \
   'Retarget the PR through the forge skill' \
   'Post-merge parent check'
+
+assert_contains_many "$implement_skill" \
+  'Exact-head readiness workflow' \
+  '`scripts/pr-readiness.sh`' \
+  'get_pr' \
+  'current PR head SHA' \
+  'required-check set' \
+  'discover_required_checks' \
+  'configuration-gap' \
+  'PR_READINESS_TIMEOUT_SECONDS' \
+  '1800' \
+  'PR_READINESS_POLL_SECONDS' \
+  'defaulting to `1800` seconds (30' \
+  'The optional checks remain informational' \
+  'newer PR head' \
+  'deterministic, ticket-scoped failure' \
+  'repair_cycles < 2' \
+  'infrastructure, flaky, ambiguous, unrelated, and scope-expanding' \
+  'evidence' \
+  'leaves the PR open and not-ready'
+
+assert_contains_many "$implement_skill" \
+  'Initialize `repair_cycles` to zero' \
+  '| `pending` | Poll again until the deadline; then report `timeout`.' \
+  '| `success` | Continue only if the post-query `get_pr` SHA still matches' \
+  '| `failure` with a deterministic, ticket-scoped cause and `repair_cycles < 2`' \
+  '| `failure` with any other cause, or after two repair cycles' \
+  '| `stale` | Discard the result and poll again for the current SHA without repair.' \
+  '| `cancelled`, `timeout`, or `configuration-gap`' \
+  'Stop without repair' \
+  'Every non-success path leaves the PR open and not-ready'
+
+for outcome in pending success failure cancelled stale timeout configuration-gap; do
+  assert_contains "$implement_skill" "\`$outcome\`"
+done
+
+readiness_table="$(awk '
+  /^\| Result \| Transition \|$/ { in_table = 1 }
+  in_table { print }
+  in_table && /^$/ { exit }
+' "$implement_skill")"
+[ -n "$readiness_table" ] || fail 'readiness transition table is missing'
+assert_readiness_row() {
+  local row="$1"
+  grep -Fq -- "$row" <<< "$readiness_table" || fail "readiness table is missing $row"
+}
+assert_readiness_row '| `pending` | Poll again until the deadline; then report `timeout`. |'
+assert_readiness_row '| `success` | Continue only if the post-query `get_pr` SHA still matches; otherwise discard it as stale. |'
+assert_readiness_row '| `failure` with a deterministic, ticket-scoped cause and `repair_cycles < 2` | Increment `repair_cycles`, perform the bounded repair, then restart at `get_pr`. |'
+assert_readiness_row '| `failure` with any other cause, or after two repair cycles | Stop and summarize the failure evidence for the human. |'
+assert_readiness_row '| `stale` | Discard the result and poll again for the current SHA without repair. |'
+assert_readiness_row '| `cancelled`, `timeout`, or `configuration-gap` | Stop without repair and summarize the outcome and evidence. |'
+
+assert_readiness_transition() {
+  local expected="$1"
+  shift
+  local actual
+  actual="$(readiness_decision "$@")"
+  [ "$actual" = "$expected" ] ||
+    fail "readiness transition returned $actual, expected $expected"
+}
+
+readiness_decision() {
+  bash "$readiness_script" transition "$@" |
+    awk -F': ' '/^decision:/ && !found { print $2; found=1 }'
+}
+
+defaults_output="$(bash "$readiness_script" defaults)"
+grep -Fqx -- 'timeout_seconds: 1800' <<< "$defaults_output" ||
+  fail 'readiness timeout default is not exposed by the executable contract'
+grep -Fqx -- 'poll_seconds: 30' <<< "$defaults_output" ||
+  fail 'readiness poll default is not exposed by the executable contract'
+if bash "$readiness_script" defaults unexpected >/dev/null 2>&1; then
+  fail 'readiness defaults accepted an unexpected argument'
+fi
+missing_sha_output="$(bash "$readiness_script" transition success '' abc 0 false false check,test evidence 2>&1 || true)"
+grep -Fq -- 'error:' <<< "$missing_sha_output" || fail 'missing SHA error was not structured on stdout'
+assert_readiness_transition pending pending abc abc 0 false false check,test pending
+assert_readiness_transition timeout pending abc abc 0 true false check,test pending
+assert_readiness_transition success success abc abc 0 false false check,test all-passed
+assert_readiness_transition stale success abc def 0 false false check,test old-head
+assert_readiness_transition repair failure abc abc 0 false true check,test ticket-failure
+assert_readiness_transition repair failure abc abc 1 false true check,test ticket-failure
+assert_readiness_transition failure failure abc abc 2 false true check,test second-failure
+assert_readiness_transition failure failure abc abc 0 false false check,test human-failure
+assert_readiness_transition cancelled cancelled abc abc 0 false false check,test cancelled
+assert_readiness_transition stale stale abc abc 0 false false check,test stale
+assert_readiness_transition timeout timeout abc abc 0 false false check,test timeout
+assert_readiness_transition configuration-gap configuration-gap abc abc 0 false false none missing-protection
+[ "$(readiness_decision success abc def 0 false false check,test old-head):$(readiness_decision success def def 0 false false check,test all-passed)" = 'stale:success' ] ||
+  fail 'stale result did not refresh before success'
+[ "$(readiness_decision pending abc abc 0 false false check,test pending):$(readiness_decision pending abc abc 0 true false check,test pending)" = 'pending:timeout' ] ||
+  fail 'pending result did not end at the deadline'
+[ "$(readiness_decision failure abc abc 0 false true check,test ticket-failure):$(readiness_decision success def def 0 false false check,test repaired)" = 'repair:success' ] ||
+  fail 'repair did not restart readiness at the new head'
+[ "$(readiness_decision failure abc abc 1 false true check,test ticket-failure):$(readiness_decision failure abc abc 2 false true check,test second-failure)" = 'repair:failure' ] ||
+  fail 'repair cycle bound was not enforced'
+
+assert_order "$implement_skill" \
+  'get_pr' \
+  'discover_required_checks' \
+  'status_for_head' \
+  'Re-fetch the PR metadata' \
+  'ready-for-review'
+
+assert_contains_many "$forge_contract" \
+  'The caller must re-read `get_pr`' \
+  'observed SHA' \
+  'Optional checks never change' \
+  'required checks only'
 
 assert_order "$implement_skill" \
   'For `delivery: combined`, use one `<type>/<spec-slug>` branch' \

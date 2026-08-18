@@ -50,6 +50,11 @@ Optional checks are included as evidence but never change `success` or
 retry deterministic, ticket-scoped failures, but the adapter only reports the
 normalized outcome and evidence.
 
+The caller must re-read `get_pr` after each status query. It may accept a
+success result only when the result's observed SHA equals the current PR head
+SHA. If the head changed, the caller discards the result and queries again for
+the new SHA. Optional checks never change readiness; readiness uses required checks only.
+
 For GitHub, match required branch-protection contexts and ruleset checks by
 name against check-runs and combined-status contexts for the requested SHA.
 Missing required results remain `pending` until the wait window expires. For

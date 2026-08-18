@@ -153,12 +153,61 @@ opening another PR. More than one match is an error. In stacked mode, use
 must return the PR number, URL, base and head branches, current head SHA, and
 open state.
 
+### Exact-head readiness workflow
+
+The readiness workflow is the only authority for the ready-for-review state:
+
+Provider adapters feed the normalized outcome, current and observed SHAs, the
+required-check set, evidence, repair count, deadline state, and failure
+classification into
+`scripts/pr-readiness.sh`. Its transition result is the workflow decision;
+`defaults` exposes the configurable timeout and poll settings.
+The script evaluates one normalized poll; this workflow owns the adapter calls,
+poll interval, deadline, and restart at `get_pr` after a repair.
+
+1. Call `get_pr` and retain its returned head SHA as the current PR head. The
+   workflow must not use the branch name, the commit that created the PR, or a
+   status result from an earlier poll as a substitute.
+2. Call `discover_required_checks` for the PR base branch. A
+   `configuration-gap` is a non-success result: leave the PR open and
+   not-ready, keep the ticket assigned, and report the missing protection with
+   evidence.
+3. Wait with `PR_READINESS_TIMEOUT_SECONDS`, defaulting to `1800` seconds (30
+   minutes). `PR_READINESS_POLL_SECONDS` defaults to `30` seconds. On
+   every poll, call `status_for_head` with the PR number, the retained current
+   head SHA, and the discovered required checks.
+4. Re-fetch the PR metadata after each status query. A newer PR head invalidates
+   the old result: discard the status result, replace the
+   retained SHA, and poll again. A result is usable only when its observed SHA
+   equals the re-fetched current PR head SHA.
+5. Mark the PR ready-for-review only when `status_for_head` reports `success`
+   for that exact SHA and every required check passes. The optional checks remain informational
+   and never authorize or block readiness.
+6. Keep the PR open and not-ready for `pending`, `stale`, `cancelled`,
+   `timeout`, and `configuration-gap`. A timeout ends the bounded wait rather
+   than waiting indefinitely.
+
+Initialize `repair_cycles` to zero for the PR. Apply this transition table to
+each normalized result:
+
+| Result | Transition |
+| --- | --- |
+| `pending` | Poll again until the deadline; then report `timeout`. |
+| `success` | Continue only if the post-query `get_pr` SHA still matches; otherwise discard it as stale. |
+| `failure` with a deterministic, ticket-scoped cause and `repair_cycles < 2` | Increment `repair_cycles`, perform the bounded repair, then restart at `get_pr`. |
+| `failure` with any other cause, or after two repair cycles | Stop and summarize the failure evidence for the human. |
+| `stale` | Discard the result and poll again for the current SHA without repair. |
+| `cancelled`, `timeout`, or `configuration-gap` | Stop without repair and summarize the outcome and evidence. |
+
+Only a deterministic, ticket-scoped failure can enter the repair transition;
+infrastructure, flaky, ambiguous, unrelated, and scope-expanding failures are
+never guessed at. A repair changes the branch head, so the workflow must
+restart at `get_pr` and obtain fresh required-check status. Every non-success path leaves the PR open and not-ready and keeps the ticket assigned.
+
 Pass the PR number and current head SHA to the exact-head readiness workflow.
-It discovers required checks through `discover_required_checks`, waits within
-its bounded window, and maps `status_for_head` success for that exact SHA to
-ready for review. Stop only after that workflow reports the PR ready for
-review. A non-success outcome leaves the PR open and not ready, keeps the
-ticket assigned, and is reported with its evidence.
+It maps `status_for_head` success for that exact SHA to ready for review.
+Stop only after that workflow reports the PR ready for review. A non-success
+outcome leaves the PR open and not ready and is reported with its evidence.
 
 Assign `HUMAN_REVIEWER` and request review through the forge skill's
 `assign_reviewer` recipe. Use the forge issue-edit recipe to transfer the
