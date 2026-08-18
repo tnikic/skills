@@ -1,6 +1,6 @@
 ---
 name: implement
-description: "Implement work from a spec or issue. Picks the next unblocked issue when none is given."
+description: "Implement work from a spec or issue. Picks the next unblocked agent-ready issue when none is given."
 disable-model-invocation: true
 ---
 
@@ -19,10 +19,14 @@ If the user passed a spec or issue, use it directly. Read its full body. If it's
 
 Otherwise, query open issues:
 
-1. Unassigned and unblocked — sort by priority then age.
-2. If none, assigned to @me and unblocked.
+1. Automatic selection includes only open issues labeled `triage:for-agent`.
+2. Start with unassigned and unblocked agent-ready issues, sorted by priority then age.
+3. If none, use the assigned-to-@me fallback, still requiring `triage:for-agent` and no blockers.
+4. Exclude `triage:pending`, `triage:unanswered`, unlabeled, `triage:for-human`, and `triage:wontfix` issues.
+5. Query open `triage:pending` issues separately and report them in a `requires triage` section.
 
 Read the full body of each candidate. Skip any whose body is empty or a vague one-liner with no clear spec.
+If no eligible issue remains, report that no implementation-ready issue exists and stop without claiming one.
 
 Present the shortlist with a recommendation for the top candidate, including a one-line summary from the body:
 
