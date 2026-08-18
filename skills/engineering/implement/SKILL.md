@@ -71,16 +71,9 @@ Use TDD at pre-agreed seams. Run the project's standard targets for static analy
 
 ### Pre-PR Implementation Loop Policy
 
-This policy covers only the `implement` pre-PR loop. The post-PR `review-analysis` batching remains out of scope; that skill owns the separate process for handling comments on an open PR.
+This policy covers only the `implement` pre-PR loop. The post-PR `review-analysis` batching remains out of scope; that skill owns the separate process for handling comments on an open PR. The numbered sequence above is one bounded pass.
 
-The sequence above is one bounded pass:
-
-1. Run the initial `check`.
-2. Run one Standards/Spec review.
-3. The correction step must batch all clear-cut findings from one review pass and apply that correction batch without running an intermediate gate.
-4. Run one corrective `check` for the batch.
-5. Run the final `test`.
-6. Run the commit gate.
+The correction step must batch all clear-cut findings from one review pass and apply that correction batch without running an intermediate gate. One successful corrective `check` follows that batch before the final `test` and commit gate.
 
 The review pass classifies findings before edits are made:
 
@@ -88,16 +81,19 @@ The review pass classifies findings before edits are made:
 - Semantic or user-directed changes start a new Standards/Spec review before the implementation continues. They are not silently folded into the current correction batch.
 - Judgment-dependent findings stop the loop and wait for human direction; no later gate can make an unresolved decision safe.
 
-When a gate fails, the loop re-enters at the narrowest applicable gate rather than restarting unchanged checks:
+When a gate fails, the loop re-enters at the narrowest applicable gate rather than restarting unchanged checks. The gate inputs and re-entry rules are explicit:
 
-- A `check` failure is corrected and rechecked. The initial review remains valid unless the correction is semantic.
-- A failed corrective `check` is corrected and rechecked; it does not restart the review when the correction is mechanical.
-- A `test` failure is corrected and the test is rerun. A behavioral correction starts a new Standards/Spec review, followed by the required checks and final test.
-- A commit-gate failure is corrected and the commit gate is rerun. Earlier successful gates remain valid unless the correction changes their inputs.
+| Event | Re-entry | Validity rule |
+| --- | --- | --- |
+| Initial `check` failure | Correct the mechanical failure, rerun `check`, then continue to Standards/Spec review | No prior review exists to rerun; a semantic correction starts review after `check` passes |
+| Standards/Spec review findings | Apply one correction batch, then run the corrective `check` | Mechanical corrections do not invalidate the completed review; semantic or user-directed changes start a new review |
+| Corrective `check` failure | Correct the failure and rerun `check` | Do not restart review when the correction is mechanical |
+| Final `test` failure | Rerun `test` after a test-only or mechanical correction; start Standards/Spec review after a behavioral correction | A changed behavior invalidates the review and dependent checks |
+| Commit-gate failure | Correct the gate-specific issue and rerun the commit gate | Staged-content changes invalidate the earliest gate that consumes that content |
 
-The rule is that unchanged checks remain valid when none of their tracked inputs changed after they passed and no new user intent or branch-base change invalidated their results. Any correction invalidates only the gates that consume the changed inputs. This policy avoids redundant reruns but does not weaken required quality, documentation, security, or final test gates: every required gate still runs successfully before handoff, and each failed gate is rerun at its applicable entry point.
+The rule is that unchanged checks remain valid when none of their tracked inputs changed after they passed and no new user intent or branch-base change invalidated their results. `check` consumes the tracked repository; Standards/Spec review consumes the issue or spec and behavioral diff; `test` consumes source and test behavior; and the commit gate consumes staged content and commit metadata. This policy avoids redundant reruns but does not weaken required quality, documentation, security, or final test gates: every required gate still runs successfully before handoff, and each failed gate is rerun at its applicable entry point.
 
-If any local gate fails, stop without committing, pushing, or closing the ticket; leave the ticket open and assigned.
+If any local gate cannot be resolved under this policy, stop without committing, pushing, or closing the ticket; leave the ticket open and assigned.
 
 A judgment-dependent finding has the same outcome until the human provides a decision.
 

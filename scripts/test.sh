@@ -291,24 +291,25 @@ assert_order "$implement_skill" \
 assert_not_contains "$implement_skill" 'Run Coverage review'
 assert_contains "$implement_skill" 'Pre-PR Implementation Loop Policy'
 assert_contains "$implement_skill" 'post-PR `review-analysis` batching remains out of scope'
+assert_contains "$implement_skill" 'The numbered sequence above is one bounded pass.'
 assert_contains "$implement_skill" 'batch all clear-cut findings from one review pass'
 assert_contains "$implement_skill" 'Mechanical corrections stay in the current loop'
 assert_contains "$implement_skill" 'Semantic or user-directed changes start a new Standards/Spec review'
 assert_contains "$implement_skill" 're-enters at the narrowest applicable gate'
 assert_contains "$implement_skill" 'unchanged checks remain valid'
 assert_contains "$implement_skill" 'does not weaken required quality, documentation, security, or final test gates'
-assert_contains "$implement_skill" 'A `check` failure is corrected and rechecked.'
-assert_contains "$implement_skill" 'A failed corrective `check` is corrected and rechecked'
-assert_contains "$implement_skill" 'A `test` failure is corrected and the test is rerun.'
-assert_contains "$implement_skill" 'A commit-gate failure is corrected and the commit gate is rerun.'
-assert_order "$implement_skill" \
-  'The sequence above is one bounded pass:' \
-  '1. Run the initial `check`.' \
-  '2. Run one Standards/Spec review.' \
-  '3. The correction step must batch all clear-cut findings' \
-  '4. Run one corrective `check` for the batch.' \
-  '5. Run the final `test`.' \
-  '6. Run the commit gate.'
+assert_contains "$implement_skill" 'Correct the mechanical failure, rerun `check`'
+assert_contains "$implement_skill" 'Correct the failure and rerun `check`'
+assert_contains "$implement_skill" 'Rerun `test` after a test-only or mechanical correction'
+assert_contains "$implement_skill" 'Correct the gate-specific issue and rerun the commit gate'
+assert_contains "$implement_skill" '| Initial `check` failure | Correct the mechanical failure, rerun `check`, then continue to Standards/Spec review |'
+assert_contains "$implement_skill" '| Standards/Spec review findings | Apply one correction batch, then run the corrective `check` |'
+assert_contains "$implement_skill" '| Corrective `check` failure | Correct the failure and rerun `check` |'
+assert_contains "$implement_skill" '| Final `test` failure | Rerun `test` after a test-only or mechanical correction; start Standards/Spec review after a behavioral correction |'
+assert_contains "$implement_skill" '| Commit-gate failure | Correct the gate-specific issue and rerun the commit gate |'
+assert_contains "$implement_skill" '`check` consumes the tracked repository; Standards/Spec review consumes the issue or spec and behavioral diff; `test` consumes source and test behavior; and the commit gate consumes staged content and commit metadata.'
+assert_contains "$implement_skill" 'If any local gate cannot be resolved under this policy, stop'
+assert_not_contains "$implement_skill" 'If any local gate fails, stop without committing, pushing, or closing the ticket'
 assert_order "$implement_skill" \
   'Create or adopt the Conventional Branch before editing tracked files' \
   '1. Run the project `check` target.' \
@@ -317,7 +318,7 @@ assert_order "$implement_skill" \
   '4. Run the project `check` target again after corrections.' \
   '5. Run the project `test` target once at the end of the implementation loop.' \
   '6. Invoke `/commit` as the universal commit-quality and documentation gate.' \
-  'If any local gate fails, stop without committing, pushing, or closing the ticket' \
+  'If any local gate cannot be resolved under this policy, stop' \
   'A judgment-dependent finding has the same outcome'
 assert_contains "$code_review_skill" 'The caller may narrow the review scope to named axes.'
 assert_contains "$code_review_skill" 'when `implement` requests `Standards and Spec`, skip'
