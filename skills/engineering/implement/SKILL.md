@@ -8,6 +8,11 @@ Implement the work in the given issue, or pick the next unblocked one.
 
 Forge operations (issue lifecycle, claims, hierarchy queries, follow-ups) run through the [`github`](../github/SKILL.md) or [`gitlab`](../gitlab/SKILL.md) skill matching the repo's forge.
 
+For PR-based delivery, use the shared [PR template](../../shared/pr-template.md)
+and [delivery contracts](../../shared/pr-delivery-contracts.md) for branch
+names, PR titles, lifecycle, and review impact. Forge-specific command syntax
+remains in the forge skill.
+
 ## 1. Pick the work
 
 If the user passed a spec or issue, use it directly. Read its full body. If it's empty or a vague one-liner with no clear spec, warn and ask whether to proceed anyway. If the user confirms, skip to step 2. If the user says no, fall through to the query path below.
@@ -61,7 +66,9 @@ If neither the issue body nor comments contain any checkboxes, skip this step.
 
 ## 4. Commit, push, and close
 
-Create a single commit. Instruct conventional-commits to include `Closes #N` as a footer (N is the issue number from step 1). Amend an earlier commit if one was already made.
+Create a single Conventional Commit. Keep forge-specific issue-closing
+metadata out of the commit; the PR body carries `Closes #N` instead. Amend an
+earlier commit if one was already made.
 
 Push: `git push -u origin HEAD`. If the push fails, report the failure and stop — do not close the issue.
 

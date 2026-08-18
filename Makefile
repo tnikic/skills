@@ -1,7 +1,10 @@
-.PHONY: check gitleaks links taxonomy help
+.PHONY: check contracts gitleaks links taxonomy help
 
-check: gitleaks links taxonomy
+check: gitleaks links taxonomy contracts
 	@echo "check: ok"
+
+contracts:
+	bash scripts/validate-pr-contracts.sh
 
 gitleaks:
 	gitleaks detect --no-git
@@ -16,12 +19,13 @@ taxonomy:
 		while IFS=: read -r lineno label; do \
 			[ -z "$$label" ] && continue; \
 			echo "$$valid" | grep -qxF "$$label" || { echo "taxonomy: $$file:$$lineno: unknown label $$label"; errors=1; }; \
-		done < <(grep -noP '\b(triage|type|kind|wayfinder):[a-z-]+' "$$file" 2>/dev/null || true); \
+		done < <(grep -noP '\b(triage|type|kind|wayfinder|impact):[a-z-]+' "$$file" 2>/dev/null || true); \
 	done < <(find skills -name '*.md' -not -path 'skills/generated/*' -not -path 'skills/shared/label-taxonomy.md'); \
 	[ "$$errors" -eq 0 ] || exit 1
 
 help:
-	@echo "check      Run gitleaks secrets scan, lychee link check, taxonomy consistency"
+	@echo "check      Run gitleaks secrets scan, lychee link check, taxonomy, and contract validation"
+	@echo "contracts  Validate shared PR delivery contracts"
 	@echo "gitleaks   Run gitleaks secrets scan"
 	@echo "links      Run lychee link check (local-only, offline)"
 	@echo "taxonomy   Check scope:value labels against shared/label-taxonomy.md"

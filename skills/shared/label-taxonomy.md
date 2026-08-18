@@ -18,6 +18,10 @@ Every label on the issue tracker belongs to exactly one scope. Within a scope, l
 | `wayfinder` | `research` | `accent` | AFK: investigate facts against primary sources |
 | `wayfinder` | `prototype` | `accent` | HITL: build a throwaway artifact to react to |
 | `wayfinder` | `grilling` | `accent` | HITL: stress-test a decision via interview |
+| `impact` | `critical` | `accent` | Review triage for security or high-blast-radius changes |
+| `impact` | `high` | `accent` | Review triage for broad or important changes |
+| `impact` | `normal` | `accent` | Default review triage value |
+| `impact` | `low` | `accent` | Review triage for trivial or narrow changes |
 
 Color tokens are defined in [`color-palette.md`](color-palette.md).
 
