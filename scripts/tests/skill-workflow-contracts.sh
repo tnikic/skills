@@ -257,6 +257,7 @@ grep -Fq -- 'error:' <<< "$missing_sha_output" || fail 'missing SHA error was no
 assert_readiness_transition pending pending abc abc 0 false false check,test pending
 assert_readiness_transition timeout pending abc abc 0 true false check,test pending
 assert_readiness_transition success success abc abc 0 false false check,test all-passed
+assert_readiness_transition success success abc abc 0 false false check,test 'required passed; optional lint failed'
 assert_readiness_transition stale success abc def 0 false false check,test old-head
 assert_readiness_transition repair failure abc abc 0 false true check,test ticket-failure
 assert_readiness_transition repair failure abc abc 1 false true check,test ticket-failure
@@ -266,6 +267,12 @@ assert_readiness_transition cancelled cancelled abc abc 0 false false check,test
 assert_readiness_transition stale stale abc abc 0 false false check,test stale
 assert_readiness_transition timeout timeout abc abc 0 false false check,test timeout
 assert_readiness_transition configuration-gap configuration-gap abc abc 0 false false none missing-protection
+unknown_outcome_output="$(bash "$readiness_script" transition unknown abc def 0 false false check,test malformed 2>&1 || true)"
+grep -Fq -- 'error:' <<< "$unknown_outcome_output" ||
+  fail 'unknown outcome did not produce a structured error'
+if grep -Fq -- 'decision: stale' <<< "$unknown_outcome_output"; then
+  fail 'unknown outcome was accepted as stale when the head differed'
+fi
 [ "$(readiness_decision success abc def 0 false false check,test old-head):$(readiness_decision success def def 0 false false check,test all-passed)" = 'stale:success' ] ||
   fail 'stale result did not refresh before success'
 [ "$(readiness_decision pending abc abc 0 false false check,test pending):$(readiness_decision pending abc abc 0 true false check,test pending)" = 'pending:timeout' ] ||

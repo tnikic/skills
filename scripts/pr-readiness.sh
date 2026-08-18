@@ -52,6 +52,7 @@ print_transition_help() {
   printf 'description: Apply one normalized readiness transition\n'
   printf 'arguments[8]: %s\n' \
     '"OUTCOME","CURRENT_SHA","OBSERVED_SHA","REPAIR_CYCLES","DEADLINE_EXPIRED","DETERMINISTIC_FAILURE","REQUIRED_CHECKS","EVIDENCE"'
+  printf 'outcomes: pending,success,failure,cancelled,stale,timeout,configuration-gap\n'
   printf 'usage: pr-readiness transition pending abc abc 0 false false check,test pending\n'
 }
 
@@ -117,6 +118,11 @@ case "${1:-}" in
     if [ "$outcome" = success ] && [ "$required_checks" = none ]; then
       emit_error 'success requires at least one required check' 'pr-readiness transition --help'
     fi
+
+    case "$outcome" in
+      pending|success|failure|cancelled|stale|timeout|configuration-gap) ;;
+      *) emit_error "unknown normalized outcome: $outcome" 'pr-readiness transition --help' ;;
+    esac
 
     if [ "$current_sha" != "$observed_sha" ]; then
       decision=stale
