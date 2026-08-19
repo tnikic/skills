@@ -14,7 +14,7 @@ Clone into `~/.agents` (or wherever your agent looks for user skills):
 git clone https://github.com/tnikic/skills.git ~/.agents
 ```
 
-Skills are discovered automatically. Run `/bootstrap` in any repo to align it to the standard project shape, `/capture` to file a bug or idea, `/implement-skill` to create or change a skill, `/improve-skill` to audit one, or `/review-skill` to review a skill diff.
+Skills are discovered automatically. Run `/bootstrap` in any repo to align it to the standard project shape, `/capture` to file a bug or idea, `/implement-skill` to create or change a skill, `/improve-skill` to audit a named skill or scan the portfolio, or `/review-skill` to review a skill diff.
 
 ## Dependencies
 

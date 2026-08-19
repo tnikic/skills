@@ -6,6 +6,7 @@ TEST_CONCERN=skill-workflow
 source "$(dirname "${BASH_SOURCE[0]}")/test_helpers.sh"
 
 assert_file "$implement_skill"
+assert_file "$capture_skill"
 assert_file "$implement_skill_work"
 assert_file "$improve_skill"
 assert_file "$review_skill"
@@ -15,24 +16,50 @@ assert_contains_many "$implement_skill_work" \
   'name: implement-skill' \
   'disable-model-invocation: true' \
   'writing-for-agents' \
+  'command-runner.md' \
   '## 1. Establish the contract' \
   '## 4. Verify'
+
+assert_contains_many "$capture_skill" \
+  'All forge calls follow the recipes' \
+  'matching forge skill' \
+  'does not run forge commands directly'
+assert_not_contains "$capture_skill" 'gh issue create'
+assert_not_contains "$capture_skill" 'gh label create'
+assert_not_contains "$capture_skill" 'glab issue create'
+assert_not_contains "$capture_skill" 'glab label create'
 
 assert_contains_many "$improve_skill" \
   'name: improve-skill' \
   'disable-model-invocation: true' \
   'writing-for-agents' \
+  'command-runner.md' \
+  'If the user names no skill, run a portfolio scan:' \
+  'Inventory every skill directory under `skills/`' \
+  'Run the lightweight audits in parallel' \
+  'Do not edit during the scan.' \
   '## 2. Explore the skill' \
   '## 3. Present candidates' \
   'Do not edit until the user picks a candidate.'
 
 assert_contains_many "$review_skill" \
   'name: review-skill' \
+  'command-runner.md' \
   'Standards' \
   'Spec' \
   'Coverage' \
   'Use fresh parallel review agents' \
   'Do not edit the skill'
+
+assert_contains "$code_review_skill" 'command-runner.md'
+assert_not_contains "$code_review_skill" 'make lint'
+assert_not_contains "$code_review_skill" 'make fmt'
+assert_not_contains "$code_review_skill" 'make check'
+
+for skill in "$implement_skill_work" "$improve_skill" "$review_skill"; do
+  assert_not_contains "$skill" 'make check'
+  assert_not_contains "$skill" 'make test'
+done
 
 assert_contains_many "$implement_skill" \
   'Treat the issue body as the canonical source for body checkboxes.' \

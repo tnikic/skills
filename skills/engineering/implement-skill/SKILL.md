@@ -65,12 +65,10 @@ pointer reaches the right material, and unrelated content is preserved.*
 Read every changed document as an agent would, following each new or changed
 pointer and checking every branch's completion criterion. Inspect the diff for
 stale wording, duplicated rules, broken relative links, and frontmatter that
-does not match the chosen invocation. Run the repository's standard checks:
-
-```text
-make check
-make test
-```
+does not match the chosen invocation. Run the project's `check` and `test`
+targets through the shared
+[`command-runner`](../../shared/command-runner.md). It detects Make or Just and
+reports when no runner is configured.
 
 For a substantial change, run `/review-skill` against the fixed point before
 calling it complete. Fix clear findings; surface judgement calls to the user.

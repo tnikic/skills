@@ -42,7 +42,7 @@ On top of whatever the repo documents, the Standards axis always carries the **s
 
 - **The repo overrides.** A documented repo standard always wins; where it endorses something the baseline would flag, suppress the smell.
 - **Always a judgement call.** Each smell is a labelled heuristic ("possible Feature Envy"), never a hard violation.
-- **Run the linter and formatter.** Execute `make lint`, `make fmt`, and `make check` on the changed files. Report violations. Tooling-caught issues are noted but not re-litigated as smells.
+- **Run the linter and formatter.** Use the shared [`command-runner`](../../shared/command-runner.md) to execute the project's `lint`, `fmt`, and `check` targets on the changed files. Report violations. Tooling-caught issues are noted but not re-litigated as smells.
 
 Each smell reads *what it is* → *how to fix*; match it against the diff:
 

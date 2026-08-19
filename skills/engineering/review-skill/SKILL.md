@@ -39,8 +39,9 @@ Find the originating request in this order:
 
 Read the changed skill, every changed or newly reachable pointer, its
 `SKILL-MECHANICS.md` branch, relevant `docs/CONTEXT.md` terms, and applicable
-ADRs. Identify the repository's `make check` and `make test` targets as the
-authoritative deterministic checks.
+ADRs. Use the shared
+[`command-runner`](../../shared/command-runner.md) to identify the project's
+`check` and `test` targets as the authoritative deterministic checks.
 
 *Completion: the standards sources, spec availability, reachable documents,
 and expected checks are known.*
@@ -79,8 +80,8 @@ Report the behavior that the changed skill claims to guide and whether each
 branch has an observable completion check or appropriate test evidence. Check
 for deterministic repository checks, regression fixtures for known failures,
 and fresh-agent or human review where prose quality is subjective. Do not
-require model-backed evaluation in `make test`; it is optional evidence, not a
-repository gate.
+require model-backed evaluation in the project's `test` target; it is optional
+evidence, not a repository gate.
 
 *Completion: all three axes have independent findings, evidence, and explicit
 unknowns.*

@@ -1,6 +1,6 @@
 ---
 name: improve-skill
-description: Audit an agent skill for structural and behavioral improvements, then guide a focused change.
+description: Audit a named agent skill or scan the skill portfolio for structural and behavioral improvements, then guide a focused change.
 disable-model-invocation: true
 ---
 
@@ -20,14 +20,33 @@ skill.
 
 ## 1. Scope the review
 
-Review the skill the user names. If none is named, list the skill directories
-that appear relevant and ask which one to inspect. Read the full skill, its
+If the user names a skill, review only that skill. Read the full skill, its
 reachable pointers, sibling skills that compete for the same invocation, the
 domain glossary, and applicable ADRs. Check recent changes when they reveal
 the area where maintenance friction is highest.
 
-*Completion: the review target, reachable document set, invocation mode, and
-governing decisions are known.*
+If the user names no skill, run a portfolio scan:
+
+1. Inventory every skill directory under `skills/` and inspect its frontmatter
+   and main `SKILL.md`.
+2. Check recent changes, competing invocation patterns, and obvious pointer,
+   hierarchy, completion, pruning, and architecture friction. Follow reachable
+   references only for likely candidates; the portfolio pass stays lightweight.
+3. Run the lightweight audits in parallel with fresh review agents, batching
+   skills if necessary, then consolidate systemic findings and rank the
+   candidate improvements.
+4. Present the ranked candidates using the format in step 3, recommend one, and
+   ask which skill and candidate to explore. Do not edit during the scan.
+
+After the user selects a skill and candidate, continue with step 2 for that
+skill.
+
+*Completion for a named skill: the review target, reachable document set,
+invocation mode, and governing decisions are known.*
+
+*Completion for a portfolio scan: every skill directory was inventoried and
+lightly audited, systemic findings were consolidated, ranked candidates were
+presented, and the user has a bounded selection to make.*
 
 ## 2. Explore the skill
 
@@ -91,12 +110,9 @@ of truth are agreed before implementation.*
 Apply the selected change with the smallest correct diff. Preserve unrelated
 behavior and update every pointer, shared reference, test, ADR, or README that
 the change makes stale. Follow all changed pointers once as a fresh agent
-would. Run:
-
-```text
-make check
-make test
-```
+would. Run the project's `check` and `test` targets through the shared
+[`command-runner`](../../shared/command-runner.md), which detects Make or Just
+and reports when no runner is configured.
 
 Request a fresh review when the change spans multiple skills or changes model
 invocation. Fix clear findings and report judgement calls rather than silently

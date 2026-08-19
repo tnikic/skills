@@ -34,7 +34,10 @@ Resolve the target repo from the user's words:
 - `"for owner/repo"` → `owner/repo`
 - `"on this repo"` or no repo mentioned → the current repo
 
-If the target repo is not the current repo, create the issue there. `gh issue create --repo <target>`. Forge calls follow the recipes in the [`github`](../github/SKILL.md) skill (or [`gitlab`](../gitlab/SKILL.md) for GitLab targets).
+If the target repo is not the current repo, pass it to the matching forge
+skill's issue-create recipe. All forge calls follow the recipes in the
+[`github`](../github/SKILL.md) skill (or [`gitlab`](../gitlab/SKILL.md) for
+GitLab targets); `/capture` does not run forge commands directly.
 
 ---
 
@@ -147,23 +150,17 @@ No `source:` or other marker labels. Triage reads the body, not the source.
 
 ## Post
 
-Create the issue on the target repo:
-
-```
-gh issue create --repo <target> --title "<title>" --body "<body>" --label triage:pending --label type:bug
-```
+Create the issue on the target repo with the matching forge skill's
+issue-create recipe. Pass the generated title, body, target repo, and the
+labels selected above. Do not derive or run a forge command in `/capture`.
 
 Use a descriptive title derived from the user's first sentence. Capitalize the first word, no period at the end.
 
 ### Label colors
 
-After creation, fix the auto-created labels' colors. `gh issue create --label` auto-creates labels that don't exist yet, but with a default color (`#333333`) instead of the taxonomy colors. See [`label-taxonomy.md`](../../shared/label-taxonomy.md) for the correct scope and color for each label. Run `gh label create` with the correct scope and color:
-
-```
-gh label create triage:pending --color 84A59D --force
-gh label create type:bug --color F28482 --force
-```
-
-For idea mode, replace `bug` with `enhancement`. These commands are idempotent — if the label already has the right color, they succeed without change.
+After creation, use the matching forge skill's label-create recipe to ensure
+the labels have the taxonomy colors. See [`label-taxonomy.md`](../../shared/label-taxonomy.md)
+for the correct scope and color. For idea mode, use `type:enhancement`
+instead of `type:bug`. The forge skill owns the idempotent label operation.
 
 After posting, tell the user the issue number and URL.
