@@ -5,7 +5,7 @@ Glossary of domain terms for the agent skills ecosystem.
 ## Skills
 
 - **bootstrap** — Skill that aligns any repo to the standard project shape (Makefile/justfile, CI, pre-commit hook, README) using a language profile.
-- **commit skill** — Universal choke point that gates quality (lint, fmt, typecheck) and docs (freshness check) before any `git commit`. Calls `conventional-commits` for the message.
+- **commit skill** — Universal choke point that gates quality (lint, fmt, typecheck) and docs (freshness check) before any `git commit`. Calls `conventional-commits` for the message; execution stays here.
 - **capture** (`/capture`) — User-invoked skill for filing bugs (forensic auto-capture) or ideas (lightweight) into the ticket pipeline. Front door to `triage` → `to-tickets` → `implement`.
 - **handoff** — Named invocation point for compacting the current session into a handoff document for a fresh agent. Used at context-limit boundaries.
 - **tdd** — Skill for test-driven development. After the skills refactor (map 31): feedback-first framing — runnable check before code, smallest provable slice first, E2E as final gate. Test list as transient external state. Cheating defenses. Refactoring in green only.
@@ -18,6 +18,7 @@ Glossary of domain terms for the agent skills ecosystem.
 - **command recipe** — An exact CLI invocation (tool, flags, args) documented for a forge action, so the agent runs it directly instead of deriving it. The unit of the github and gitlab skills.
 - **model-invoked** — A skill the model picks up automatically from its description, not only when the user explicitly invokes it.
 - **issue hierarchy** — Parent/child and blocked-by/blocking relationships between tickets; queried by wayfinder, to-tickets, and implement.
+- **forge hierarchy capability** — The forge-specific mapping behind the shared issue hierarchy: GitHub uses child issues, while GitLab uses task work items parented under issues. Consumers use the matching forge recipe rather than assuming one issue type.
 - **ticket pipeline** — capture → triage → to-tickets → implement; the journey of a bug or idea to a merged change. Front door is `capture`.
 
 ## Conventions (TDD)
@@ -34,6 +35,7 @@ Glossary of domain terms for the agent skills ecosystem.
 ## Shared modules
 
 - **command-runner** — Single source of truth for detecting and invoking the project's command runner (Makefile or justfile). Skills that need to run project targets read from here rather than reimplementing detection.
+- **issue-hierarchy** — Shared relationship contract for ticket workflows; forge skills provide the commands, while GitHub uses child issues and GitLab uses task work items under issues.
 - **issue-template** — Canonical template for agent-grabbable tickets (`## What to build`, `## Acceptance criteria`, `## Blocked by`). Used by `to-tickets` (creates), `implement` and `triage` (consume).
 - **label-taxonomy** — Single source of truth for every label scope, value, and color token. Also carries the usage instruction (how to pass `--color`).
 - **color-palette** — Hex values for every color token referenced by the label taxonomy.

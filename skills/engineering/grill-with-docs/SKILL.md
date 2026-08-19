@@ -22,4 +22,4 @@ When either fires, offer: "This is getting large — want me to create a Wayfind
 
 ## Ending the session
 
-When the grilling session concludes, stage all domain-modeling changes (`docs/CONTEXT.md`, `docs/adr/`) and run `/conventional-commits`.
+When the grilling session concludes, stage all domain-modeling changes (`docs/CONTEXT.md`, `docs/adr/`) and run `/commit`.

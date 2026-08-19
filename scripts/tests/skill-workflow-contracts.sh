@@ -11,6 +11,64 @@ assert_file "$implement_skill_work"
 assert_file "$improve_skill"
 assert_file "$review_skill"
 assert_file "$code_review_skill"
+assert_file "$commit_skill"
+assert_file "$conventional_commits_skill"
+assert_file "$handoff_skill"
+assert_file "$to_spec_skill"
+assert_file "$to_tickets_skill"
+assert_file "$wayfinder_skill"
+assert_file "$grill_with_docs_skill"
+assert_file "$issue_hierarchy"
+
+assert_contains_many "$commit_skill" \
+  'message-only mode' \
+  'It never stages or commits in this mode.' \
+  'isolate each accepted group' \
+  'delegated skill owns presentation and approval' \
+  'amend-reword mode'
+assert_contains_many "$conventional_commits_skill" \
+  'message-only mode' \
+  'return the approved message(s)' \
+  'return the approved message(s) and accepted split' \
+  'Do not run `git add`, `git commit`' \
+  'route to `/commit` before' \
+  'starting these steps' \
+  'draft-only mode' \
+  'existing commit and diff instead'
+assert_not_contains "$conventional_commits_skill" 'Run `git commit -m'
+
+assert_contains_many "$handoff_skill" \
+  'agent-handoff-XXXXXX.md' \
+  'secure temporary-file API' \
+  'absolute path' \
+  'Completion criterion'
+
+assert_contains_many "$issue_hierarchy" \
+  'GitHub' \
+  'GitLab' \
+  'issue_type=task' \
+  'Blocking is separate from parentage.'
+assert_contains_many "$gitlab_skill" \
+  'issue_type=task' \
+  '/set_parent' \
+  'parentIds: [$parentId]' \
+  'types: [TASK]' \
+  'pageInfo { hasNextPage endCursor }' \
+  'features { assignees'
+
+assert_contains_many "$to_spec_skill" \
+  '`kind:decision`' \
+  'type:bug' \
+  'otherwise use `type:enhancement`' \
+  'child tickets through the matching' \
+  'If the map is open'
+assert_not_contains "$to_spec_skill" 'Check with the user that these seams match their expectations.'
+assert_contains "$to_tickets_skill" 'child tasks'
+assert_contains "$wayfinder_skill" 'child task work items'
+assert_contains "$implement_skill" 'Create a single commit through `/commit`'
+assert_contains "$wayfinder_skill" 'Run `/commit`'
+assert_contains "$grill_with_docs_skill" 'run `/commit`'
+assert_not_contains "$implement_skill" 'conventional-commits'
 
 assert_contains_many "$implement_skill_work" \
   'name: implement-skill' \
@@ -75,8 +133,9 @@ assert_contains_many "$implement_skill" \
   'Query open `triage:pending` issues separately and report them in a `requires triage` section.' \
   'If none, use the assigned-to-@me fallback, still requiring `triage:for-agent` and no open blockers.' \
   'If no eligible issue remains, report that no implementation-ready issue exists and stop without claiming one.' \
-  'An issue is unblocked only when every issue in its `blockedBy` relationship is closed.' \
-  'Inspect each blocker state; closed links do not block selection, while any open blocker excludes the candidate.'
+  "Use the matching forge's blocker relationship from the shared hierarchy contract." \
+  'A ticket is unblocked only when every blocker is closed;' \
+  'inspect each blocker state, while any open blocker excludes the candidate.'
 
 assert_not_contains "$implement_skill" 'Unassigned and unblocked — sort by priority then age.'
 assert_not_contains "$implement_skill" 'If none, assigned to @me and unblocked.'

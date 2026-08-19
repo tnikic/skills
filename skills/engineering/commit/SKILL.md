@@ -113,18 +113,23 @@ If auto-update cannot resolve the gap, block the commit:
 
 Generate the commit message:
 
-- **Normal commit** — invoke `/conventional-commits`. Note that the quality gate (step 3) already passed — conventional-commits should skip its own lint/format step. Present the message for approval. User can edit.
+- **Normal commit** — invoke `/conventional-commits` in explicit **message-only mode**. The delegated skill analyzes the staged diff, runs only any checks still required by this gate, presents the message for approval, and returns approved message(s) plus any accepted split groups. It never stages or commits in this mode.
 - **User provided a message** — use it as-is. Skip generation.
 - **Amend** — present the existing commit message. User edits if needed.
-- **Amend with reword** — invoke `/conventional-commits` anyway.
+- **Amend with reword** — invoke `/conventional-commits` in explicit
+  **amend-reword mode**. The delegated skill analyzes `HEAD`'s existing commit
+  rather than requiring staged changes.
 
-User must approve the final message before proceeding.
+For generated messages, the delegated skill owns presentation and approval. Once
+it returns approved message(s), proceed without asking for a second approval.
+User-provided and existing amend messages are already approved by the intent
+branch above.
 
 ---
 
 ## 6. Commit
 
-Run `git commit -m "<approved message>"`.
+Run `git commit -m "<approved message>"`. If the approved plan splits the diff, isolate each accepted group in the staging area before running its commit.
 
 If amending: `git commit --amend -m "<message>"`.
 

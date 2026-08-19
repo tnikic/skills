@@ -1,20 +1,33 @@
 ---
 name: conventional-commits
-description: Create well-formed Conventional Commits messages from staged changes. Analyzes the diff to determine type, scope, and body; presents the message for approval before committing. Supports auto-splitting multi-scope changes. Use when the user wants to commit changes, create a commit, or draft a commit message.
+description: Create well-formed Conventional Commits messages from staged changes. Analyzes the diff to determine type, scope, and body; presents the message for approval before handing execution to the universal commit gate. Supports auto-splitting multi-scope changes. Use when the user wants to commit changes, create a commit, or draft a commit message.
 ---
 
 # Conventional Commits
 
-Create commits that follow the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification — a structured format that communicates intent through typed, optionally scoped messages.
+Create commit messages that follow the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification — a structured format that communicates intent through typed, optionally scoped messages. Direct commit requests route through `/commit`; this skill owns message analysis and approval, not repository mutation.
 
 ## Steps
 
+When a user invokes this skill directly for a commit, route to `/commit` before
+starting these steps. When the user explicitly asks only for a draft, run these
+steps in **draft-only mode**. Otherwise these steps run when `/commit` delegates
+in **message-only mode** or **amend-reword mode**.
+
 ### 1. Detect changes
 
-Run `git status --short` and `git diff --cached --stat`. What happens next depends on what you find:
+When invoked by `/commit` in **message-only mode**, use the existing staging
+area as-is. Do not stage or unstage files. In **amend-reword mode**, use
+`HEAD`'s existing commit and diff instead; do not require staged changes.
 
-- **Nothing staged, nothing unstaged** → report "nothing to commit" and stop.
-- **Nothing staged, unstaged changes present** → auto-stage everything with `git add -A`. If the user specified paths ("only the parser" / "just the config files"), stage only those paths instead.
+Run `git status --short` and `git diff --cached --stat` (or inspect `HEAD` in
+amend-reword mode). What happens next depends on what you find:
+
+- **Nothing staged, nothing unstaged** → in amend-reword mode, continue with
+  `HEAD`; otherwise report "nothing to commit" and stop.
+- **Nothing staged, unstaged changes present** → hand control to `/commit` so
+  its staging and safety rules run. If the user specified paths ("only the
+  parser" / "just the config files"), pass those paths to `/commit`.
 - **Changes already staged** → use them as-is.
 
 *Completion criterion: the staging area has changes to commit, or the skill exits with "nothing to commit."*
@@ -101,13 +114,19 @@ Ask "Ready to commit?" The user can accept, edit the message inline, or reject. 
 
 *Completion criterion: user accepts the message(s).*
 
-### 7. Execute
+### 7. Return or delegate execution
 
-Run `git commit -m "<message>"` for each commit. By default, signing respects the repository's git config (`commit.gpgSign`). To commit unsigned — for batch jobs or overnight automation — the user (or a calling skill) can request unsigned, and you pass `--no-gpg-sign`.
+- **Message-only mode** — return the approved message(s) and accepted split
+  groups to `/commit`. Do not run `git add`, `git commit`, or any other staging
+  operation. `/commit` owns execution after its gates pass.
+- **Draft-only direct invocation** — return the approved message(s) without
+  committing. A direct commit request was routed to `/commit` before this step.
 
-If the user requested splitting, commit each message in sequence. If any commit fails, stop and report the error.
+By default, signing respects the repository's git config (`commit.gpgSign`). If
+the user requested unsigned commits, pass that preference back to `/commit`.
 
-*Completion criterion: all commits created successfully.*
+*Completion criterion: approved message(s) and any split groups are returned to
+the universal commit gate; no commit is created in this skill.*
 
 ## Reference
 

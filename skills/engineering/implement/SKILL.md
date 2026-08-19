@@ -7,6 +7,8 @@ disable-model-invocation: true
 Implement the work in the given issue, or pick the next unblocked one.
 
 Forge operations (issue lifecycle, claims, hierarchy queries, follow-ups) run through the [`github`](../github/SKILL.md) or [`gitlab`](../gitlab/SKILL.md) skill matching the repo's forge.
+Read the shared [`issue-hierarchy`](../../shared/issue-hierarchy.md) contract
+before selecting work or handling parent-dependent follow-ups.
 
 ## 1. Pick the work
 
@@ -15,7 +17,7 @@ If the user passed a spec or issue, use it directly. Read its full body. If it's
 Otherwise, query open issues:
 
 1. Automatic selection includes only open issues labeled `triage:for-agent`.
-2. Start with unassigned and unblocked agent-ready issues, sorted by priority then age. An issue is unblocked only when every issue in its `blockedBy` relationship is closed. Inspect each blocker state; closed links do not block selection, while any open blocker excludes the candidate.
+2. Start with unassigned and unblocked agent-ready tickets, sorted by priority then age. Use the matching forge's blocker relationship from the shared hierarchy contract. A ticket is unblocked only when every blocker is closed; inspect each blocker state, while any open blocker excludes the candidate.
 3. If none, use the assigned-to-@me fallback, still requiring `triage:for-agent` and no open blockers.
 4. Exclude `triage:pending`, `triage:unanswered`, unlabeled, `triage:for-human`, and `triage:wontfix` issues.
 5. Query open `triage:pending` issues separately and report them in a `requires triage` section.
@@ -59,7 +61,7 @@ Treat the issue body as the canonical source for body checkboxes. Update the ori
 
 For checkboxes that exist only in comments, edit the original comment in place via the forge skill's comment-edit recipe, preserving all unrelated text and replacing only satisfied markers. This keeps comment-only criteria in their source comment while body criteria remain in the issue body. Leave unsatisfied criteria unchecked.
 
-If any criterion is unsatisfied, report which ones and why to the user. Offer to create follow-up tickets via the forge skill's issue-create recipe, following the template in [`issue-template.md`](../../shared/issue-template.md). Apply the same labels as the current issue. Parent each follow-up to the current issue's parent (if it has one); otherwise create it standalone. Add a comment on the current issue linking each follow-up.
+If any criterion is unsatisfied, report which ones and why to the user. Offer to create follow-up tickets via the forge skill's issue-create recipe, following the template in [`issue-template.md`](../../shared/issue-template.md). Apply the same labels as the current issue. Parent each follow-up to the current issue's parent (if it has one) using the matching forge's hierarchy recipe; GitHub creates a child issue and GitLab creates a child task. Otherwise create it standalone. Add a comment on the current issue linking each follow-up.
 
 If neither the issue body nor comments contain any checkboxes, skip this step.
 
@@ -67,7 +69,9 @@ If neither the issue body nor comments contain any checkboxes, skip this step.
 
 ## 4. Commit, push, and close
 
-Create a single commit. Instruct conventional-commits to include `Closes #N` as a footer (N is the issue number from step 1). Amend an earlier commit if one was already made.
+Create a single commit through `/commit`. Pass `Closes #N` as the requested
+footer (N is the issue number from step 1). Amend an earlier commit if one was
+already made.
 
 Push: `git push -u origin HEAD`. If the push fails, report the failure and stop — do not close the issue.
 
@@ -77,8 +81,6 @@ Verify closure: poll the issue state every 3 seconds, up to 3 attempts. If the i
 
 ## 5. Parent check
 
-If the closed issue has a `parent`, list the parent's sub-issues. When all are closed, tell the user: "All sub-issues of #<parent> are closed. Close it as well?" The user confirms or declines. If confirmed and that parent itself has a parent, recurse.
+If the closed ticket has a parent, query the parent's child tickets through the matching forge's hierarchy recipe. When all are closed, tell the user: "All child tickets of #<parent> are closed. Close it as well?" The user confirms or declines. If confirmed and that parent itself has a parent, recurse.
 
 *Completion: parent closure offered where applicable; user decision handled.*
-
-When a parent `kind:spec` is closed, remind the user: "The spec is closed. Consider running `/update-docs` to bring the README up to date with everything that shipped."

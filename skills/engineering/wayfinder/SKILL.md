@@ -20,25 +20,33 @@ Every map and ticket is an issue, so it has a **name** — its title. In everyth
 
 ## The Map
 
-The map is a single issue on this repo's issue tracker, labelled `kind:map` — the canonical artifact. Its tickets are child issues of the map.
+The map is a single issue on this repo's issue tracker, labelled `kind:map` — the canonical artifact. Its tickets are child tickets of the map.
 
 The map is an **index**, not a store. It lists the decisions made and points at the tickets that hold their detail; a decision lives in exactly one place — its ticket — so the map never restates it, only gists it and links.
 
 Forge operations (issue create/label/comment/assign/close, frontier queries, blocking edges) are executed with the [`github`](../github/SKILL.md) or [`gitlab`](../gitlab/SKILL.md) skill, whichever forge the map lives on.
+Read the shared [`issue-hierarchy`](../../shared/issue-hierarchy.md) contract:
+GitHub maps use child issues; GitLab maps use child task work items under the
+map issue.
 
 Label scopes, values, colors, and usage are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md).
 
 - **Map**: create an issue with label `kind:map` (scope `kind`, name `map`).
 - **Stub map**: create a `kind:map` issue from a fog dump (delegated from `/grill-with-docs`). Body has Destination, Notes, and raw unresolved threads — no structured sections yet. The next `/wayfinder` session detects the stub and cleans it up.
-- **Child ticket**: create an issue with `parent` set to the map's number, labelled `kind:decision` (scope `kind`, name `decision`) and `wayfinder:<type>` (scope `wayfinder`, name matching the type).
-- **Blocking**: set `blocked_by` on the ticket — a set-replacement of the blocker issue numbers.
-- **Frontier**: list issues with `parent: <map>`, `state: "open"`, `unblocked: true`, `assignee: "@unassigned"`.
+- **Child ticket**: create a GitHub child issue with `parent` set to the map's
+  number, or a GitLab child task with `issue_type=task` followed by
+  `/set_parent`. In both cases, apply `kind:decision` (scope `kind`, name
+  `decision`) and `wayfinder:<type>` (scope `wayfinder`, name matching the
+  type).
+- **Blocking**: set the ticket's blocking edges with the matching forge recipe.
+- **Frontier**: query direct child tickets through the matching forge's
+  hierarchy recipe, then keep only open, unblocked, unassigned tickets.
 - **Claim**: update the issue with `assignee: "@me"` — the session's first write.
 - **Resolve**: comment the answer on the ticket, close the ticket, then append a context pointer to the map's Decisions-so-far.
 
 ### The map body
 
-The whole map at low resolution, loaded once per session. Open tickets are **not** listed — they are open child issues, found by query.
+The whole map at low resolution, loaded once per session. Open tickets are **not** listed — they are open child tickets, found by query.
 
 ```markdown
 ## Destination
@@ -66,7 +74,8 @@ The whole map at low resolution, loaded once per session. Open tickets are **not
 
 ### Tickets
 
-Each ticket is a **child issue** of the map; the tracker's issue id is its identity. Its body is the question, sized to one 100K token agent session:
+Each ticket is a **child ticket** of the map; the tracker's work-item id is its
+identity. Its body is the question, sized to one 100K token agent session:
 
 ```markdown
 ## Question
@@ -89,7 +98,7 @@ Every ticket is either **HITL** — human in the loop, worked *with* a human who
 - **Research** (AFK): Reading documentation, third-party APIs, or local resources like knowledge bases to surface a fact a decision waits on. Resolved by the `subagent` tool with `agent: "researcher"`. Follow the dispatch pattern in [`subagent-dispatch.md`](../../shared/subagent-dispatch.md). Use when knowledge outside the current working directory is required.
 - **Prototype** (HITL): Raise the fidelity of the discussion by making a cheap, rough, concrete artifact to react to — an outline, a rough take, a stub, or UI/logic code via the /prototype skill. Links the prototype as an asset. Use when "how should it look" or "how should it behave" is the key question.
 - **Grilling** (HITL): Conversation via the /grilling and /domain-modeling skills (pattern: [`grilling-with-domain-modeling.md`](../../shared/grilling-with-domain-modeling.md)), one question at a time. The default case.
-When a decision is blocked by work that must be *executed* before it can be resolved — signing up for a service so its API can be judged, provisioning access, moving data so its shape can be seen — that work is a regular `kind:ticket` (scope `kind`, name `ticket`), not a child of the map. Create it on the tracker, then set the decision's `blocked_by` to reference it. The map holds only decisions; execution lives outside.
+When a decision is blocked by work that must be *executed* before it can be resolved — signing up for a service so its API can be judged, provisioning access, moving data so its shape can be seen — that work is a regular `kind:ticket` (scope `kind`, name `ticket`), not a child of the map. Create it on the tracker, then set the decision's blocking edge to reference it. The map holds only decisions; execution lives outside.
 
 ## Fog of war
 
@@ -125,7 +134,7 @@ User invokes with a loose idea.
 1. **Name the destination.** Run a `/grilling` and `/domain-modeling` session (pattern: [`grilling-with-domain-modeling.md`](../../shared/grilling-with-domain-modeling.md)) to pin down what this map is finding its way to — the spec, decision, or change. The destination fixes the scope, so it's settled first.
 2. **Map the frontier.** Grill again, **breadth-first** this time: fan out across the whole space rather than deep on any one thread, surfacing the open decisions and the first steps takeable now. **If this surfaces no fog** — the way to the destination is already clear, the whole journey small enough for one session — you don't need a map. Stop and ask the user how they'd like to proceed.
 3. **Create the map** (label `kind:map`): Destination and Notes filled in, Decisions-so-far empty, the fog sketched into **Not yet specified**.
-4. **Create the tickets you can specify now** as child issues of the map, each labelled `kind:decision` and the appropriate `wayfinder:<type>` — then wire blocking edges in a **second pass** (issues need ids before they can reference each other). Wiring sorts them into the frontier and the blocked; everything you can't yet specify stays in the fog — the **Not yet specified** section.
+4. **Create the tickets you can specify now** as child tickets of the map using the matching forge hierarchy recipe, each labelled `kind:decision` and the appropriate `wayfinder:<type>` — then wire blocking edges in a **second pass** (tickets need ids before they can reference each other). Wiring sorts them into the frontier and the blocked; everything you can't yet specify stays in the fog — the **Not yet specified** section.
 5. **Fire the research subagents.** Claim each `research` ticket (assign to @me), then spin up a `subagent` with `agent: "researcher"` for each to resolve it in parallel, writing findings to a local `research/<name>` branch and capturing them in the resolution comment.
 6. **Clean up research artifacts.** After every research subagent completes: delete its local `research/<name>` branch and any files it created (e.g. `docs/research/<topic>.md`). The resolution comment is the canonical record — branches stay local, never pushed.
 7. Stop — charting is one session's work; it hand-resolves nothing.
@@ -158,6 +167,6 @@ When the frontier is empty, the route is clear. Before closing, do these in orde
 
 3. **Write the closing summary.** Use the format in [`CLOSING-SUMMARY.md`](CLOSING-SUMMARY.md). Post it as a comment on the map, then append it to the map body below **Decisions so far** as **Route found**. *Completion criterion: closing summary posted as comment and appended to map body.*
 
-4. **Commit file changes.** Scan the closing summary and key decisions for domain terms. Check `docs/CONTEXT.md` for any not yet captured; update if found. Stage all changes (`docs/CONTEXT.md`, `docs/adr/`). Run `/conventional-commits` — ADRs as separate commits, glossary changes batched. *Completion criterion: all file changes committed; user approved each via conventional-commits review.*
+4. **Commit file changes.** Scan the closing summary and key decisions for domain terms. Check `docs/CONTEXT.md` for any not yet captured; update if found. Stage all changes (`docs/CONTEXT.md`, `docs/adr/`). Run `/commit` — ADRs as separate commits, glossary changes batched. *Completion criterion: all file changes committed through `/commit`; the commit hashes are reported.*
 
 5. **Close the map.** Present the closing summary and ask: "The route is clear. Close the map?" Close on confirmation. *Completion criterion: user confirmed; map issue closed.*

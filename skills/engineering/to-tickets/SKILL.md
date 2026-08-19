@@ -8,6 +8,10 @@ disable-model-invocation: true
 
 Break a plan, spec, or conversation into a set of **tickets** — tracer-bullet vertical slices, each declaring the tickets that **block** it.
 
+Read the shared [`issue-hierarchy`](../../shared/issue-hierarchy.md) contract.
+Use the matching forge skill's parent and blocking recipes when publishing;
+never assume that every forge creates child issues of the same type.
+
 
 ## Process
 
@@ -65,7 +69,14 @@ Iterate until the user approves the breakdown.
 
 ### 6. Publish the tickets
 
-Publish the approved tickets as **child issues** of the source spec — set `parent` to the spec's issue number when creating each. Publish via the [`github`](../github/SKILL.md) or [`gitlab`](../gitlab/SKILL.md) skill, whichever forge the repo lives on. Create in dependency order (blockers first). After all tickets are created, do a second pass to set each ticket's `blocked_by` edges — the tracker needs issue identifiers before they can reference each other.
+Publish the approved tickets as **child tickets** of the source spec. GitHub
+creates child issues with `parent`; GitLab creates child tasks with
+`issue_type=task` and attaches each with `/set_parent`. Publish via the
+[`github`](../github/SKILL.md) or [`gitlab`](../gitlab/SKILL.md) skill, whichever
+forge the repo lives on. Create in dependency order (blockers first). After all
+tickets are created, do a second pass to set each ticket's blocking edges using
+the matching forge recipe — the tracker needs issue identifiers before they can
+reference each other.
 
 Apply the labels `triage:for-agent` (scope `triage`, name `for-agent`) and `kind:ticket` (scope `kind`, name `ticket`) to each ticket, with `--color` set from the scope's hex (see [`label-taxonomy.md`](../../shared/label-taxonomy.md) for usage). Also stamp the parent's `type:*` label (scope `type`) on every child (a spec's children inherit its type). Unless instructed otherwise, the tickets are agent-grabbable by construction.
 

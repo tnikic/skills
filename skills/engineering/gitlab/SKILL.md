@@ -1,6 +1,6 @@
 ---
 name: gitlab
-description: Work with GitLab — issues, merge requests, labels, projects, and issue links (blocked-by/blocking, related). Exact command recipes backed by the glab CLI. Use whenever a task queries or modifies GitLab issues, MRs, labels, or projects, or when another skill needs a GitLab operation.
+description: Work with GitLab — issues, work-item hierarchy, merge requests, labels, projects, and issue links. Exact command recipes backed by the glab CLI. Use whenever a task queries or modifies GitLab issues, MRs, labels, projects, hierarchy, or relationships, or when another skill needs a GitLab operation.
 compatibility: Requires the glab CLI (glab-cli/glab) and GitLab authentication.
 ---
 
@@ -83,9 +83,46 @@ glab issue close N -R $R
 glab issue reopen N -R $R
 ```
 
+## Work-item hierarchy
+
+GitLab's native hierarchy is typed: an issue can parent task work items. A task
+has its own title, description, labels, assignee, comments, and lifecycle, but
+is not an issue-to-issue sub-issue. Use this adapter when a workflow needs a
+child ticket under an issue.
+
+```bash
+# create a child task; the response includes the task's iid and numeric id
+glab api -X POST "projects/GROUP%2FREPO/issues" \
+  -f title="Child task" \
+  -f description="body" \
+  -f issue_type=task
+
+# attach the task to its parent issue; quick actions run when the note is saved
+glab issue note TASK_IID -R $R -m "/set_parent #PARENT_IID"
+
+# verify the parent relationship
+glab api graphql -f query='query($id: WorkItemID!) { workItem(id: $id) { features { hierarchy { parent { id iid title } } } } }' \
+  -F id="$TASK_ID"
+
+# list direct child tasks of a parent work item
+glab api graphql -f query='query($fullPath: ID!, $parentId: WorkItemID!, $after: String) { project(fullPath: $fullPath) { workItems(parentIds: [$parentId], types: [TASK], first: 100, after: $after) { nodes { id iid title state features { assignees { assignees { nodes { username } } } } } pageInfo { hasNextPage endCursor } } } }' \
+  -F fullPath="$R" \
+  -F parentId="$PARENT_ID" \
+  -F after=null
+```
+
+The REST response returns a numeric database id. Convert it to the GraphQL
+work-item id format `gid://gitlab/WorkItem/<id>` before assigning `TASK_ID` or
+`PARENT_ID`. The REST issue-create endpoint has no direct `parent_id` field; the
+two-step create-and-attach sequence is intentional. If more than 100 child
+tasks exist, repeat the query with `after` set to `pageInfo.endCursor` while
+`pageInfo.hasNextPage` is true.
+
 ## Issue links (blocked-by / blocking)
 
-GitLab has no native issue parent/child. Relationships are **issue links** with a `link_type`: `relates_to`, `blocks`, or `is_blocked_by`. Set them via the API — the project id in the path is the URL-encoded project path:
+Relationships outside parentage are **issue links** with a `link_type`:
+`relates_to`, `blocks`, or `is_blocked_by`. Set them via the API — the project
+id in the path is the URL-encoded project path:
 
 ```bash
 # this issue is blocked by issue 2 of the same project

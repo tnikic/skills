@@ -11,10 +11,15 @@ This skill takes the current conversation context and codebase understanding and
 
 ### Detect source type
 
-Check the source issue's `kind:*` label before synthesizing. Valid `kind:*` values are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md).
+If the user passed a source issue, check its `kind:*` and `type:*` labels
+before synthesizing. If no source issue was passed, treat the current
+conversation as the source and infer the `type:*` label from the request.
+Valid labels are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md).
+Read the shared [`issue-hierarchy`](../../shared/issue-hierarchy.md) contract
+when resolving child tickets in map-consumer mode.
 
 - **`kind:map`** — this is a Wayfinder map. Activate map-consumer mode (next section).
-- **`kind:spec`** or **`kind:ticket`** — stop. "This is already a `kind:<x>`, not raw material for a spec."
+- **`kind:spec`**, **`kind:ticket`**, or **`kind:decision`** — stop. "This is already a `kind:<x>`, not raw material for a spec."
 - **No label, reads like a spec** — stamp with `kind:spec`, warn "This already reads like a spec — published as-is.", and stop.
 - **No label, reads like conversation output** — proceed with normal synthesis (step 1 below).
 
@@ -22,18 +27,23 @@ Check the source issue's `kind:*` label before synthesizing. Valid `kind:*` valu
 
 When the source is a `kind:map`:
 
-1. **Check it's closed.** If the map has open child tickets, block with: "This map has N open decisions. Wayfinder maps should be closed before synthesizing a spec. Reply 'proceed anyway' to continue." Do not proceed without this explicit override.
-2. **Fetch the full trail.** Read the closing summary (the **Route found** comment), then fetch resolution comments from closed child tickets for detail on specific decisions.
-3. **Synthesize.** Use the closing summary's narrative for Problem Statement and Solution. Resolution comments feed Implementation Decisions. Residual fog and Out of scope feed Further Notes and Out of Scope in the spec.
-4. **Write and publish** the spec using the template below.
+1. **Check it's closed.** Read the map's state through the matching forge issue
+   recipe. If the map is open, block with: "This map is still open. Close it
+   before synthesizing a spec." Do not proceed without that state transition.
+2. **Check its children.** Query the map's child tickets through the matching
+   forge hierarchy recipe. If the map has open child tickets, block with: "This
+   map has N open decisions. Wayfinder maps should be closed before
+   synthesizing a spec. Reply 'proceed anyway' to continue." Do not proceed
+   without this explicit override.
+3. **Fetch the full trail.** Read the closing summary (the **Route found** comment), then fetch resolution comments from closed child tickets for detail on specific decisions.
+4. **Synthesize.** Use the closing summary's narrative for Problem Statement and Solution. Resolution comments feed Implementation Decisions. Residual fog and Out of scope feed Further Notes and Out of Scope in the spec.
+5. **Write and publish** the spec using the template below.
 
 ### Normal mode
 
 1. Explore the repo to understand the current state of the codebase, if you haven't already. Use the project's domain glossary vocabulary throughout the spec, and respect any ADRs in the area you're touching.
 
 2. Sketch out the seams at which you're going to test the feature. Existing seams should be preferred to new ones. Use the highest seam possible. If new seams are needed, propose them at the highest point you can. The fewer seams across the codebase, the better — the ideal number is one.
-
-Check with the user that these seams match their expectations.
 
 3. Write the spec using the template below, then publish it to the project issue tracker.
 
@@ -93,4 +103,13 @@ Any further notes about the feature.
 
 </spec-template>
 
-After writing the spec via either mode, publish to the issue tracker with labels `triage:for-agent`, `kind:spec`, `type:enhancement`. Pass `--color` for each label — see [`label-taxonomy.md`](../../shared/label-taxonomy.md) for scope hex values. Publish via the [`github`](../github/SKILL.md) or [`gitlab`](../gitlab/SKILL.md) skill, whichever forge the repo lives on.
+Before publishing, preserve an existing valid `type:*` label. If the source has
+no `type:*` label, infer `type:bug` when it describes broken or incorrect
+existing behavior; otherwise use `type:enhancement`. This inference applies to
+conversation sources and unlabeled maps alike.
+
+After writing the spec via either mode, publish to the issue tracker with labels
+`triage:for-agent`, `kind:spec`, and the resolved `type:*` label. Pass `--color`
+for each label — see [`label-taxonomy.md`](../../shared/label-taxonomy.md) for
+scope hex values. Publish via the [`github`](../github/SKILL.md) or
+[`gitlab`](../gitlab/SKILL.md) skill, whichever forge the repo lives on.
