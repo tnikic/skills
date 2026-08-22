@@ -21,6 +21,12 @@ review_skill="$repo_root/skills/engineering/review-skill/SKILL.md"
 code_review_skill="$repo_root/skills/engineering/code-review/SKILL.md"
 github_skill="$repo_root/skills/engineering/github/SKILL.md"
 gitlab_skill="$repo_root/skills/engineering/gitlab/SKILL.md"
+diagnosing_bugs_skill="$repo_root/skills/engineering/diagnosing-bugs/SKILL.md"
+triage_skill="$repo_root/skills/engineering/triage/SKILL.md"
+research_skill="$repo_root/skills/engineering/research/SKILL.md"
+merge_conflicts_skill="$repo_root/skills/engineering/resolving-merge-conflicts/SKILL.md"
+prototype_skill="$repo_root/skills/engineering/prototype/SKILL.md"
+prototype_logic="$repo_root/skills/engineering/prototype/LOGIC.md"
 fail() {
   printf 'test[%s]: %s\n' "${TEST_CONCERN:-unknown}" "$1" >&2
   exit 1

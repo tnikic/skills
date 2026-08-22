@@ -11,6 +11,8 @@ Glossary of domain terms for the agent skills ecosystem.
 - **tdd** — Skill for test-driven development. After the skills refactor (map 31): feedback-first framing — runnable check before code, smallest provable slice first, E2E as final gate. Test list as transient external state. Cheating defenses. Refactoring in green only.
 - **github skill** — Model-invoked skill for GitHub forge actions, backed by the `gh` CLI. Authoritative command-recipe catalog for GitHub.
 - **gitlab skill** — Model-invoked skill for GitLab forge actions, backed by the `glab` CLI. Authoritative command-recipe catalog for GitLab.
+- **research** — Model-invoked workflow for primary-source investigation that leaves a cited Markdown artifact in the repository.
+- **resolving-merge-conflicts** — Model-invoked workflow for tracing conflict intent, resolving hunks, running checks, and finishing through the commit gate.
 
 ## Forge access
 
