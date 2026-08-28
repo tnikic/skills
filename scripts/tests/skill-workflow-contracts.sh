@@ -255,9 +255,41 @@ assert_contains_many_normalized "$to_spec_skill" \
   'type:bug' \
   'otherwise use `type:enhancement`' \
   'child tickets through the matching' \
-  'If the map is open'
+  'If the map is open' \
+  'Do not apply `kind:spec` until the specification has been published successfully.' \
+  'one issue record' \
+  'body limit' \
+  'ordered comments' \
+  '## Spec overflow N/M' \
+  'human-readable line' \
+  'not a parent-child relationship' \
+  'published `kind:spec` issue is ready now for `/to-tickets`'
+assert_order_normalized "$to_spec_skill" \
+  'fit complete sections' \
+  'body limit' \
+  'ordered comments' \
+  'Publish to the issue tracker with labels' \
+  'human-readable line' \
+  'published `kind:spec` issue is ready now for `/to-tickets`'
 assert_not_contains "$to_spec_skill" 'Check with the user that these seams match their expectations.'
-assert_contains "$to_tickets_skill" 'child tasks'
+assert_contains_many_normalized "$to_tickets_skill" \
+  'child tasks' \
+  'full spec source' \
+  'issue body first, then append comments' \
+  '## Spec overflow N/M' \
+  'Overflow comments are part of the specification' \
+  'Do not stamp `kind:spec` from this planning workflow.' \
+  'native parent/child hierarchy' \
+  'exactly one implementation ticket' \
+  'create that one native child issue first' \
+  'issue records and their edges exist'
+assert_order_normalized "$to_tickets_skill" \
+  'assemble the full spec source' \
+  'issue body first' \
+  'Overflow comments are part of the specification' \
+  'native child tickets' \
+  'exactly one implementation ticket' \
+  'create that one native child issue first'
 assert_contains "$wayfinder_skill" 'child task work items'
 assert_contains_many_normalized "$implement_skill" \
   'Create a single commit through `/commit`' \

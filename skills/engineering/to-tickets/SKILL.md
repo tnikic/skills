@@ -19,11 +19,24 @@ never assume that every forge creates child issues of the same type.
 
 Work from whatever is already in the conversation context. If the user passes a reference (a spec path, an issue number or URL) as an argument, fetch it and read its full body, comments, and labels.
 
+When the source is a published `kind:spec` issue, assemble the full spec source
+before drafting tickets: read the issue body first, then append comments in
+tracker order whose headings match `## Spec overflow N/M`, sorted by `N`.
+Overflow comments are part of the specification, not optional discussion. Read
+all other comments as context, but do not mistake them for spec sections.
+
+*Completion: the ticket breakdown is based on the issue body plus every ordered
+overflow comment, with unrelated comments retained only as context.*
+
 ### 2. Validate the source
 
 Check the source issue's `kind:*` label (scope `kind`) before breaking anything down. Valid values are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md).
 
-- **`kind:spec`** (scope `kind`, name `spec`) — proceed normally. If the source is missing a `kind:*` label entirely and reads like a spec (has problem statement, user stories, etc.), stamp it with `kind:spec` now and proceed.
+- **`kind:spec`** (scope `kind`, name `spec`) — proceed normally. This label
+  means the specification was published and is ready for ticket planning.
+- **No `kind:*` and reads like a spec** — stop and route the source through
+  `/to-spec` for publication. Do not stamp `kind:spec` from this planning
+  workflow.
 - **`kind:ticket`** (scope `kind`, name `ticket`) — stop. Tell the user: "This is already a ticket (`kind:ticket`). Tickets can't be broken into sub-tickets. If this work is too large for one session, convert it to a spec first."
 - **`kind:decision`** (scope `kind`, name `decision`) or **`kind:map`** (scope `kind`, name `map`) — stop. Tell the user: "This is a `kind:<x>`, not a spec. It can't be broken into tickets."
 - **No `kind:*` and reads like a ticket** (has acceptance criteria, a single buildable unit) — stamp with `kind:ticket` and stop with the same message as above.
@@ -69,19 +82,37 @@ Iterate until the user approves the breakdown.
 
 ### 6. Publish the tickets
 
-Publish the approved tickets as **child tickets** of the source spec. GitHub
+Publish the approved tickets as **native child tickets** of the source spec. GitHub
 creates child issues with `parent`; GitLab creates child tasks with
 `issue_type=task` and attaches each with `/set_parent`. Publish via the
 [`github`](../github/SKILL.md) or [`gitlab`](../gitlab/SKILL.md) skill, whichever
 forge the repo lives on. Create in dependency order (blockers first). After all
 tickets are created, do a second pass to set each ticket's blocking edges using
 the matching forge recipe — the tracker needs issue identifiers before they can
-reference each other.
+reference each other. A specification-to-ticket relationship is represented by
+this native parent/child hierarchy, not by a human-readable link alone.
+
+If the approved breakdown contains exactly one implementation ticket, use the
+one-ticket shortcut without bypassing the issue record: create that one native
+child issue first, then expose `/implement` as ready now. For multiple tickets,
+expose `/implement` for the created tickets only after all records and blocking
+edges exist.
 
 Apply the labels `triage:for-agent` (scope `triage`, name `for-agent`) and `kind:ticket` (scope `kind`, name `ticket`) to each ticket, with `--color` set from the scope's hex (see [`label-taxonomy.md`](../../shared/label-taxonomy.md) for usage). Also stamp the parent's `type:*` label (scope `type`) on every child (a spec's children inherit its type). Unless instructed otherwise, the tickets are agent-grabbable by construction.
 
 Do NOT close or modify any parent issue.
 
 Use the issue template from [`issue-template.md`](../../shared/issue-template.md) for every ticket created.
+
+Read [`continuation`](../../shared/continuation.md) at this boundary and return
+the complete continuation set. The planning result is `complete` when the
+approved issue records and their edges exist; ready-now actions are the
+corresponding `/implement` actions, later actions are any explicitly dependent
+implementation tickets, and the dependencies and deliberate stop are `None`
+when no tracker dependency or intentional stop remains.
+
+*Completion: every approved ticket has its issue record and native hierarchy;
+the one-ticket shortcut creates its issue record before exposing `/implement`;
+and the returned continuation set accounts for every created ticket and edge.*
 
 Work the frontier one ticket at a time with `/implement`, clearing context between tickets.

@@ -20,7 +20,8 @@ when resolving child tickets in map-consumer mode.
 
 - **`kind:map`** — this is a Wayfinder map. Activate map-consumer mode (next section).
 - **`kind:spec`**, **`kind:ticket`**, or **`kind:decision`** — stop. "This is already a `kind:<x>`, not raw material for a spec."
-- **No label, reads like a spec** — stamp with `kind:spec`, warn "This already reads like a spec — published as-is.", and stop.
+- **No label, reads like a spec** — proceed in normal mode. Do not apply
+  `kind:spec` until the specification has been published successfully.
 - **No label, reads like conversation output** — proceed with normal synthesis (step 1 below).
 
 ### Map-consumer mode
@@ -37,7 +38,7 @@ When the source is a `kind:map`:
    without this explicit override.
 3. **Fetch the full trail.** Read the closing summary (the **Route found** comment), then fetch resolution comments from closed child tickets for detail on specific decisions.
 4. **Synthesize.** Use the closing summary's narrative for Problem Statement and Solution. Resolution comments feed Implementation Decisions. Residual fog and Out of scope feed Further Notes and Out of Scope in the spec.
-5. **Write and publish** the spec using the template below.
+5. **Write** the spec using the template below, then follow Publication below.
 
 ### Normal mode
 
@@ -45,7 +46,7 @@ When the source is a `kind:map`:
 
 2. Sketch out the seams at which you're going to test the feature. Existing seams should be preferred to new ones. Use the highest seam possible. If new seams are needed, propose them at the highest point you can. The fewer seams across the codebase, the better — the ideal number is one.
 
-3. Write the spec using the template below, then publish it to the project issue tracker.
+3. Write the spec using the template below, then follow Publication below.
 
 <spec-template>
 
@@ -103,13 +104,44 @@ Any further notes about the feature.
 
 </spec-template>
 
+### Publication
+
+After writing the spec in either mode, publish it as one issue record. Before
+creating it, fit complete sections into the issue body up to the matching
+forge's body limit. Move useful complete sections that do not fit into ordered
+comments headed `## Spec overflow N/M`, where `N` is the comment's position and
+`M` is the total number of overflow comments. Use overflow only when the body
+limit is reached; do not create a second spec issue or split a section across
+comments.
+
+*Completion: the spec is either within the body limit or has its complete
+overflow sections identified for ordered publication in the same issue.*
+
 Before publishing, preserve an existing valid `type:*` label. If the source has
 no `type:*` label, infer `type:bug` when it describes broken or incorrect
 existing behavior; otherwise use `type:enhancement`. This inference applies to
 conversation sources and unlabeled maps alike.
 
-After writing the spec via either mode, publish to the issue tracker with labels
+Publish to the issue tracker with labels
 `triage:for-agent`, `kind:spec`, and the resolved `type:*` label. Pass `--color`
 for each label — see [`label-taxonomy.md`](../../shared/label-taxonomy.md) for
 scope hex values. Publish via the [`github`](../github/SKILL.md) or
-[`gitlab`](../gitlab/SKILL.md) skill, whichever forge the repo lives on.
+[`gitlab`](../gitlab/SKILL.md) skill, whichever forge the repo lives on. The
+publication result is the source handed directly to `/to-tickets`.
+
+When map-consumer mode produced the spec, use the matching forge's issue-edit
+recipe to add a human-readable line such as
+`- [<spec title>](<spec URL>) - published specification` to the map's
+developer-facing `Route found` record (or its `Decisions so far` section when
+no `Route found` section exists). This is an outcome link, not a parent-child
+relationship: do not make the spec a map child.
+
+After successful publication, read [`continuation`](../../shared/continuation.md)
+and return a complete continuation set: the published `kind:spec` issue is
+ready now for `/to-tickets`; `/implement` is later, after implementation issue
+records exist; the publication dependencies and deliberate stop are `None`
+unless the tracker reports otherwise.
+
+*Completion: one published issue contains the complete spec, labels, and any
+ordered overflow comments; map-consumer runs record the spec link on the map;
+and the continuation set identifies `/to-tickets` as ready now.*
