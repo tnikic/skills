@@ -109,10 +109,34 @@ assert_contains_many_normalized "$commit_skill" \
 assert_contains_many_normalized "$pr_skill" \
   'name: pr' \
   'disable-model-invocation: true' \
-  'Prepare one non-default implementation branch for one ticket' \
+  'Advance one implementation ticket from a spec through exactly one non-default branch' \
+  'Each implementation ticket gets its own branch and review record' \
+  'advance sequentially through one linear stack' \
+  'separate specs have independent roots' \
+  'Read the full source, all comments, and native child ticket records' \
+  'declared order and dependency edges' \
+  'stable key' \
+  'declared spec or dependency order' \
+  'tracker priority' \
+  'ticket creation time' \
+  'its predecessor is merged or implementation-ready' \
+  'has no spec-local predecessor' \
+  'every dependency outside the current spec is closed' \
+  'Validate that the current spec is one linear chain' \
+  'fork, fan in, or cycle' \
+  'stop before creating a branch or publishing a review record' \
+  'forge cannot infer stack ancestry' \
+  'linearize the dependencies or split the work into separate specs' \
+  'Keep external open dependencies as blockers' \
   'Identify the repository default branch' \
   'If the current branch is the default branch, stop before implementation' \
   'actionable guidance to create or switch to a non-default implementation branch' \
+  'one deterministic source branch' \
+  'first ticket in a spec targets the default branch' \
+  "each later ticket targets exactly its predecessor's source branch" \
+  'Start a later ticket from that implementation-ready predecessor branch' \
+  'A branch belongs to one ticket and one spec' \
+  'native source/target topology' \
   'Invoke `/implement` for the identified work in PR-workflow handoff mode.' \
   '`/implement` owns issue reading, implementation, validation, review and repair' \
   'After a successful implementation handoff, invoke `/commit`.' \
@@ -130,14 +154,20 @@ assert_contains_many_normalized "$pr_skill" \
   'normalized publication result' \
   'publication_failure' \
   'Preserve the pushed branch and open issue' \
-  '## 6. Return the implementation-ready boundary' \
+  '## 6. Return the implementation-ready boundary and merge order' \
   'implementation-ready' \
   'Keep the ticket open' \
-  'complete continuation set'
+  'complete continuation set' \
+  'selected target branch' \
+  'native synchronization, rebasing, branch updates' \
+  "spec's required human merge order" \
+  'Human review and merge remain outside this workflow' \
+  'do not approve, merge, or close records here' \
+  'downstream implementation as a later or ready-now continuation'
 assert_order_normalized "$pr_skill" \
   'Identify the repository default branch' \
   'If the current branch is the default branch, stop before implementation' \
-  '## 2. Prepare the implementation branch' \
+  '## 2. Prepare the implementation branch and topology' \
   'Verify the current branch is non-default immediately before the implementation handoff' \
   '## 3. Delegate implementation' \
   'Invoke `/implement`' \
@@ -146,7 +176,7 @@ assert_order_normalized "$pr_skill" \
   '## 5. Publish one review record' \
   'provider-neutral `find` operation' \
   'one `create` operation' \
-  '## 6. Return the implementation-ready boundary'
+  '## 6. Return the implementation-ready boundary and merge order'
 assert_not_contains "$pr_skill" 'git commit'
 assert_not_contains "$pr_skill" 'git push'
 assert_contains_many_normalized "$implement_skill" \
@@ -715,6 +745,81 @@ done
   fail 'GitLab merged state is not distinct from implementation-ready'
 [ "$(jq -r '.lifecycle[2].issue_state' "$gitlab_pr_workflow_fixture")" = closed ] ||
   fail 'GitLab closed state is not distinct from implementation-ready'
+
+assert_stack_route_fixture() {
+  local fixture="$1"
+  local provider="$2"
+  local one_ticket_publication="$3"
+  local expected_merge_order="$4"
+
+  assert_file "$fixture"
+  [ "$(jq -r '.provider' "$fixture")" = "$provider" ] ||
+    fail "$fixture has the wrong forge route"
+
+  [ "$(jq '.scenarios.one_ticket.tickets | length' "$fixture")" = 1 ] ||
+    fail "$fixture does not cover the one-ticket route"
+  [ "$(jq -r '.scenarios.one_ticket.tickets[0].publication' "$fixture")" = "$one_ticket_publication" ] ||
+    fail "$fixture does not identify one review record per ticket"
+  [ "$(jq -r '.scenarios.one_ticket.branches_per_ticket' "$fixture")" = true ] ||
+    fail "$fixture does not prove one branch per ticket"
+  [ "$(jq -r '.scenarios.one_ticket.records_per_ticket' "$fixture")" = true ] ||
+    fail "$fixture does not prove one review record per ticket"
+  [ "$(jq -c '.scenarios.one_ticket.events' "$fixture")" = '["branch","implement","commit","find","create"]' ] ||
+    fail "$fixture does not prove the one-ticket workflow order"
+
+  [ "$(jq '.scenarios.multi_ticket.tickets | length' "$fixture")" = 3 ] ||
+    fail "$fixture does not cover multiple tickets"
+  [ "$(jq -r '.scenarios.multi_ticket.linear' "$fixture")" = true ] ||
+    fail "$fixture does not prove a linear stack"
+  [ "$(jq -r '.scenarios.multi_ticket.downstream_started_before_predecessor_merge' "$fixture")" = true ] ||
+    fail "$fixture does not prove implementation-ready downstream work"
+  [ "$(jq -r '.scenarios.multi_ticket.branches_per_ticket' "$fixture")" = true ] ||
+    fail "$fixture does not prove one branch per stacked ticket"
+  [ "$(jq -r '.scenarios.multi_ticket.records_per_ticket' "$fixture")" = true ] ||
+    fail "$fixture does not prove one review record per stacked ticket"
+  jq -e '.scenarios.multi_ticket.events | length == 3 and all(.[]; .stages == ["branch", "implement", "commit", "find", "create"] and .commits == 1 and .pushed == true and .records == 1)' "$fixture" >/dev/null ||
+    fail "$fixture does not prove the per-ticket workflow order"
+  jq -e '.scenarios.multi_ticket.tickets | [.[].source_branch] | length == (unique | length)' "$fixture" >/dev/null ||
+    fail "$fixture shares source branches between tickets"
+  jq -e '.scenarios.multi_ticket.tickets | .[0].target_branch == "main" and .[1].target_branch == .[0].source_branch and .[2].target_branch == .[1].source_branch' "$fixture" >/dev/null ||
+    fail "$fixture lost linear source/target topology"
+  [ "$(jq -c '.scenarios.multi_ticket.merge_order' "$fixture")" = "$expected_merge_order" ] ||
+    fail "$fixture lost required merge order"
+  [ "$(jq -r '.scenarios.multi_ticket.human_merge' "$fixture")" = true ] ||
+    fail "$fixture does not keep merge outside the workflow"
+
+  [ "$(jq -r '.scenarios.separate_specs.independent_roots' "$fixture")" = true ] ||
+    fail "$fixture does not prove separate spec independence"
+  [ "$(jq -r '.scenarios.separate_specs.shared_branch_state' "$fixture")" = false ] ||
+    fail "$fixture shares branch state between specs"
+  jq -e '.scenarios.separate_specs.specs | all(.[]; .target_branch == "main")' "$fixture" >/dev/null ||
+    fail "$fixture does not give separate specs independent roots"
+
+  selected="$(jq -r '.scenarios.deterministic_selection.selected' "$fixture")"
+  calculated="$(jq -r '.scenarios.deterministic_selection.candidates | sort_by([.spec_order, .dependency_order, .priority, .created_at, .number]) | .[0].number' "$fixture")"
+  [ "$selected" = "$calculated" ] ||
+    fail "$fixture selection is not deterministic: selected $selected, calculated $calculated"
+  [ "$(jq -c '.scenarios.deterministic_selection.sort_key' "$fixture")" = '["spec_or_dependency_order","priority","ticket_age"]' ] ||
+    fail "$fixture does not declare selection precedence"
+
+  [ "$(jq -r '.scenarios.external_blocker.ready' "$fixture")" = false ] ||
+    fail "$fixture incorrectly selected an externally blocked ticket"
+  [ "$(jq -r '.scenarios.external_blocker.publication' "$fixture")" = 'not started' ] ||
+    fail "$fixture published an externally blocked ticket"
+  [ "$(jq -r '.scenarios.external_blocker.external_blockers[0].state' "$fixture")" = open ] ||
+    fail "$fixture did not preserve an open external blocker"
+
+  [ "$(jq -r '.scenarios.non_linear.linear' "$fixture")" = false ] ||
+    fail "$fixture does not identify a non-linear graph"
+  [ "$(jq -r '.scenarios.non_linear.publication' "$fixture")" = stopped ] ||
+    fail "$fixture did not stop non-linear publication"
+  [ "$(jq -r '.scenarios.non_linear.records_created' "$fixture")" = 0 ] ||
+    fail "$fixture created a record for a non-linear graph"
+  assert_contains_normalized "$fixture" 'linearize the dependencies or split the work into separate specs'
+}
+
+assert_stack_route_fixture "$pr_stack_fixture" github 'one pull request' '[102,103,104]'
+assert_stack_route_fixture "$gitlab_pr_stack_fixture" gitlab 'one merge request' '[202,203,204]'
 
 printf '%s\n' \
   'Direct invocation: /implement' \

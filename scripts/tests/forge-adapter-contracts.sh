@@ -31,7 +31,10 @@ assert_contains_many_normalized "$forge_contract" \
   'publication-failed' \
   'retryable: true' \
   'preserved_branch: true' \
-  'preserved_issue: true'
+  'preserved_issue: true' \
+  'stack root' \
+  'selected predecessor branch' \
+  'adapter returns that topology'
 assert_not_contains "$forge_contract" 'gh '
 assert_not_contains "$forge_contract" 'glab '
 

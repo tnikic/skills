@@ -41,6 +41,10 @@ identified by source branch, not by a provider-specific stack identifier.
 Multiple open records for one source branch are an actionable failure because
 the workflow cannot safely choose one.
 
+For stacked publication, `target_branch` is the default branch for a stack root
+or the selected predecessor branch for a later layer; the adapter returns that
+topology without choosing or simulating it.
+
 ## Publication Failure
 
 Failure results use this shape and never claim that a review record exists:

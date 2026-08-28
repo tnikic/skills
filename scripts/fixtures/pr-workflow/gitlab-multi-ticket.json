@@ -1,0 +1,159 @@
+{
+  "provider": "gitlab",
+  "default_branch": "main",
+  "spec": 100,
+  "review_record": "merge request",
+  "scenarios": {
+    "one_ticket": {
+      "tickets": [
+        {
+          "number": 201,
+          "spec_order": 1,
+          "priority": 2,
+          "created_at": "2026-08-28T10:00:00Z",
+          "predecessor": null,
+          "source_branch": "feat/201-foundation",
+          "target_branch": "main",
+          "publication": "one merge request",
+          "state": "implementation-ready"
+        }
+      ],
+      "branches_per_ticket": true,
+      "records_per_ticket": true,
+      "events": ["branch", "implement", "commit", "find", "create"],
+      "merge_order": [201],
+      "human_merge": true
+    },
+    "multi_ticket": {
+      "tickets": [
+        {
+          "number": 202,
+          "spec_order": 1,
+          "priority": 2,
+          "created_at": "2026-08-28T10:01:00Z",
+          "predecessor": null,
+          "source_branch": "feat/202-auth",
+          "target_branch": "main",
+          "state": "implementation-ready"
+        },
+        {
+          "number": 203,
+          "spec_order": 2,
+          "priority": 1,
+          "created_at": "2026-08-28T10:02:00Z",
+          "predecessor": 202,
+          "source_branch": "feat/203-ui",
+          "target_branch": "feat/202-auth",
+          "state": "implementation-ready"
+        },
+        {
+          "number": 204,
+          "spec_order": 3,
+          "priority": 1,
+          "created_at": "2026-08-28T10:03:00Z",
+          "predecessor": 203,
+          "source_branch": "feat/204-api",
+          "target_branch": "feat/203-ui",
+          "state": "implementation-ready"
+        }
+      ],
+      "downstream_started_before_predecessor_merge": true,
+      "branches_per_ticket": true,
+      "records_per_ticket": true,
+      "events": [
+        {
+          "ticket": 202,
+          "stages": ["branch", "implement", "commit", "find", "create"],
+          "commits": 1,
+          "pushed": true,
+          "records": 1
+        },
+        {
+          "ticket": 203,
+          "stages": ["branch", "implement", "commit", "find", "create"],
+          "commits": 1,
+          "pushed": true,
+          "records": 1
+        },
+        {
+          "ticket": 204,
+          "stages": ["branch", "implement", "commit", "find", "create"],
+          "commits": 1,
+          "pushed": true,
+          "records": 1
+        }
+      ],
+      "linear": true,
+      "merge_order": [202, 203, 204],
+      "human_merge": true
+    },
+    "separate_specs": {
+      "specs": [
+        {
+          "number": 210,
+          "source_branch": "feat/210-docs",
+          "target_branch": "main"
+        },
+        {
+          "number": 220,
+          "source_branch": "feat/220-cli",
+          "target_branch": "main"
+        }
+      ],
+      "independent_roots": true,
+      "shared_branch_state": false
+    },
+    "deterministic_selection": {
+      "candidates": [
+        {
+          "number": 230,
+          "spec_order": 2,
+          "dependency_order": 2,
+          "priority": 1,
+          "created_at": "2026-08-28T09:00:00Z"
+        },
+        {
+          "number": 231,
+          "spec_order": 1,
+          "dependency_order": 1,
+          "priority": 3,
+          "created_at": "2026-08-28T11:00:00Z"
+        },
+        {
+          "number": 232,
+          "spec_order": 1,
+          "dependency_order": 1,
+          "priority": 3,
+          "created_at": "2026-08-28T10:00:00Z"
+        }
+      ],
+      "sort_key": ["spec_or_dependency_order", "priority", "ticket_age"],
+      "selected": 232
+    },
+    "external_blocker": {
+      "ticket": 240,
+      "spec": 100,
+      "external_blockers": [
+        {
+          "number": 241,
+          "state": "open"
+        }
+      ],
+      "ready": false,
+      "publication": "not started",
+      "guidance": "wait for external blocker #241 to close"
+    },
+    "non_linear": {
+      "ticket_edges": [
+        [250, 251],
+        [250, 252],
+        [251, 253],
+        [252, 253]
+      ],
+      "linear": false,
+      "publication": "stopped",
+      "records_created": 0,
+      "guidance": "linearize the dependencies or split the work into separate specs"
+    }
+  }
+}
