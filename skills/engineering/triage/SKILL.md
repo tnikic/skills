@@ -24,13 +24,44 @@ Every issue or comment posted by triage must start with this disclaimer:
 
 Label scopes, values, colors, and usage are defined in [`label-taxonomy.md`](../../shared/label-taxonomy.md). This skill owns the `triage:*`, `type:*`, and `kind:*` scopes.
 
-All scopes are **exclusive** — only one label per scope per issue. The triage agent determines `kind:spec` vs `kind:ticket` during evaluation: `kind:spec` when the work needs planning before building, `kind:ticket` when the build is the plan and it fits in one session.
+All scopes are **exclusive** — only one label per scope per issue. Triage uses
+`kind:spec` only for a published specification that is ready for ticket
+planning. Unfinished planning remains an intake record without `kind:spec` and
+is routed as clarification-needed or as a planning outcome.
 
 Scoped labels use the notation `scope:name`. When calling tracker tools, always pass them as structured labels — `{scope: "scope", name: "name"}` — not as a flat string with a colon. Tracker calls are executed with the [`github`](../github/SKILL.md) or [`gitlab`](../gitlab/SKILL.md) skill, whichever forge the repo lives on.
 
 ---
 
 State transitions: an unlabeled issue normally goes to `triage:pending` first; from there it moves to `triage:unanswered`, `triage:for-agent`, `triage:for-human`, or `triage:wontfix`. `triage:unanswered` returns to `triage:pending` once the reporter replies. The maintainer can override at any time — flag transitions that look unusual and ask before proceeding.
+
+## Classification routes
+
+After applying an outcome, read the shared
+[`continuation`](../../shared/continuation.md) reference and return the exact
+continuation set in the agent interaction. Keep skill names and routing fields
+out of issue bodies and comments.
+
+- **Clarification needed** — apply `triage:unanswered`; the current state is
+  `pending`, the ready-now action is the reporter's clarification, and later
+  `/triage` re-evaluates the issue after a reply. Do not apply `kind:spec`.
+- **Bounded ticket** — apply `triage:for-agent`, `kind:ticket`, and the
+  resolved `type:*`; `/implement` is ready now against this issue record.
+- **Published spec** — apply `triage:for-agent`, `kind:spec`, and the resolved
+  `type:*`; `/to-tickets` is ready now to create implementation tickets.
+- **Human-owned** — apply `triage:for-human` and the resolved `type:*`; the
+  current state is `pending` until the named human action is complete, with no
+  agent implementation route.
+- **Rejected** — apply `triage:wontfix` and close with the appropriate
+  explanation; the current state is `complete` with a deliberate stop and no
+  later action.
+- **Already implemented** — apply `triage:wontfix`, close, and point to the
+  existing implementation; the current state is `complete` with a deliberate
+  stop and no later action.
+
+The bounded and published-spec branches differ by the artifact already present:
+an implementation ticket is ready to build, while a published spec is ready to
+be broken into tickets. Work that merely still needs planning is neither.
 
 ## Invocation
 
@@ -61,7 +92,7 @@ Show counts and a one-line summary per item. Let the maintainer pick.
 
 2. **Recommend.** Tell the maintainer your recommendation with reasoning, plus a brief codebase summary relevant to the request — including whether it's already implemented. Recommend all three label axes:
    - `type:*` — `type:bug` or `type:enhancement`
-   - `kind:*` — `kind:spec` (needs planning before building) or `kind:ticket` (the build is the plan, fits one session)
+    - `kind:*` — `kind:spec` (a published specification ready for ticket planning) or `kind:ticket` (the build is the plan and fits one session)
    - `triage:*` — the appropriate state
 
     Wait for direction.

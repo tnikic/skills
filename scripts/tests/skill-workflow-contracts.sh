@@ -123,6 +123,48 @@ assert_contains_many_normalized "$triage_skill" \
   'tag each line `[PR]` or `[issue]`' \
   'prepend the exact disclaimer above' \
   'Do not infer external-PR scope from repository activity alone.'
+assert_contains_many_normalized "$grilling_skill" \
+  'shared [`continuation`](../../shared/continuation.md)' \
+  'One-ticket' \
+  'exactly one implementation ticket remains' \
+  'Multi-ticket' \
+  'Too large' \
+  'uncharted Wayfinder map' \
+  'Return the complete continuation set'
+assert_order_normalized "$grilling_skill" \
+  'One-ticket' \
+  '`/to-tickets`' \
+  '`/implement` later' \
+  'Multi-ticket' \
+  '`/to-spec`' \
+  'Too large' \
+  'uncharted Wayfinder map'
+assert_contains_many_normalized "$grill_with_docs_skill" \
+  'One-ticket' \
+  'Multi-ticket' \
+  'Too large' \
+  'uncharted Wayfinder map' \
+  'complete continuation set' \
+  'The too-large branch is a map continuation'
+assert_contains_many_normalized "$triage_skill" \
+  '`kind:spec` only for a published specification' \
+  'Clarification needed' \
+  'Bounded ticket' \
+  'Published spec' \
+  'Human-owned' \
+  'Rejected' \
+  'Already implemented' \
+  'Do not apply `kind:spec`'
+assert_contains_many_normalized "$wayfinder_skill" \
+  'shared [`continuation`](../../shared/continuation.md)' \
+  'Uncharted map' \
+  'Charted map' \
+  'Spec-ready' \
+  'One-ticket shortcut' \
+  'Decision captured' \
+  'Follow-up map' \
+  'exactly one implementation ticket remains' \
+  'Wayfinder never places `/implement` in the ready-now route'
 assert_contains_many_normalized "$prototype_skill" \
   'single shareable HTML demo' \
   'LOGIC.md' \

@@ -5,6 +5,10 @@ description: Grill the user relentlessly about a plan, decision, or idea — a d
 
 Interview the user relentlessly until you reach a shared understanding. Map this as a **design tree**: every decision branches into the decisions that hang off it.
 
+At the boundary, read the shared [`continuation`](../../shared/continuation.md)
+reference and return a continuation set in the live interaction. Keep the exact
+route out of any public issue record.
+
 ## Ground rules
 
 Grilling is a discussion that ends in a plan, not in code. While it runs, the only files you write are:
@@ -28,4 +32,27 @@ Each round the user answers reshapes the tree — settled decisions push the fro
 
 Finding _facts_ is your job, never the user's. When a frontier question needs a fact from the environment (filesystem, tools, etc.), dispatch a sub-agent to find it — don't ask the user for anything you could look up yourself. Don't block on it: a running exploration is an unsettled prerequisite, so only the questions downstream of it wait for the sub-agent to report — ask the rest of the frontier now. The _decisions_ are the user's — put each to them and wait.
 
-The session is done when the frontier is empty: every branch of the design tree visited, nothing left silently assumed. When the user confirms you have reached a shared understanding, **end with the plan**: a short summary of the decisions made and the threads still open, plus the next step — `/to-spec` to write it up, or `/implement` to build it. Grilling ends at the plan; the build is a separate invocation.
+The session is done when the frontier is empty: every branch of the design tree visited, nothing left silently assumed. When the user confirms you have reached a shared understanding, **end with the plan**: a short summary of the decisions made and the threads still open. Grilling ends at the plan; the selected continuation is reported below and any build is a separate invocation.
+
+## Route the plan
+
+Choose the route from the settled implementation landscape:
+
+Return the complete continuation set with current state, ready-now actions,
+later actions, dependencies, and deliberate stop. Use `None` for an empty
+field.
+
+- **One-ticket** — exactly one implementation ticket remains. Report `/to-tickets`
+  as ready now so the issue record is created; report `/implement` later, after
+  that record exists.
+- **Multi-ticket** — multiple implementation tickets or a richer requirements
+  artifact remain. Report `/to-spec` as ready now; report `/to-tickets` later,
+  after the specification is published, and `/implement` after those tickets
+  exist.
+- **Too large** — the work still has unresolved threads that exceed one
+  session. Report creation of an uncharted Wayfinder map as ready now; report
+  running `/wayfinder` on that map later.
+
+The one-ticket and multi-ticket branches preserve the issue record before
+implementation. The too-large branch records the unresolved landscape before
+any implementation planning begins.

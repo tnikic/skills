@@ -22,6 +22,16 @@ Every map and ticket is an issue, so it has a **name** — its title. In everyth
 
 The map is a single issue on this repo's issue tracker, labelled `kind:map` — the canonical artifact. Its tickets are child tickets of the map.
 
+## Map states
+
+- **Uncharted map** — a follow-up map recorded for later pickup. It has a
+  destination and unresolved threads but no active planning frontier.
+- **Charted map** — a map in an active Wayfinder session whose decision frontier
+  is being worked through.
+
+Creating a follow-up map records the work as uncharted. A later `/wayfinder`
+session claims it and charts the map before resolving decisions.
+
 The map is an **index**, not a store. It lists the decisions made and points at the tickets that hold their detail; a decision lives in exactly one place — its ticket — so the map never restates it, only gists it and links.
 
 Forge operations (issue create/label/comment/assign/close, frontier queries, blocking edges) are executed with the [`github`](../github/SKILL.md) or [`gitlab`](../gitlab/SKILL.md) skill, whichever forge the map lives on.
@@ -120,6 +130,31 @@ Fog only ever gathers _toward_ the destination. The destination fixes the scope,
 Out-of-scope work never graduates — the frontier stops at the destination — so it returns only if the destination is redrawn, and then as a fresh effort, not a resumption.
 
 Ruling something out of scope is a scoping act, not a step on the route. When a ticket that already exists turns out to sit past the destination — mis-scoped in while charting, or exposed by a resolution — **close it** (a closed ticket is unambiguously off the frontier) and leave one line in the **Out of scope** section: the gist plus why it's out of scope, linking the closed ticket. It stays out of **Decisions so far**, which records the route actually walked — a scope boundary isn't a step on it.
+
+## Map continuations
+
+When the frontier is empty, read the shared
+[`continuation`](../../shared/continuation.md) reference and report a
+continuation set in the agent interaction; the map body and comments remain
+developer-facing. Select exactly one outcome:
+
+- **Spec-ready** — the known implementation landscape needs multiple tickets
+  or a richer requirements artifact. `/to-spec` is ready now; `/to-tickets`
+  follows the published specification, and `/implement` follows those tickets.
+- **One-ticket shortcut** — exactly one implementation ticket remains.
+  `/to-tickets` is ready now; `/implement` is later, after the issue record is
+  created. This shortcut is not valid for zero or multiple implementation
+  tickets.
+- **Decision captured** — the destination is a decision recorded in domain docs
+  or an ADR. The current state is `complete`, ready now and later are `None`,
+  and the deliberate stop names the captured decision.
+- **Follow-up map** — unresolved, in-scope fog remains beyond this session.
+  With human approval, create an uncharted map now; `/wayfinder` on that map is
+  later when the follow-up is picked up. If it is intentionally deferred,
+  report that deliberate stop instead.
+
+Wayfinder never places `/implement` in the ready-now route. Implementation is
+only exposed later through the ticket or specification that owns it.
 
 ## Invocation
 

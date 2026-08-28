@@ -6,7 +6,29 @@ disable-model-invocation: true
 
 Run a `/grilling` session, using the `/domain-modeling` skill (pattern: [`grilling-with-domain-modeling.md`](../../shared/grilling-with-domain-modeling.md)).
 
-This is a discussion: the only files you write are `docs/CONTEXT.md` and `docs/adr/`, and it ends in a plan — implementation happens later, via `/to-spec` or `/implement`.
+This is a discussion: the only files you write are `docs/CONTEXT.md` and
+`docs/adr/`, and it ends in a plan. Read the shared
+[`continuation`](../../shared/continuation.md) reference when the plan reaches
+its boundary; the exact route stays in the agent interaction while public
+records describe the work and decisions.
+
+## Route the plan
+
+The delegated `/grilling` session distinguishes the bounded routes:
+
+- **One-ticket** — exactly one implementation ticket remains. Continue to
+  `/to-tickets` now, then `/implement` after the issue record exists.
+- **Multi-ticket** — multiple implementation tickets or a richer requirements
+  artifact remain. Continue to `/to-spec` now, then `/to-tickets`, and expose
+  `/implement` only after those tickets exist.
+- **Too large** — unresolved threads exceed one session. Create an uncharted
+  Wayfinder map now; run `/wayfinder` on that map when the planning session is
+  resumed.
+
+Return the complete continuation set with current state, ready-now actions,
+later actions, dependencies, and deliberate stop. Use `None` for an empty
+field. The too-large branch is a map continuation, not a direct implementation
+route.
 
 ## During the session
 
