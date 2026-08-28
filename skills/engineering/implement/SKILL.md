@@ -69,6 +69,12 @@ If neither the issue body nor comments contain any checkboxes, skip this step.
 
 ## 4. Commit and close
 
+When `/implement` was invoked by `/pr` in PR-workflow handoff mode, return after
+step 3. That mode keeps implementation, validation, review and repair, and
+acceptance handling here, while leaving commit, push, issue closure, and the
+parent check to their owning workflow boundaries. The ordinary route below is
+unchanged when `/implement` is invoked directly.
+
 Create a single commit through `/commit`. Pass `Closes #N` as the requested
 footer (N is the issue number from step 1). Amend an earlier commit if one was
 already made.

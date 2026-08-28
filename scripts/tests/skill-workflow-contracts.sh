@@ -18,6 +18,7 @@ assert_file "$merge_conflicts_skill"
 assert_file "$prototype_skill"
 assert_file "$prototype_logic"
 assert_file "$commit_skill"
+assert_file "$pr_skill"
 assert_file "$conventional_commits_skill"
 assert_file "$handoff_skill"
 assert_file "$to_spec_skill"
@@ -104,6 +105,40 @@ assert_contains_many_normalized "$commit_skill" \
   'Do not delegate pushing back' \
   'requested footer such as `Closes #N`' \
   'Completion criterion: every staged file is agent-touched, generated, or has an explicit user decision.'
+
+assert_contains_many_normalized "$pr_skill" \
+  'name: pr' \
+  'disable-model-invocation: true' \
+  'Prepare a non-default implementation branch' \
+  'Identify the repository default branch' \
+  'If the current branch is the default branch, stop before implementation' \
+  'actionable guidance to create or switch to a non-default implementation branch' \
+  'Invoke `/implement` for the identified work in PR-workflow handoff mode.' \
+  '`/implement` owns issue reading, implementation, validation, review and repair' \
+  'After a successful implementation handoff, invoke `/commit`.' \
+  'The commit skill owns staging, safety, quality, documentation, message approval, commit creation, and pushing.' \
+  'does not close issues or publish forge-specific records' \
+  'complete continuation set'
+assert_order_normalized "$pr_skill" \
+  'Identify the repository default branch' \
+  'If the current branch is the default branch, stop before implementation' \
+  '## 2. Prepare the implementation branch' \
+  'Verify the current branch is non-default immediately before the implementation handoff' \
+  '## 3. Delegate implementation' \
+  'Invoke `/implement`' \
+  '## 4. Delegate commit and push' \
+  'invoke `/commit`'
+assert_not_contains "$pr_skill" 'git commit'
+assert_not_contains "$pr_skill" 'git push'
+assert_contains_many_normalized "$implement_skill" \
+  'When `/implement` was invoked by `/pr` in PR-workflow handoff mode' \
+  'return after step 3' \
+  'The ordinary route below is unchanged when `/implement` is invoked directly.'
+assert_order_normalized "$implement_skill" \
+  'return after step 3' \
+  'Create a single commit through `/commit`' \
+  'Verify closure' \
+  '## 5. Parent check'
 assert_order_normalized "$commit_skill" \
   '## 6. Commit' \
   'Report the commit hash.' \
@@ -500,7 +535,55 @@ overflow_fixture="$(mktemp -d)"
 specialist_fixture="$(mktemp)"
 public_fixture="$(mktemp)"
 commit_fixture="$(mktemp)"
-trap 'rm -f "$order_fixture" "$bounded_fixture" "$multi_ticket_fixture" "$map_fixture" "$specialist_fixture" "$public_fixture" "$commit_fixture"; rm -rf "$overflow_fixture"' EXIT
+pr_default_fixture="$(mktemp)"
+pr_feature_fixture="$(mktemp)"
+pr_ordinary_fixture="$(mktemp)"
+trap 'rm -f "$order_fixture" "$bounded_fixture" "$multi_ticket_fixture" "$map_fixture" "$specialist_fixture" "$public_fixture" "$commit_fixture" "$pr_default_fixture" "$pr_feature_fixture" "$pr_ordinary_fixture"; rm -rf "$overflow_fixture"' EXIT
+
+printf '%s\n' \
+  'Default branch: main' \
+  'Current branch: main' \
+  'Result: stop before /implement' \
+  'Guidance: create or switch to a non-default implementation branch' \
+  'Implementation: not started' > "$pr_default_fixture"
+assert_order_normalized "$pr_default_fixture" \
+  'Default branch: main' \
+  'Current branch: main' \
+  'Result: stop before /implement' \
+  'Guidance: create or switch to a non-default implementation branch' \
+  'Implementation: not started'
+
+printf '%s\n' \
+  'Default branch: main' \
+  'Current branch: feature/ticket' \
+  'Selected branch: feature/ticket' \
+  'Implementation handoff: /implement' \
+  'Commit handoff: /commit' \
+  'Result: pushed branch ready for PR publication' > "$pr_feature_fixture"
+assert_order_normalized "$pr_feature_fixture" \
+  'Default branch: main' \
+  'Current branch: feature/ticket' \
+  'Selected branch: feature/ticket' \
+  'Implementation handoff: /implement' \
+  'Commit handoff: /commit' \
+  'Result: pushed branch ready for PR publication'
+
+printf '%s\n' \
+  'Direct invocation: /implement' \
+  'Implementation and validation' \
+  'Review and repair' \
+  'Acceptance handling' \
+  'Commit and push through /commit' \
+  'Issue closure' \
+  'Parent check' > "$pr_ordinary_fixture"
+assert_order_normalized "$pr_ordinary_fixture" \
+  'Direct invocation: /implement' \
+  'Implementation and validation' \
+  'Review and repair' \
+  'Acceptance handling' \
+  'Commit and push through /commit' \
+  'Issue closure' \
+  'Parent check'
 
 printf '%s\n' \
   'Current state: ready' \
