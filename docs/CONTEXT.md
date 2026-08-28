@@ -109,6 +109,10 @@ The original issue record that preserves the user's intent and history while lin
 - **multi-ticket route** — The continuation route for multiple tickets or a richer requirements artifact.
 - **map continuation** — a Wayfinder outcome that reports a spec-ready route, an optional one-ticket shortcut, one or more uncharted follow-up maps, or a deliberate stop. Wayfinder does not call `/implement` directly.
 - **triage route** — `/triage` classifies an intake record as clarification-needed, bounded implementation, published spec, human-owned, or rejected/already implemented, then points to the matching continuation without mislabeling unfinished planning as a spec.
+- **PR workflow** — Separate user-invoked workflow that orchestrates implementation branches, commit finalization, and pull-request publication without duplicating implementation or forge operations.
+- **Forge-native stack operation** — A GitHub or GitLab capability for creating and maintaining stacked pull requests or merge requests, exposed through the matching forge skill for the PR workflow to use.
+- **Implementation-ready** — A ticket state in which its change is implemented, validated, committed, pushed, and represented by a pull request or merge request, even though the issue remains open until merge.
+- **Spec-local dependency** — A dependency between tickets in one spec that can be satisfied for downstream implementation by the predecessor branch becoming implementation-ready; a dependency outside the spec remains a real blocker.
 
 ## Conventions (TDD)
 
