@@ -1,0 +1,90 @@
+{
+  "ticket": 91,
+  "default_branch": "main",
+  "source_branch": "feat/91-gitlab-mr",
+  "issue_state": "open",
+  "events": [
+    {
+      "stage": "branch",
+      "action": "select",
+      "branch": "feat/91-gitlab-mr"
+    },
+    {
+      "stage": "implement",
+      "delegation": "/implement",
+      "result": "validated"
+    },
+    {
+      "stage": "commit",
+      "delegation": "/commit",
+      "commits": 1,
+      "pushed": true,
+      "head_sha": "gitlab91abc"
+    },
+    {
+      "stage": "forge",
+      "skill": "gitlab",
+      "operation": "find",
+      "record": null
+    },
+    {
+      "stage": "forge",
+      "skill": "gitlab",
+      "operation": "create",
+      "records": 1,
+      "source_branch": "feat/91-gitlab-mr",
+      "target_branch": "main",
+      "state": "open"
+    },
+    {
+      "stage": "workflow",
+      "implementation_ready": true
+    }
+  ],
+  "body": {
+    "sections": [
+      "Change scope",
+      "Notable decisions",
+      "Validation",
+      "Acceptance results",
+      "Spec context",
+      "Stack position",
+      "Dependency context",
+      "Related records"
+    ],
+    "change_scope": "Publish ticket #91 as one reviewable GitLab merge request",
+    "notable_decisions": "Use explicit GitLab operations and branch-identity reconciliation",
+    "validation": "make check and make test passed",
+    "acceptance_results": 7,
+    "dependency_context": "#87, #88, and #85 resolved",
+    "reference": "Related: #91",
+    "closing_reference": false
+  },
+  "publication": {
+    "record_id": "91",
+    "url": "https://gitlab.example/merge_requests/91",
+    "title": "Publish single-ticket GitLab merge requests",
+    "body": "ticket-focused body",
+    "source_branch": "feat/91-gitlab-mr",
+    "target_branch": "main",
+    "head_sha": "gitlab91abc",
+    "state": "open"
+  },
+  "lifecycle": [
+    {
+      "name": "implementation-ready",
+      "issue_state": "open",
+      "publication_state": "open"
+    },
+    {
+      "name": "merged",
+      "issue_state": "open",
+      "publication_state": "merged"
+    },
+    {
+      "name": "closed",
+      "issue_state": "closed",
+      "publication_state": "merged"
+    }
+  ]
+}

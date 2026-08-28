@@ -1,7 +1,7 @@
 ---
 name: gitlab
 description: Work with GitLab — issues, work-item hierarchy, merge requests, labels, projects, and issue links. Exact command recipes backed by the glab CLI. Use whenever a task queries or modifies GitLab issues, MRs, labels, projects, hierarchy, or relationships, or when another skill needs a GitLab operation.
-compatibility: Requires the glab CLI (glab-cli/glab) and GitLab authentication.
+compatibility: Requires the glab CLI (glab-cli/glab), jq, and GitLab authentication with project access.
 ---
 
 # GitLab forge skill
@@ -18,6 +18,34 @@ glab auth login             # authenticate if not signed in
 ```
 
 Self-hosted instances: `GITLAB_HOST=https://gitlab.example.com` or `--hostname` on auth. The instance is also detected from the current git remote.
+
+Automation requires an installed `glab`, an authenticated account or token with
+the `api` scope, and Developer or greater access to the target project. The
+account must be able to read the project, push the selected source branch, and
+create or update merge requests. Read-only project access is not sufficient for
+publication.
+
+## Repository targeting
+
+Set both the GitLab project and the checkout explicitly. URL-encode a
+`GROUP/REPO` path as `GROUP%2FREPO` for REST calls, and verify that the checkout
+remote points at the same project before using a source branch:
+
+```bash
+R=GROUP/REPO
+PROJECT=GROUP%2FREPO
+REPO_DIR=/path/to/repository
+REMOTE=origin
+
+glab api "projects/$PROJECT" --jq '{path_with_namespace,default_branch}'
+git -C "$REPO_DIR" remote get-url "$REMOTE"
+git -C "$REPO_DIR" config remote.pushDefault "$REMOTE"
+```
+
+The project metadata must resolve to `R`, and the merge request target is the
+reported `default_branch` unless the workflow explicitly supplies a stack
+predecessor. Every `glab mr` call below includes `-R "$R"`; every REST call
+uses the encoded project path.
 
 ## Conventions
 
@@ -153,8 +181,19 @@ MR_URL="$(glab mr create -R $R -t "Title" -d "body" -s SOURCE_BRANCH -b "$BASE_B
 glab mr view "$MR_URL" -R $R -F json \
   --jq '{record_id:(.iid|tostring),url:.web_url,title,body:.description,source_branch:.source_branch,target_branch:.target_branch,head_sha:(.sha // .diff_refs.head_sha),state:(if .state == "opened" then "open" elif .state == "merged" then "merged" else "closed" end)}'
 
+# REST create fallback — the response is JSON; normalize it through view when
+# the CLI create command is unavailable or its output is ambiguous
+glab api -X POST "projects/GROUP%2FREPO/merge_requests" \
+  -f source_branch=SOURCE_BRANCH -f target_branch=TARGET_BRANCH \
+  -f title="Title" -f description="body" \
+  --jq '{record_id:(.iid|tostring),url:.web_url,title,body:.description,source_branch:.source_branch,target_branch:.target_branch,head_sha:(.sha // .diff_refs.head_sha),state:(if .state == "opened" then "open" elif .state == "merged" then "merged" else "closed" end)}'
+
 # find — reconcile an ambiguous create by source branch before retrying
 glab mr list -R $R --source-branch SOURCE_BRANCH -F json \
+  --jq 'if length > 1 then error("multiple open merge requests for source branch") elif length == 0 then {record:null} else .[0] | {record:{record_id:(.iid|tostring),url:.web_url,title,body:.description,source_branch:.source_branch,target_branch:.target_branch,head_sha:(.sha // .diff_refs.head_sha),state:"open"}} end'
+
+# REST find fallback — filter open records by branch identity, then normalize
+glab api "projects/GROUP%2FREPO/merge_requests?state=opened&source_branch=SOURCE_BRANCH" --paginate \
   --jq 'if length > 1 then error("multiple open merge requests for source branch") elif length == 0 then {record:null} else .[0] | {record:{record_id:(.iid|tostring),url:.web_url,title,body:.description,source_branch:.source_branch,target_branch:.target_branch,head_sha:(.sha // .diff_refs.head_sha),state:"open"}} end'
 
 # view — return the current provider response normalized to the shared record
@@ -173,11 +212,20 @@ glab mr view RECORD_ID -R $R -F json \
 
 # publication_failure — classify command, auth, permissions, and publication failures
 # as retryable while preserving the pushed branch and issue; never fabricate a record.
-# Map exit 127 to tooling-unavailable, auth failures to authentication-required,
-# 403 responses to permission-denied, and transient 408, 429, 500, or 503
-# publication errors to publication-failed. Return retryable=true,
-# publication_exists=false, and the preserved branch and issue state for each
-# class. Reconcile an ambiguous create with find before retrying.
+# Map exit 127 to tooling-unavailable, auth failures or HTTP 401 to
+# authentication-required, HTTP 403 to permission-denied, and transient 408,
+# 429, 500, or 503 publication errors to publication-failed. Return
+# retryable=true, publication_exists=false for a known unsuccessful operation or
+# publication_exists=unknown for an ambiguous create, plus preserved branch and
+# issue state. Reconcile an ambiguous create with find by source branch before
+# retrying; never blindly create a second record.
+# The returned failure includes:
+# operation: create | find | view | update | retarget
+# failure_class: tooling-unavailable | authentication-required | permission-denied | publication-failed
+# retryable: true
+# publication_exists: false | unknown
+# preserved_branch: true
+# preserved_issue: true
 glab auth status
 glab mr create -R $R -t "Title" -d "body" -s SOURCE_BRANCH -b TARGET_BRANCH -y
 
@@ -193,6 +241,20 @@ glab mr note N -R $R -m "text"
 # merge — squash keeps history clean; -d removes the source branch
 glab mr merge N -R $R -s -d -y
 ```
+
+Represent a stack through source and target branch topology: each merge
+request's source branch targets its predecessor, and the lowest branch targets
+the default branch. GitLab's native merge-request UI is retained for human
+fallback and inspection, including creating, viewing, retargeting, and
+resolving a merge request when automation is unavailable. UI actions do not
+replace the machine-readable adapter result. The experimental `glab stack sync` is
+not the machine contract; use the explicit operations above and reconcile
+native state by branch identity.
+
+Retry transport failures and HTTP 408, 429, 500, and 503 with bounded backoff.
+Treat missing tooling, authentication, and project access as retryable
+prerequisite failures, not as publication. Stop before claiming a merge
+request exists whenever the normalized result is absent or cannot be verified.
 
 ## Raw API escape hatch
 

@@ -117,7 +117,9 @@ assert_contains_many_normalized "$pr_skill" \
   '`/implement` owns issue reading, implementation, validation, review and repair' \
   'After a successful implementation handoff, invoke `/commit`.' \
   'The commit skill owns staging, safety, quality, documentation, message approval, commit creation, and pushing.' \
-  '## 5. Publish one GitHub pull request' \
+  '## 5. Publish one review record' \
+  '### GitHub pull request' \
+  '### GitLab merge request' \
   'ticket-focused body' \
   'Stack position' \
   'Dependency context' \
@@ -141,7 +143,7 @@ assert_order_normalized "$pr_skill" \
   'Invoke `/implement`' \
   '## 4. Delegate commit and push' \
   'invoke `/commit`' \
-  '## 5. Publish one GitHub pull request' \
+  '## 5. Publish one review record' \
   'provider-neutral `find` operation' \
   'one `create` operation' \
   '## 6. Return the implementation-ready boundary'
@@ -656,6 +658,63 @@ for class in tooling-unavailable authentication-required permission-denied publi
     '.failures[] | select(.failure_class == $class and .retryable == true and .publication_exists == false and .preserved_branch == true and .preserved_issue == true and .stop_before_claim == true and .implementation_ready == false)' \
     "$pr_failure_fixture" >/dev/null || fail "workflow failure state is incomplete for $class"
 done
+
+assert_file "$gitlab_pr_workflow_fixture"
+gitlab_workflow_events="$(jq -c '[.events[] | {stage,delegation,operation}]' "$gitlab_pr_workflow_fixture")"
+[ "$gitlab_workflow_events" = "$expected_workflow_events" ] ||
+  fail "GitLab single-ticket workflow changed order: $gitlab_workflow_events"
+[ "$(jq -r '.events[2].commits' "$gitlab_pr_workflow_fixture")" = 1 ] ||
+  fail 'GitLab workflow did not prove one commit'
+[ "$(jq -r '.events[2].pushed' "$gitlab_pr_workflow_fixture")" = true ] ||
+  fail 'GitLab workflow did not prove push'
+[ "$(jq -r '.events[3].skill' "$gitlab_pr_workflow_fixture")" = gitlab ] ||
+  fail 'GitLab workflow did not hand publication to GitLab'
+[ "$(jq -r '.events[4].records' "$gitlab_pr_workflow_fixture")" = 1 ] ||
+  fail 'GitLab workflow did not prove one merge request'
+[ "$(jq -r '.publication.state' "$gitlab_pr_workflow_fixture")" = open ] ||
+  fail 'GitLab publication is not reviewable'
+[ "$(jq -r '.publication.source_branch' "$gitlab_pr_workflow_fixture")" = "$(jq -r '.source_branch' "$gitlab_pr_workflow_fixture")" ] ||
+  fail 'GitLab publication changed the source branch'
+[ "$(jq -r '.publication.target_branch' "$gitlab_pr_workflow_fixture")" = main ] ||
+  fail 'GitLab publication changed the target branch'
+[ "$(jq -r '.publication.head_sha' "$gitlab_pr_workflow_fixture")" = "$(jq -r '.events[2].head_sha' "$gitlab_pr_workflow_fixture")" ] ||
+  fail 'GitLab publication changed the pushed head'
+[ "$(jq -r '.publication.record_id' "$gitlab_pr_workflow_fixture")" != null ] ||
+  fail 'GitLab normalized publication is missing record_id'
+[ "$(jq -r '.publication.url' "$gitlab_pr_workflow_fixture")" != null ] ||
+  fail 'GitLab normalized publication is missing url'
+[ "$(jq -r '.publication.title' "$gitlab_pr_workflow_fixture")" != null ] ||
+  fail 'GitLab normalized publication is missing title'
+[ "$(jq -r '.publication.body' "$gitlab_pr_workflow_fixture")" != null ] ||
+  fail 'GitLab normalized publication is missing body'
+for field in change_scope notable_decisions validation dependency_context; do
+  jq -e --arg field "$field" ".body[\$field] != null and (.body[\$field] | length) > 0" \
+    "$gitlab_pr_workflow_fixture" >/dev/null ||
+    fail "GitLab body is missing $field content"
+done
+for section in 'Change scope' 'Notable decisions' 'Validation' 'Acceptance results' \
+  'Spec context' 'Stack position' 'Dependency context' 'Related records'; do
+  jq -e --arg section "$section" '.body.sections | index($section) != null' \
+    "$gitlab_pr_workflow_fixture" >/dev/null ||
+    fail "GitLab body is missing $section"
+done
+[ "$(jq -r '.body.reference' "$gitlab_pr_workflow_fixture")" = 'Related: #91' ] ||
+  fail 'GitLab body lost its non-closing ticket reference'
+[ "$(jq -r '.body.closing_reference' "$gitlab_pr_workflow_fixture")" = false ] ||
+  fail 'GitLab body has a closing reference'
+[ "$(jq -r '.body.acceptance_results' "$gitlab_pr_workflow_fixture")" = 7 ] ||
+  fail 'GitLab body did not mirror all ticket criteria'
+for state in implementation-ready merged closed; do
+  jq -e --arg state "$state" '.lifecycle[] | select(.name == $state)' \
+    "$gitlab_pr_workflow_fixture" >/dev/null ||
+    fail "GitLab lifecycle is missing $state"
+done
+[ "$(jq -r '.lifecycle[0].issue_state' "$gitlab_pr_workflow_fixture")" = open ] ||
+  fail 'GitLab implementation-ready state closed the issue'
+[ "$(jq -r '.lifecycle[1].publication_state' "$gitlab_pr_workflow_fixture")" = merged ] ||
+  fail 'GitLab merged state is not distinct from implementation-ready'
+[ "$(jq -r '.lifecycle[2].issue_state' "$gitlab_pr_workflow_fixture")" = closed ] ||
+  fail 'GitLab closed state is not distinct from implementation-ready'
 
 printf '%s\n' \
   'Direct invocation: /implement' \

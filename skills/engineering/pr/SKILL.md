@@ -80,9 +80,10 @@ implementation branch and issue open for retry. Do not claim PR readiness.
 *Completion: `/commit` reports the selected non-default branch's commit as
 pushed, or the failure is reported without claiming publication.*
 
-## 5. Publish one GitHub pull request
+## 5. Publish one review record
 
-This ticket uses the GitHub forge skill. Read the provider-neutral
+Choose the forge matching the repository and follow exactly one provider branch
+below. Read the provider-neutral
 [`forge-pr-delivery-contract`](../../shared/forge-pr-delivery-contract.md) and
 [`pr-template`](../../shared/pr-template.md) before handing off publication.
 
@@ -96,43 +97,54 @@ the resolved prerequisites or the actual blocker. In `Related records`, use
 `Related: #N` or `Refs: #N` for the open ticket. The intermediate publication
 reference is non-closing, so this body does not use `Closes #N`.
 
-Ask the GitHub skill to run the provider-neutral `find` operation by source
-branch first. When it returns `record: null`, ask it to run one `create`
+### GitHub pull request
+
+Use the GitHub skill for the selected provider branch and its normalized
+publication result.
+
+### GitLab merge request
+
+Use the GitLab skill for the selected provider branch and its normalized
+publication result.
+
+Ask the selected forge skill to run the provider-neutral `find` operation by
+source branch first. When it returns `record: null`, ask it to run one `create`
 operation with the ticket body, source branch, and default target branch. When
 it finds an existing record, reuse that record instead of creating another.
 Consume the resulting normalized publication record; the workflow does not
-derive GitHub commands or provider response fields. Reconcile its `record_id`,
-`url`, `title`, `body`, `source_branch`, `target_branch`, `head_sha`, and
-`state` against the ticket body, selected source branch, default target branch,
-and pushed commit before reporting readiness. A mismatch is a publication
-failure and remains retryable with the branch and issue preserved.
+derive provider commands or response fields. Reconcile its `record_id`, `url`,
+`title`, `body`, `source_branch`, `target_branch`, `head_sha`, and `state` against
+the ticket body, selected source branch, default target branch, and pushed
+commit before reporting readiness. A mismatch is a publication failure and
+remains retryable with the branch and issue preserved.
 
 If the forge returns a `publication_failure`, stop at this boundary. Preserve
 the pushed branch and open issue, report the contract's failure class, message,
 and recovery action, and retain `retryable: true`,
 `publication_exists: false|unknown`, `preserved_branch: true`, and
-`preserved_issue: true`. Do not claim that a pull request exists or that the
-ticket is implementation-ready. A retry finds by source branch before any
-create operation.
+`preserved_issue: true`. Do not claim that a pull request or merge request
+exists or that the ticket is implementation-ready. A retry finds by source
+branch before any create operation.
 
-*Completion: exactly one open GitHub pull-request record is represented by one
-normalized publication result, or a retryable failure is reported with the
-branch and issue preserved and no publication claimed.*
+*Completion: exactly one open pull-request or merge-request record from the
+selected forge is represented by one normalized publication result, or a
+retryable failure is reported with the branch and issue preserved and no
+publication claimed.*
 
 ## 6. Return the implementation-ready boundary
 
 Report `implementation-ready` only when `/implement` completed validation,
-`/commit` reports one pushed commit, and the GitHub result is one normalized
-record whose state is `open`. Keep the ticket open at this boundary. The open
-issue plus the open review record is implementation-ready; `merged` is a
-separate review-record state, and `closed` is a later issue lifecycle state
-after the change reaches the default branch. Do not close the ticket or alter
-the parent spec from this workflow.
+`/commit` reports one pushed commit, and the selected forge result is one
+normalized record whose state is `open`. Keep the ticket open at this
+boundary. The open issue plus the open review record is implementation-ready;
+`merged` is a separate review-record state, and `closed` is a later issue
+lifecycle state after the change reaches the default branch. Do not close the
+ticket or alter the parent spec from this workflow.
 
 Return the complete continuation set using the shared
 [`continuation`](../../shared/continuation.md) contract, with the current state,
 ready-now actions, later actions, dependencies, and deliberate stop fields.
 
 *Completion: the issue remains open, the implementation-ready state is
-reported only for an open normalized pull request, and merged or closed states
-remain distinguishable in the continuation set.*
+reported only for an open normalized pull request or merge request, and merged
+or closed states remain distinguishable in the continuation set.*

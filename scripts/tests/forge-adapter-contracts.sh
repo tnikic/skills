@@ -117,9 +117,20 @@ assert_order_normalized "$github_skill" \
 assert_not_contains "$github_skill" 'Graphite'
 assert_not_contains "$github_skill" 'graphite'
 assert_contains_many_normalized "$gitlab_skill" \
+  '## Repository targeting' \
+  'Developer or greater access' \
+  '`api` scope' \
+  'push the selected source branch' \
+  'native merge-request UI' \
+  'human fallback and inspection' \
+  'experimental `glab stack sync`' \
   'glab mr create -R $R' \
   'glab mr list -R $R --source-branch SOURCE_BRANCH -F json' \
-  'glab mr update RECORD_ID -R $R --target-branch TARGET_BRANCH'
+  'glab mr update RECORD_ID -R $R --target-branch TARGET_BRANCH' \
+  'projects/GROUP%2FREPO/merge_requests' \
+  'publication_exists=unknown' \
+  'bounded backoff' \
+  'branch identity'
 assert_not_contains "$github_skill" 'then "{\\"record\\":null}"'
 assert_not_contains "$gitlab_skill" 'then "{\\"record\\":null}"'
 
