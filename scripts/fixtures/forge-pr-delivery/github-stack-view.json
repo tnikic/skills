@@ -1,0 +1,34 @@
+{
+  "trunk": "main",
+  "currentBranch": "feature-ui",
+  "branches": [
+    {
+      "name": "feature-auth",
+      "head": "auth123",
+      "base": "main",
+      "isCurrent": false,
+      "isMerged": false,
+      "isQueued": false,
+      "needsRebase": false,
+      "pr": {
+        "number": 41,
+        "url": "https://github.example/pull/41",
+        "state": "OPEN"
+      }
+    },
+    {
+      "name": "feature-ui",
+      "head": "ui456",
+      "base": "feature-auth",
+      "isCurrent": true,
+      "isMerged": false,
+      "isQueued": false,
+      "needsRebase": false,
+      "pr": {
+        "number": 42,
+        "url": "https://github.example/pull/42",
+        "state": "OPEN"
+      }
+    }
+  ]
+}

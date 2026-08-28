@@ -70,6 +70,52 @@ assert_contains_many_normalized "$github_skill" \
   'gh pr create -R $R' \
   'gh pr list -R $R --head SOURCE_BRANCH --state open' \
   'gh pr edit RECORD_ID -R $R --base TARGET_BRANCH'
+assert_contains_many_normalized "$github_skill" \
+  'github/gh-stack' \
+  'GitHub CLI 2.0' \
+  'gh repo view -R "$R"' \
+  'git -C "$REPO_DIR" remote get-url "$REMOTE"' \
+  'gh stack init' \
+  'adopts existing branches' \
+  'gh stack add' \
+  'gh stack push --remote "$REMOTE"' \
+  'gh stack submit --auto --open --remote "$REMOTE"' \
+  'gh stack view --json' \
+  'gh stack sync --remote "$REMOTE"' \
+  'gh stack sync --prune --remote "$REMOTE"' \
+  'tooling-unavailable' \
+  'authentication-required' \
+  'permission-denied' \
+  'publication-failed' \
+  'retryable: true' \
+  'Preserve the pushed branch and issue state' \
+  'record_id' \
+  'source_branch' \
+  'target_branch' \
+  'head_sha'
+assert_order_normalized "$github_skill" \
+  '## Setup and auth' \
+  '## Repository targeting' \
+  '## Native Stacked Pull Requests' \
+  '### Initialize and adopt branches' \
+  '### Push and submit' \
+  '### View and normalize metadata' \
+  '### Synchronize' \
+  '### Retryable failures'
+assert_order_normalized "$github_skill" \
+  'gh extension install github/gh-stack' \
+  'gh auth status' \
+  'gh repo view -R "$R"' \
+  'gh stack init' \
+  'gh stack add' \
+  'gh stack push --remote "$REMOTE"' \
+  'gh stack submit --auto --open --remote "$REMOTE"' \
+  'gh stack view --json' \
+  'gh pr view "$pr" -R "$R"' \
+  'gh stack sync --remote "$REMOTE"' \
+  'gh stack sync --prune --remote "$REMOTE"'
+assert_not_contains "$github_skill" 'Graphite'
+assert_not_contains "$github_skill" 'graphite'
 assert_contains_many_normalized "$gitlab_skill" \
   'glab mr create -R $R' \
   'glab mr list -R $R --source-branch SOURCE_BRANCH -F json' \
@@ -82,9 +128,16 @@ github_create="$fixture_dir/github-create.json"
 gitlab_create="$fixture_dir/gitlab-create.json"
 github_failures="$fixture_dir/github-failures.json"
 gitlab_failures="$fixture_dir/gitlab-failures.json"
-for fixture in "$github_create" "$gitlab_create" "$github_failures" "$gitlab_failures"; do
+github_stack_view="$fixture_dir/github-stack-view.json"
+for fixture in "$github_create" "$gitlab_create" "$github_failures" "$gitlab_failures" "$github_stack_view"; do
   assert_file "$fixture"
 done
+
+stack_branches="$(jq -c '[.branches[] | {name,head,base,pr: .pr.number}]' "$github_stack_view")"
+expected_stack='[{"name":"feature-auth","head":"auth123","base":"main","pr":41},{"name":"feature-ui","head":"ui456","base":"feature-auth","pr":42}]'
+[ "$stack_branches" = "$expected_stack" ] || fail "GitHub stack fixture lost branch topology: $stack_branches"
+stack_prs="$(jq -c '[.branches[] | select(.pr != null) | .pr.number]' "$github_stack_view")"
+[ "$stack_prs" = '[41,42]' ] || fail "GitHub stack fixture lost PR identifiers: $stack_prs"
 
 github_result="$(jq -c '{record_id:(.number|tostring),url,title,body,source_branch:.headRefName,target_branch:.baseRefName,head_sha:.headRefOid,state:(if .state == "OPEN" then "open" else "closed" end)}' "$github_create")"
 gitlab_result="$(jq -c '{record_id:(.iid|tostring),url:.web_url,title,body:.description,source_branch:.source_branch,target_branch:.target_branch,head_sha:.sha,state:(if .state == "opened" then "open" else "closed" end)}' "$gitlab_create")"
