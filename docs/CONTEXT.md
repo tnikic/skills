@@ -11,8 +11,91 @@ Glossary of domain terms for the agent skills ecosystem.
 - **tdd** — Skill for test-driven development. After the skills refactor (map 31): feedback-first framing — runnable check before code, smallest provable slice first, E2E as final gate. Test list as transient external state. Cheating defenses. Refactoring in green only.
 - **github skill** — Model-invoked skill for GitHub forge actions, backed by the `gh` CLI. Authoritative command-recipe catalog for GitHub.
 - **gitlab skill** — Model-invoked skill for GitLab forge actions, backed by the `glab` CLI. Authoritative command-recipe catalog for GitLab.
-- **research** — Model-invoked workflow for primary-source investigation that leaves a cited Markdown artifact in the repository.
+- **research** — Model-invoked workflow for primary-source investigation that leaves a cited research record in the stable per-user cache.
 - **resolving-merge-conflicts** — Model-invoked workflow for tracing conflict intent, resolving hunks, running checks, and finishing through the commit gate.
+
+## Workflow Model
+
+**Workflow**:
+A skill-led path that turns an idea, decision, or change into one or more durable artifacts and an explicit continuation.
+
+**Primary artifact**:
+The main durable result of a workflow. A workflow may also create downstream artifacts when the destination requires them.
+_Avoid_: finishing product, final output
+
+**Artifact set**:
+The complete group of durable records produced by a workflow, including its primary artifact and any explicitly linked downstream artifacts.
+
+**Implementation landscape**:
+A small, issue-backed description of the implementation work that follows a design discussion. It may contain one implementation ticket or several related tickets.
+
+**Continuation set**:
+The ordered set of next actions a workflow exposes at its boundary. It may fan out into independent actions, such as publishing a spec now while recording non-blocking follow-up maps for later.
+
+**Spec overflow**:
+The exceptional condition where a spec exceeds the issue tracker's body limit. The spec remains one issue record; useful sections move into ordered comments rather than creating additional specs.
+
+**Continuation**:
+The explicit next skill or deliberate stopping point produced when a workflow reaches its current boundary. It is based on the artifact's state and destination, not merely on which skill just ran.
+_Avoid_: handoff, next step
+
+**Issue record**:
+The issue-tracker entry that preserves the intent and history behind planned work, including work that is implemented immediately afterward.
+_Avoid_: ticket (when referring to the record generically)
+
+**Uncharted map**:
+A follow-up Wayfinder map recorded for later pickup. It has a destination and unresolved threads but has not entered an active Wayfinder session. The current raw form called a "stub map" is an uncharted map.
+
+**Charted map**:
+A Wayfinder map currently being worked through its decision frontier.
+
+**Decision ticket**:
+A `kind:decision` child of a Wayfinder map that resolves one planning decision. A domain decision may also be captured in `docs/CONTEXT.md` or an ADR; those are not necessarily decision tickets.
+
+**Implementation ticket**:
+A bounded issue record whose acceptance behavior is settled enough for `/implement` to build without another planning branch.
+
+**Spec**:
+A durable, publishable description of a problem, solution, user stories, implementation decisions, testing decisions, and scope, intended to be broken into implementation tickets or used as the implementation handoff.
+
+**Published spec**:
+A spec that exists as a `kind:spec` issue record and is ready to enter the ticket-planning route. `kind:spec` does not describe work that merely still needs planning.
+
+**Spec-ready**:
+A planning state in which the known work can be expressed as one spec, while any remaining fog is either non-blocking or assigned to separate uncharted maps.
+
+**One-ticket shortcut**:
+The direct route from a planning workflow to `/to-tickets` when the agreed implementation landscape contains exactly one implementation ticket. It still creates an issue record before `/implement` runs.
+
+**Owner**:
+The workflow or artifact that requested a specialist activity and receives its findings or verdict. The owner controls whether that result advances to another continuation.
+
+**Internal continuation**:
+The agent-facing routing information used to choose a subsequent workflow. It belongs in the live session context, not in an issue body or comment.
+
+**Developer-facing record**:
+An issue body or comment written in terms of the work, decision, and outcome a developer needs to understand. It does not expose skill names or workflow procedure.
+
+**Machine metadata**:
+Tracker state, labels, assignments, and relationships used to query and coordinate work. Machine metadata may remain on an issue when the tracker requires it, but it is distinct from developer-facing prose.
+
+**Planning hierarchy**:
+The native issue structure in which a map owns decision work, a spec owns implementation tickets, and a map links to its resulting spec as an outcome rather than treating the spec as a map child.
+
+**Research record**:
+A cited, durable result of an investigation that can be revisited by the owning workflow without rerunning the research. Its storage must remain outside production source unless the research itself is intentionally part of the project.
+
+**Research cache**:
+The stable per-user XDG cache location for canonical research records. OS temp is reserved for disposable scratch material, while issue-backed findings are also recorded on the developer-facing owner record.
+
+**Prototype residue**:
+Temporary project-local files created to test a design question. They may be necessary while a prototype runs, but are removed after the verdict unless the validated result becomes real project content.
+
+**Prototype cleanup**:
+The completion step that removes prototype residue from the project path after the design verdict is captured, retaining only validated project content or an explicitly throwaway external copy.
+
+**Intake record**:
+The original issue record that preserves the user's intent and history while linked maps, specs, decisions, and implementation tickets carry the work forward.
 
 ## Forge access
 
@@ -21,7 +104,11 @@ Glossary of domain terms for the agent skills ecosystem.
 - **model-invoked** — A skill the model picks up automatically from its description, not only when the user explicitly invokes it.
 - **issue hierarchy** — Parent/child and blocked-by/blocking relationships between tickets; queried by wayfinder, to-tickets, and implement.
 - **forge hierarchy capability** — The forge-specific mapping behind the shared issue hierarchy: GitHub uses child issues, while GitLab uses task work items parented under issues. Consumers use the matching forge recipe rather than assuming one issue type.
-- **ticket pipeline** — capture → triage → to-tickets → implement; the journey of a bug or idea to a merged change. Front door is `capture`.
+- **ticket pipeline** — capture → triage → to-tickets → implement; the journey of a bug or idea to a merged change. Front door is `capture`. Other planning routes can enter the pipeline through `/grilling`, `/wayfinder`, or `/to-spec`.
+- **small-work route** — `/grill-with-docs` → `/to-tickets` → `/implement`; the normal path when grilling settles exactly one bounded implementation ticket.
+- **multi-ticket route** — `/grill-with-docs` or `/wayfinder` → `/to-spec` → `/to-tickets` → `/implement`; the path when implementation requires multiple tickets or a richer requirements artifact.
+- **map continuation** — a Wayfinder outcome that reports a spec-ready route, an optional one-ticket shortcut, one or more uncharted follow-up maps, or a deliberate stop. Wayfinder does not call `/implement` directly.
+- **triage route** — `/triage` classifies an intake record as clarification-needed, bounded implementation, published spec, human-owned, or rejected/already implemented, then points to the matching continuation without mislabeling unfinished planning as a spec.
 
 ## Conventions (TDD)
 
