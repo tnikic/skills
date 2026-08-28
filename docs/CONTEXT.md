@@ -8,6 +8,7 @@ Glossary of domain terms for the agent skills ecosystem.
 - **commit skill** — Universal choke point that gates quality (lint, fmt, typecheck) and docs (freshness check) before any `git commit`, then pushes it. Calls `conventional-commits` for the message; execution stays here.
 - **capture** (`/capture`) — User-invoked skill for filing bugs (forensic auto-capture) or ideas (lightweight) into the ticket pipeline. Front door to `triage` → `to-tickets` → `implement`.
 - **handoff** — Named invocation point for compacting the current session into a handoff document for a fresh agent. Used at context-limit boundaries.
+- **pr** (`/pr`) — User-invoked workflow that prepares a safe implementation branch and hands work through implementation and commit gates for reviewable delivery.
 - **tdd** — Skill for test-driven development. After the skills refactor (map 31): feedback-first framing — runnable check before code, smallest provable slice first, E2E as final gate. Test list as transient external state. Cheating defenses. Refactoring in green only.
 - **github skill** — Model-invoked skill for GitHub forge actions, backed by the `gh` CLI. Authoritative command-recipe catalog for GitHub.
 - **gitlab skill** — Model-invoked skill for GitLab forge actions, backed by the `glab` CLI. Authoritative command-recipe catalog for GitLab.
@@ -113,6 +114,9 @@ The original issue record that preserves the user's intent and history while lin
 - **Forge-native stack operation** — A GitHub or GitLab capability for creating and maintaining stacked pull requests or merge requests, exposed through the matching forge skill for the PR workflow to use.
 - **Implementation-ready** — A ticket state in which its change is implemented, validated, committed, pushed, and represented by a pull request or merge request, even though the issue remains open until merge.
 - **Spec-local dependency** — A dependency between tickets in one spec that can be satisfied for downstream implementation by the predecessor branch becoming implementation-ready; a dependency outside the spec remains a real blocker.
+- **Normalized publication result** — Provider-neutral pull-request or merge-request metadata returned by a forge skill, including the review record, source and target branches, current head, state, and failure classification.
+- **Branch-topology stack** — A linear stack represented by each review record's source branch targeting the predecessor branch, with the lowest branch targeting the default branch.
+- **Stack reconciliation** — Idempotent recovery that discovers existing review records and compares normalized forge state before creating, updating, or retargeting publication records again.
 
 ## Conventions (TDD)
 
