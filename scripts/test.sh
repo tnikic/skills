@@ -6,6 +6,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 suites=(
   repository "scripts/tests/repository-contracts.sh"
   skill-workflow "scripts/tests/skill-workflow-contracts.sh"
+  forge-adapter "scripts/tests/forge-adapter-contracts.sh"
 )
 
 failed=0

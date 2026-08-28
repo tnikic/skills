@@ -1,0 +1,10 @@
+{
+  "number": 42,
+  "url": "https://github.example/pull/42",
+  "state": "OPEN",
+  "title": "[delivery 1/2] publish ticket",
+  "body": "ticket body",
+  "headRefName": "feat/42-delivery",
+  "baseRefName": "main",
+  "headRefOid": "abc123"
+}

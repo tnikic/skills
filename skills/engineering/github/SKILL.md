@@ -102,11 +102,50 @@ gh issue view N -R $R --json parent,subIssues,blockedBy,blocking
 gh api "/repos/$R/issues/N/sub_issues" --paginate   # plain REST list of child issue numbers
 ```
 
-## Pull requests
+## Pull Requests And Delivery
+
+Workflow skills read the provider-neutral operations and results in
+[`forge-pr-delivery-contract.md`](../../shared/forge-pr-delivery-contract.md)
+when publishing or maintaining a pull request. These are the GitHub adapter
+recipes: GitHub owns the command syntax and response fields, then returns the
+contract's `record_id`, `url`, `source_branch`, `target_branch`, `head_sha`, and
+normalized `state`.
 
 ```bash
-# create — head branch must be pushed; base is the target branch
-gh pr create -R $R --title "Title" --body "body" --head HEADBRANCH --base main -l scope:name
+# create — source branch must be pushed; base is the target branch
+BASE_BRANCH="$(gh repo view -R $R --json defaultBranchRef --jq '.defaultBranchRef.name')"
+PR_URL="$(gh pr create -R $R --title "Title" --body "body" --head SOURCE_BRANCH --base "$BASE_BRANCH" -l scope:name)"
+gh pr view "$PR_URL" -R $R --json number,url,state,title,body,headRefName,baseRefName,headRefOid \
+  --jq '{record_id:(.number|tostring),url,title,body,source_branch:.headRefName,target_branch:.baseRefName,head_sha:.headRefOid,state:(if .state == "OPEN" then "open" elif .state == "MERGED" then "merged" else "closed" end)}'
+
+# find — reconcile an ambiguous create by source branch before retrying
+gh pr list -R $R --head SOURCE_BRANCH --state open \
+  --json number,url,state,title,body,headRefName,baseRefName,headRefOid \
+  --jq 'if length > 1 then error("multiple open pull requests for source branch") elif length == 0 then {record:null} else .[0] | {record:{record_id:(.number|tostring),url,title,body,source_branch:.headRefName,target_branch:.baseRefName,head_sha:.headRefOid,state:"open"}} end'
+
+# view — return the current provider response normalized to the shared record
+gh pr view RECORD_ID -R $R --json number,url,state,title,body,headRefName,baseRefName,headRefOid \
+  --jq '{record_id:(.number|tostring),url,title,body,source_branch:.headRefName,target_branch:.baseRefName,head_sha:.headRefOid,state:(if .state == "OPEN" then "open" elif .state == "MERGED" then "merged" else "closed" end)}'
+
+# update — edit provider fields, then read the authoritative current head
+gh pr edit RECORD_ID -R $R --title "Title" --body "body" --add-label "scope:name"
+gh pr view RECORD_ID -R $R --json number,url,state,title,body,headRefName,baseRefName,headRefOid \
+  --jq '{record_id:(.number|tostring),url,title,body,source_branch:.headRefName,target_branch:.baseRefName,head_sha:.headRefOid,state:(if .state == "OPEN" then "open" elif .state == "MERGED" then "merged" else "closed" end)}'
+
+# retarget — use GitHub's native target update; do not simulate stack behavior
+gh pr edit RECORD_ID -R $R --base TARGET_BRANCH
+gh pr view RECORD_ID -R $R --json number,url,state,title,body,headRefName,baseRefName,headRefOid \
+  --jq '{record_id:(.number|tostring),url,title,body,source_branch:.headRefName,target_branch:.baseRefName,head_sha:.headRefOid,state:(if .state == "OPEN" then "open" elif .state == "MERGED" then "merged" else "closed" end)}'
+
+# publication_failure — classify command, auth, permission, and publication failures
+# as retryable while preserving the pushed branch and issue; never fabricate a record.
+# Map exit 127 to tooling-unavailable, auth failures to authentication-required,
+# permissions failures to permission-denied, and transient 408, 429, 500, or 503
+# publication errors to publication-failed. Return retryable=true,
+# publication_exists=false, and the preserved branch and issue state for each
+# class.
+gh auth status
+gh pr create -R $R --title "Title" --body "body" --head SOURCE_BRANCH --base TARGET_BRANCH
 
 # list / view
 gh pr list -R $R --json number,title,state,labels,headRefName,baseRefName --limit 100

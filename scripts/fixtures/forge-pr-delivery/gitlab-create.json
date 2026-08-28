@@ -1,0 +1,10 @@
+{
+  "iid": 42,
+  "web_url": "https://gitlab.example/merge_requests/42",
+  "state": "opened",
+  "title": "[delivery 1/2] publish ticket",
+  "description": "ticket body",
+  "source_branch": "feat/42-delivery",
+  "target_branch": "main",
+  "sha": "abc123"
+}

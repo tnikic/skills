@@ -137,11 +137,49 @@ glab api "projects/GROUP%2FREPO/issues/N/links"
 
 GitLab treats "blocked" as a workflow signal, not a hard gate — closing a blocker does not auto-close the blocked issue.
 
-## Merge requests
+## Merge Requests And Delivery
+
+Workflow skills read the provider-neutral operations and results in
+[`forge-pr-delivery-contract.md`](../../shared/forge-pr-delivery-contract.md)
+when publishing or maintaining a merge request. These are the GitLab adapter
+recipes: GitLab owns the command syntax and response fields, then returns the
+contract's `record_id`, `url`, `source_branch`, `target_branch`, `head_sha`, and
+normalized `state`.
 
 ```bash
 # create — source branch must be pushed; -b is the target branch
-glab mr create -R $R -t "Title" -d "body" -s SOURCE_BRANCH -b main -l scope:name --remove-source-branch -y
+BASE_BRANCH="$(glab api "projects/GROUP%2FREPO" | jq -r '.default_branch')"
+MR_URL="$(glab mr create -R $R -t "Title" -d "body" -s SOURCE_BRANCH -b "$BASE_BRANCH" -l scope:name -y)"
+glab mr view "$MR_URL" -R $R -F json \
+  --jq '{record_id:(.iid|tostring),url:.web_url,title,body:.description,source_branch:.source_branch,target_branch:.target_branch,head_sha:(.sha // .diff_refs.head_sha),state:(if .state == "opened" then "open" elif .state == "merged" then "merged" else "closed" end)}'
+
+# find — reconcile an ambiguous create by source branch before retrying
+glab mr list -R $R --source-branch SOURCE_BRANCH -F json \
+  --jq 'if length > 1 then error("multiple open merge requests for source branch") elif length == 0 then {record:null} else .[0] | {record:{record_id:(.iid|tostring),url:.web_url,title,body:.description,source_branch:.source_branch,target_branch:.target_branch,head_sha:(.sha // .diff_refs.head_sha),state:"open"}} end'
+
+# view — return the current provider response normalized to the shared record
+glab mr view RECORD_ID -R $R -F json \
+  --jq '{record_id:(.iid|tostring),url:.web_url,title,body:.description,source_branch:.source_branch,target_branch:.target_branch,head_sha:(.sha // .diff_refs.head_sha),state:(if .state == "opened" then "open" elif .state == "merged" then "merged" else "closed" end)}'
+
+# update — edit provider fields, then read the authoritative current head
+glab mr update RECORD_ID -R $R -t "Title" -d "body" -l "scope:name"
+glab mr view RECORD_ID -R $R -F json \
+  --jq '{record_id:(.iid|tostring),url:.web_url,title,body:.description,source_branch:.source_branch,target_branch:.target_branch,head_sha:(.sha // .diff_refs.head_sha),state:(if .state == "opened" then "open" elif .state == "merged" then "merged" else "closed" end)}'
+
+# retarget — use GitLab's native target update; do not simulate stack behavior
+glab mr update RECORD_ID -R $R --target-branch TARGET_BRANCH
+glab mr view RECORD_ID -R $R -F json \
+  --jq '{record_id:(.iid|tostring),url:.web_url,title,body:.description,source_branch:.source_branch,target_branch:.target_branch,head_sha:(.sha // .diff_refs.head_sha),state:(if .state == "opened" then "open" elif .state == "merged" then "merged" else "closed" end)}'
+
+# publication_failure — classify command, auth, permissions, and publication failures
+# as retryable while preserving the pushed branch and issue; never fabricate a record.
+# Map exit 127 to tooling-unavailable, auth failures to authentication-required,
+# 403 responses to permission-denied, and transient 408, 429, 500, or 503
+# publication errors to publication-failed. Return retryable=true,
+# publication_exists=false, and the preserved branch and issue state for each
+# class. Reconcile an ambiguous create with find before retrying.
+glab auth status
+glab mr create -R $R -t "Title" -d "body" -s SOURCE_BRANCH -b TARGET_BRANCH -y
 
 # list / view
 glab mr list -R $R -F json

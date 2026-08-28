@@ -110,9 +110,14 @@ printf '%s\n' \
   '#!/usr/bin/env bash' \
   'printf "test: skill-workflow fixture ran\\n"' \
   > "$runner_fixture/scripts/tests/skill-workflow-contracts.sh"
+printf '%s\n' \
+  '#!/usr/bin/env bash' \
+  'printf "test: forge-adapter fixture ran\\n"' \
+  > "$runner_fixture/scripts/tests/forge-adapter-contracts.sh"
 if runner_output="$(bash "$runner_fixture/scripts/test.sh" 2>&1)"; then
   fail 'runner returned success after a concern failed'
 fi
 assert_contains <(printf '%s\n' "$runner_output") 'test[repository]: fixture failure'
 assert_contains <(printf '%s\n' "$runner_output") 'test: repository: failed'
 assert_contains <(printf '%s\n' "$runner_output") 'test: skill-workflow fixture ran'
+assert_contains <(printf '%s\n' "$runner_output") 'test: forge-adapter fixture ran'

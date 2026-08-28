@@ -1,0 +1,6 @@
+{
+  "tooling": {"exit_code": 127},
+  "authentication": {"status": 401},
+  "permissions": {"status": 403},
+  "publication": {"status": 503}
+}

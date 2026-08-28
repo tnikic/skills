@@ -14,6 +14,13 @@ Read the shared [`continuation`](../../shared/continuation.md) contract when
 returning the workflow boundary. Keep the exact continuation in the live
 interaction rather than in an issue record.
 
+Read the provider-neutral [`forge-pr-delivery-contract`](../../shared/forge-pr-delivery-contract.md)
+and [`pr-template`](../../shared/pr-template.md) when handing a pushed ticket
+to a forge. Render the ticket body from the template, then ask the matching
+forge skill to perform the named operation and consume its normalized record or
+retryable failure. Keep provider commands, response fields, and native stack
+mechanics in that forge skill.
+
 ## 1. Establish the delivery target
 
 Use the issue, spec, or settled implementation landscape supplied by the user.
