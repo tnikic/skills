@@ -491,4 +491,156 @@ assert_contains_many_normalized "$code_review_skill" \
   'developer-facing owner record' \
   "owner's complete continuation set"
 
+# Integration fixtures exercise the boundary contracts, rather than only
+# checking that each route's vocabulary appears somewhere in its skill.
+bounded_fixture="$(mktemp)"
+multi_ticket_fixture="$(mktemp)"
+map_fixture="$(mktemp)"
+overflow_fixture="$(mktemp -d)"
+specialist_fixture="$(mktemp)"
+public_fixture="$(mktemp)"
+commit_fixture="$(mktemp)"
+trap 'rm -f "$order_fixture" "$bounded_fixture" "$multi_ticket_fixture" "$map_fixture" "$specialist_fixture" "$public_fixture" "$commit_fixture"; rm -rf "$overflow_fixture"' EXIT
+
+printf '%s\n' \
+  'Current state: ready' \
+  'Ready now: /to-tickets creates exactly one implementation issue record' \
+  'Later: /implement after the issue record exists' \
+  'Dependencies: None' \
+  'Deliberate stop: None' > "$bounded_fixture"
+assert_order_normalized "$bounded_fixture" \
+  'Current state: ready' \
+  'Ready now: /to-tickets' \
+  'Later: /implement after the issue record exists'
+assert_not_contains "$bounded_fixture" 'Ready now: /to-spec'
+
+printf '%s\n' \
+  'Current state: ready' \
+  'Ready now: /to-spec publishes one specification' \
+  'Later: /to-tickets after publication; /implement after issue records exist' \
+  'Dependencies: None' \
+  'Deliberate stop: None' > "$multi_ticket_fixture"
+assert_order_normalized "$multi_ticket_fixture" \
+  'Ready now: /to-spec' \
+  'Later: /to-tickets after publication' \
+  '/implement after issue records exist'
+assert_not_contains "$multi_ticket_fixture" 'Ready now: /implement'
+
+printf '%s\n' \
+  'Current state: ready' \
+  'Ready now: /to-spec for the actionable multi-ticket landscape' \
+  'Later: create an uncharted Wayfinder map for non-blocking follow-up fog' \
+  'Dependencies: None' \
+  'Deliberate stop: None' > "$map_fixture"
+assert_order_normalized "$map_fixture" \
+  'Ready now: /to-spec' \
+  'Later: create an uncharted Wayfinder map'
+assert_not_contains "$map_fixture" 'Ready now: create an uncharted Wayfinder map'
+
+printf '%s\n' \
+  '## Spec body' \
+  'Problem Statement' > "$overflow_fixture/body"
+printf '%s\n' \
+  '## Spec overflow 2/2' \
+  'Testing Decisions' > "$overflow_fixture/overflow-2"
+printf '%s\n' \
+  '## Spec overflow 1/2' \
+  'Implementation Decisions' > "$overflow_fixture/overflow-1"
+overflow_source="$overflow_fixture/assembled"
+{
+  cat "$overflow_fixture/body"
+  while IFS= read -r comment; do
+    cat "$comment"
+  done < <(printf '%s\n' "$overflow_fixture"/overflow-* | sort -V)
+} > "$overflow_source"
+assert_order "$overflow_source" \
+  'Problem Statement' \
+  'Implementation Decisions' \
+  'Testing Decisions'
+assert_contains "$overflow_source" '## Spec overflow 1/2'
+assert_contains "$overflow_source" '## Spec overflow 2/2'
+
+printf '%s\n' \
+  'Owner: implementation issue' \
+  'Result: cited specialist finding' \
+  'Canonical record: stable XDG cache' \
+  'Scratch: OS temp, removed after synthesis' \
+  'Owner continuation: returned in the live interaction' > "$specialist_fixture"
+assert_order_normalized "$specialist_fixture" \
+  'Owner: implementation issue' \
+  'Result: cited specialist finding' \
+  'Canonical record: stable XDG cache' \
+  'Scratch: OS temp, removed after synthesis' \
+  'Owner continuation: returned in the live interaction'
+assert_not_contains "$specialist_fixture" 'Canonical record: project docs'
+assert_contains_many_normalized "$research_skill" \
+  'owner before gathering evidence' \
+  'stable per-user XDG cache' \
+  'OS temp is scratch only'
+assert_contains_many_normalized "$prototype_skill" \
+  'owner before building' \
+  'remove every project-local prototype file, route, and switcher'
+artifact_fixture="$(mktemp -d)"
+mkdir -p "$artifact_fixture/project" "$artifact_fixture/scratch"
+printf '%s\n' 'prototype residue' > "$artifact_fixture/project/prototype.html"
+printf '%s\n' 'scratch notes' > "$artifact_fixture/scratch/research.md"
+rm -f "$artifact_fixture/project/prototype.html" "$artifact_fixture/scratch/research.md"
+[ ! -e "$artifact_fixture/project/prototype.html" ] ||
+  fail 'prototype residue survived the completion boundary'
+[ ! -e "$artifact_fixture/scratch/research.md" ] ||
+  fail 'scratch artifact survived the completion boundary'
+rm -rf "$artifact_fixture"
+
+awk '/^## The map body$/{capture=1; next} /^## Tickets$/{capture=0} capture' \
+  "$wayfinder_skill" > "$public_fixture"
+awk '/^<spec-template>$/{capture=1; next} /^<\/spec-template>$/{capture=0} capture' \
+  "$to_spec_skill" >> "$public_fixture"
+cat "$issue_template" >> "$public_fixture"
+assert_not_contains "$public_fixture" 'Current state'
+assert_not_contains "$public_fixture" 'Ready now'
+assert_not_contains "$public_fixture" 'Dependencies'
+assert_not_contains "$public_fixture" 'Deliberate stop'
+assert_not_contains "$public_fixture" '/implement'
+
+printf '%s\n' \
+  'Commit owner: /commit' \
+  'Message policy: /conventional-commits returns an approved message' \
+  'Execution: /commit creates the local commit and pushes it' > "$commit_fixture"
+assert_order_normalized "$commit_fixture" \
+  'Commit owner: /commit' \
+  'Message policy: /conventional-commits returns an approved message' \
+  'Execution: /commit creates the local commit and pushes it'
+assert_contains_many_normalized "$commit_skill" \
+  '## 1. Stage' \
+  '## 2. Safety check' \
+  '## 3. Quality gate' \
+  '## 4. Docs gate' \
+  '## 5. Message' \
+  '## 6. Commit' \
+  '## 7. Push'
+assert_not_contains "$conventional_commits_skill" 'Run `git commit'
+assert_not_contains "$conventional_commits_skill" 'Run `git push'
+
+# Fresh-agent pointer audit: every changed workflow with a continuation
+# boundary reaches the shared contract, and old direct-route wording is gone.
+assert_contains "$grilling_skill" '../../shared/continuation.md'
+assert_contains "$grill_with_docs_skill" '../../shared/continuation.md'
+assert_contains "$triage_skill" '../../shared/continuation.md'
+assert_contains "$wayfinder_skill" '../../shared/continuation.md'
+assert_contains "$to_spec_skill" '../../shared/continuation.md'
+assert_contains "$to_tickets_skill" '../../shared/continuation.md'
+assert_contains "$research_skill" '../../shared/continuation.md'
+assert_contains "$prototype_skill" '../../shared/continuation.md'
+assert_contains "$prototype_logic" '../../shared/continuation.md'
+assert_contains "$prototype_ui" '../../shared/continuation.md'
+assert_contains "$diagnosing_bugs_skill" '../../shared/continuation.md'
+assert_contains "$code_review_skill" '../../shared/continuation.md'
+assert_contains "$review_skill" '../../shared/continuation.md'
+assert_not_contains "$grill_with_docs_skill" 'via `/to-spec` or `/implement`'
+assert_not_contains "$grilling_skill" 'plus the next step'
+assert_not_contains "$wayfinder_skill" 'docs/research/<topic-slug>.md'
+assert_not_contains "$to_spec_skill" 'stamp with `kind:spec`'
+assert_not_contains "$to_tickets_skill" 'stamp it with `kind:spec` now'
+assert_not_contains "$implement_skill" 'Push: `git push -u origin HEAD`'
+
 printf 'skill-workflow: ok\n'
