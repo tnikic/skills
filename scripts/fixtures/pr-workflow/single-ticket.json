@@ -1,0 +1,90 @@
+{
+  "ticket": 90,
+  "default_branch": "main",
+  "source_branch": "feat/90-github-pr",
+  "issue_state": "open",
+  "events": [
+    {
+      "stage": "branch",
+      "action": "select",
+      "branch": "feat/90-github-pr"
+    },
+    {
+      "stage": "implement",
+      "delegation": "/implement",
+      "result": "validated"
+    },
+    {
+      "stage": "commit",
+      "delegation": "/commit",
+      "commits": 1,
+      "pushed": true,
+      "head_sha": "abc123"
+    },
+    {
+      "stage": "forge",
+      "skill": "github",
+      "operation": "find",
+      "record": null
+    },
+    {
+      "stage": "forge",
+      "skill": "github",
+      "operation": "create",
+      "records": 1,
+      "source_branch": "feat/90-github-pr",
+      "target_branch": "main",
+      "state": "open"
+    },
+    {
+      "stage": "workflow",
+      "implementation_ready": true
+    }
+  ],
+  "body": {
+    "sections": [
+      "Change scope",
+      "Notable decisions",
+      "Validation",
+      "Acceptance results",
+      "Spec context",
+      "Stack position",
+      "Dependency context",
+      "Related records"
+    ],
+    "change_scope": "Publish ticket #90 as one reviewable GitHub pull request",
+    "notable_decisions": "Use one safe branch and branch-identity reconciliation",
+    "validation": "make check and make test passed",
+    "acceptance_results": 7,
+    "dependency_context": "#87, #88, and #89 resolved",
+    "reference": "Related: #90",
+    "closing_reference": false
+  },
+  "publication": {
+    "record_id": "42",
+    "url": "https://github.example/pull/42",
+    "title": "Publish single-ticket GitHub pull requests",
+    "body": "ticket-focused body",
+    "source_branch": "feat/90-github-pr",
+    "target_branch": "main",
+    "head_sha": "abc123",
+    "state": "open"
+  },
+  "lifecycle": [
+    {
+      "name": "implementation-ready",
+      "issue_state": "open",
+      "publication_state": "open"
+    },
+    {
+      "name": "merged",
+      "issue_state": "open",
+      "publication_state": "merged"
+    },
+    {
+      "name": "closed",
+      "issue_state": "closed",
+      "publication_state": "merged"
+    }
+  ]
+}

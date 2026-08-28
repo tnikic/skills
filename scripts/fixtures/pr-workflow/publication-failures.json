@@ -1,0 +1,40 @@
+{
+  "failures": [
+    {
+      "failure_class": "tooling-unavailable",
+      "retryable": true,
+      "publication_exists": false,
+      "preserved_branch": true,
+      "preserved_issue": true,
+      "stop_before_claim": true,
+      "implementation_ready": false
+    },
+    {
+      "failure_class": "authentication-required",
+      "retryable": true,
+      "publication_exists": false,
+      "preserved_branch": true,
+      "preserved_issue": true,
+      "stop_before_claim": true,
+      "implementation_ready": false
+    },
+    {
+      "failure_class": "permission-denied",
+      "retryable": true,
+      "publication_exists": false,
+      "preserved_branch": true,
+      "preserved_issue": true,
+      "stop_before_claim": true,
+      "implementation_ready": false
+    },
+    {
+      "failure_class": "publication-failed",
+      "retryable": true,
+      "publication_exists": false,
+      "preserved_branch": true,
+      "preserved_issue": true,
+      "stop_before_claim": true,
+      "implementation_ready": false
+    }
+  ]
+}

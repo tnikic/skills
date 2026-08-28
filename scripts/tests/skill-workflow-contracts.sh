@@ -109,7 +109,7 @@ assert_contains_many_normalized "$commit_skill" \
 assert_contains_many_normalized "$pr_skill" \
   'name: pr' \
   'disable-model-invocation: true' \
-  'Prepare a non-default implementation branch' \
+  'Prepare one non-default implementation branch for one ticket' \
   'Identify the repository default branch' \
   'If the current branch is the default branch, stop before implementation' \
   'actionable guidance to create or switch to a non-default implementation branch' \
@@ -117,7 +117,20 @@ assert_contains_many_normalized "$pr_skill" \
   '`/implement` owns issue reading, implementation, validation, review and repair' \
   'After a successful implementation handoff, invoke `/commit`.' \
   'The commit skill owns staging, safety, quality, documentation, message approval, commit creation, and pushing.' \
-  'does not close issues or publish forge-specific records' \
+  '## 5. Publish one GitHub pull request' \
+  'ticket-focused body' \
+  'Stack position' \
+  'Dependency context' \
+  'Related: #N' \
+  'provider-neutral `find` operation' \
+  'record: null' \
+  'one `create` operation' \
+  'normalized publication result' \
+  'publication_failure' \
+  'Preserve the pushed branch and open issue' \
+  '## 6. Return the implementation-ready boundary' \
+  'implementation-ready' \
+  'Keep the ticket open' \
   'complete continuation set'
 assert_order_normalized "$pr_skill" \
   'Identify the repository default branch' \
@@ -127,7 +140,11 @@ assert_order_normalized "$pr_skill" \
   '## 3. Delegate implementation' \
   'Invoke `/implement`' \
   '## 4. Delegate commit and push' \
-  'invoke `/commit`'
+  'invoke `/commit`' \
+  '## 5. Publish one GitHub pull request' \
+  'provider-neutral `find` operation' \
+  'one `create` operation' \
+  '## 6. Return the implementation-ready boundary'
 assert_not_contains "$pr_skill" 'git commit'
 assert_not_contains "$pr_skill" 'git push'
 assert_contains_many_normalized "$implement_skill" \
@@ -567,6 +584,78 @@ assert_order_normalized "$pr_feature_fixture" \
   'Implementation handoff: /implement' \
   'Commit handoff: /commit' \
   'Result: pushed branch ready for PR publication'
+
+assert_file "$pr_workflow_fixture"
+assert_file "$pr_failure_fixture"
+workflow_events="$(jq -c '[.events[] | {stage,delegation,operation}]' "$pr_workflow_fixture")"
+expected_workflow_events='[{"stage":"branch","delegation":null,"operation":null},{"stage":"implement","delegation":"/implement","operation":null},{"stage":"commit","delegation":"/commit","operation":null},{"stage":"forge","delegation":null,"operation":"find"},{"stage":"forge","delegation":null,"operation":"create"},{"stage":"workflow","delegation":null,"operation":null}]'
+[ "$workflow_events" = "$expected_workflow_events" ] ||
+  fail "single-ticket workflow changed order: $workflow_events"
+[ "$(jq -r '.events[2].commits' "$pr_workflow_fixture")" = 1 ] ||
+  fail 'single-ticket workflow did not prove one commit'
+[ "$(jq -r '.events[2].pushed' "$pr_workflow_fixture")" = true ] ||
+  fail 'single-ticket workflow did not prove push'
+[ "$(jq -r '.events[0].branch' "$pr_workflow_fixture")" = "$(jq -r '.source_branch' "$pr_workflow_fixture")" ] ||
+  fail 'single-ticket workflow did not preserve the selected source branch'
+[ "$(jq -r '.default_branch' "$pr_workflow_fixture")" = main ] ||
+  fail 'single-ticket workflow did not preserve the default target branch'
+[ "$(jq -r '.events[3].skill' "$pr_workflow_fixture")" = github ] ||
+  fail 'single-ticket workflow did not hand publication to GitHub'
+[ "$(jq -r '.events[4].records' "$pr_workflow_fixture")" = 1 ] ||
+  fail 'single-ticket workflow did not prove one GitHub pull request'
+[ "$(jq -r '.events[4].source_branch' "$pr_workflow_fixture")" = "$(jq -r '.source_branch' "$pr_workflow_fixture")" ] ||
+  fail 'single-ticket publication changed the source branch'
+[ "$(jq -r '.events[4].target_branch' "$pr_workflow_fixture")" = "$(jq -r '.default_branch' "$pr_workflow_fixture")" ] ||
+  fail 'single-ticket publication changed the target branch'
+[ "$(jq -r '.events[5].implementation_ready' "$pr_workflow_fixture")" = true ] ||
+  fail 'single-ticket workflow did not prove implementation-ready state'
+[ "$(jq -r '.issue_state' "$pr_workflow_fixture")" = open ] ||
+  fail 'single-ticket workflow changed the issue state'
+for field in change_scope notable_decisions validation dependency_context; do
+  jq -e --arg field "$field" '.body[$field] != null and (.body[$field] | length) > 0' "$pr_workflow_fixture" >/dev/null ||
+    fail "single-ticket body is missing $field content"
+done
+[ "$(jq -r '.body.acceptance_results' "$pr_workflow_fixture")" = 7 ] ||
+  fail 'single-ticket body did not mirror all ticket criteria'
+for section in 'Change scope' 'Notable decisions' 'Validation' 'Acceptance results' \
+  'Spec context' 'Stack position' 'Dependency context' 'Related records'; do
+  jq -e --arg section "$section" '.body.sections | index($section) != null' "$pr_workflow_fixture" >/dev/null ||
+    fail "single-ticket body is missing $section"
+done
+[ "$(jq -r '.body.reference' "$pr_workflow_fixture")" = 'Related: #90' ] ||
+  fail 'single-ticket body lost its non-closing ticket reference'
+[ "$(jq -r '.body.closing_reference' "$pr_workflow_fixture")" = false ] ||
+  fail 'single-ticket body has a closing reference'
+for field in record_id url title body source_branch target_branch head_sha state; do
+  jq -e --arg field "$field" '.publication[$field] != null and (.publication[$field] | length) > 0' "$pr_workflow_fixture" >/dev/null ||
+    fail "single-ticket publication is missing $field"
+done
+[ "$(jq -r '.publication.state' "$pr_workflow_fixture")" = open ] ||
+  fail 'single-ticket publication is not reviewable'
+[ "$(jq -r '.publication.source_branch' "$pr_workflow_fixture")" = "$(jq -r '.source_branch' "$pr_workflow_fixture")" ] ||
+  fail 'single-ticket normalized result changed the source branch'
+[ "$(jq -r '.publication.target_branch' "$pr_workflow_fixture")" = "$(jq -r '.default_branch' "$pr_workflow_fixture")" ] ||
+  fail 'single-ticket normalized result changed the target branch'
+[ "$(jq -r '.publication.head_sha' "$pr_workflow_fixture")" = "$(jq -r '.events[2].head_sha' "$pr_workflow_fixture")" ] ||
+  fail 'single-ticket normalized result changed the pushed head'
+for state in implementation-ready merged closed; do
+  jq -e --arg state "$state" '.lifecycle[] | select(.name == $state)' "$pr_workflow_fixture" >/dev/null ||
+    fail "single-ticket lifecycle is missing $state"
+done
+[ "$(jq -r '.lifecycle[0].issue_state' "$pr_workflow_fixture")" = open ] ||
+  fail 'implementation-ready did not preserve the open issue'
+[ "$(jq -r '.lifecycle[0].publication_state' "$pr_workflow_fixture")" = open ] ||
+  fail 'implementation-ready did not preserve the open publication'
+[ "$(jq -r '.lifecycle[1].publication_state' "$pr_workflow_fixture")" = merged ] ||
+  fail 'merged state is not distinct from implementation-ready'
+[ "$(jq -r '.lifecycle[2].issue_state' "$pr_workflow_fixture")" = closed ] ||
+  fail 'closed state is not distinct from implementation-ready'
+
+for class in tooling-unavailable authentication-required permission-denied publication-failed; do
+  jq -e --arg class "$class" \
+    '.failures[] | select(.failure_class == $class and .retryable == true and .publication_exists == false and .preserved_branch == true and .preserved_issue == true and .stop_before_claim == true and .implementation_ready == false)' \
+    "$pr_failure_fixture" >/dev/null || fail "workflow failure state is incomplete for $class"
+done
 
 printf '%s\n' \
   'Direct invocation: /implement' \

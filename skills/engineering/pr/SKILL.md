@@ -6,9 +6,10 @@ disable-model-invocation: true
 
 # PR Workflow
 
-Prepare a non-default implementation branch, then hand the requested work to
-`/implement` and `/commit` in that order. This is an additional route for
-reviewable delivery; direct `/implement` remains available for ordinary work.
+Prepare one non-default implementation branch for one ticket, then hand the
+work to `/implement`, `/commit`, and the matching forge publication operation
+in that order. This is an additional route for reviewable delivery; direct
+`/implement` remains available for ordinary work.
 
 Read the shared [`continuation`](../../shared/continuation.md) contract when
 returning the workflow boundary. Keep the exact continuation in the live
@@ -45,6 +46,9 @@ switch to it. Verify the current branch is non-default immediately before the
 implementation handoff. Preserve a dirty worktree and stop with guidance if a
 branch switch would risk unrelated changes.
 
+Carry this selected branch unchanged through implementation, commit, push, and
+publication; the ticket has one implementation branch.
+
 *Completion: one non-default implementation branch is selected, the worktree
 is safe to use, and no implementation has started before this branch check.*
 
@@ -76,14 +80,59 @@ implementation branch and issue open for retry. Do not claim PR readiness.
 *Completion: `/commit` reports the selected non-default branch's commit as
 pushed, or the failure is reported without claiming publication.*
 
-## 5. Return the PR boundary
+## 5. Publish one GitHub pull request
 
-After the commit gate succeeds, report the branch and commit as ready for the
-provider-specific PR publication workflow. Keep the issue open: this boundary
-does not close issues or publish forge-specific records. Return the complete
-continuation set with the current state, ready-now actions, later actions,
-dependencies, and deliberate stop fields.
+This ticket uses the GitHub forge skill. Read the provider-neutral
+[`forge-pr-delivery-contract`](../../shared/forge-pr-delivery-contract.md) and
+[`pr-template`](../../shared/pr-template.md) before handing off publication.
 
-*Completion: the pushed implementation branch, commit, and next PR-publication
-boundary are reported, with no premature issue closure or forge-specific
-operation claimed.*
+Render one ticket-focused body from the shared template, using the ticket title
+as the publication title. Fill `Change scope`,
+`Notable decisions`, `Validation`, and `Acceptance results` from the ticket and
+the completed `/implement` result; include every ticket criterion in
+`Acceptance results`. Fill `Spec context` when a parent spec is relevant,
+`Stack position` as `1/1 -> <default branch>`, and `Dependency context` with
+the resolved prerequisites or the actual blocker. In `Related records`, use
+`Related: #N` or `Refs: #N` for the open ticket. The intermediate publication
+reference is non-closing, so this body does not use `Closes #N`.
+
+Ask the GitHub skill to run the provider-neutral `find` operation by source
+branch first. When it returns `record: null`, ask it to run one `create`
+operation with the ticket body, source branch, and default target branch. When
+it finds an existing record, reuse that record instead of creating another.
+Consume the resulting normalized publication record; the workflow does not
+derive GitHub commands or provider response fields. Reconcile its `record_id`,
+`url`, `title`, `body`, `source_branch`, `target_branch`, `head_sha`, and
+`state` against the ticket body, selected source branch, default target branch,
+and pushed commit before reporting readiness. A mismatch is a publication
+failure and remains retryable with the branch and issue preserved.
+
+If the forge returns a `publication_failure`, stop at this boundary. Preserve
+the pushed branch and open issue, report the contract's failure class, message,
+and recovery action, and retain `retryable: true`,
+`publication_exists: false|unknown`, `preserved_branch: true`, and
+`preserved_issue: true`. Do not claim that a pull request exists or that the
+ticket is implementation-ready. A retry finds by source branch before any
+create operation.
+
+*Completion: exactly one open GitHub pull-request record is represented by one
+normalized publication result, or a retryable failure is reported with the
+branch and issue preserved and no publication claimed.*
+
+## 6. Return the implementation-ready boundary
+
+Report `implementation-ready` only when `/implement` completed validation,
+`/commit` reports one pushed commit, and the GitHub result is one normalized
+record whose state is `open`. Keep the ticket open at this boundary. The open
+issue plus the open review record is implementation-ready; `merged` is a
+separate review-record state, and `closed` is a later issue lifecycle state
+after the change reaches the default branch. Do not close the ticket or alter
+the parent spec from this workflow.
+
+Return the complete continuation set using the shared
+[`continuation`](../../shared/continuation.md) contract, with the current state,
+ready-now actions, later actions, dependencies, and deliberate stop fields.
+
+*Completion: the issue remains open, the implementation-ready state is
+reported only for an open normalized pull request, and merged or closed states
+remain distinguishable in the continuation set.*
