@@ -97,12 +97,29 @@ Surface the URL (and the `?variant=` keys). The user will flip through whenever 
 
 ### 6. Capture the answer and clean up
 
-Once a variant has won, capture the answer — which variant and why — then capture the prototype the way the [SKILL](SKILL.md) describes. Fold the winner into the real code and move the rest onto the throwaway branch, not into main:
+Once a variant has won, capture the answer — which variant and why — on the
+developer-facing owner record. Fold the winner into the real code and preserve
+the full set of variants only in the explicitly throwaway branch or external
+copy described by the [SKILL](SKILL.md):
 
 - **Sub-shape A** — fold the winner into the existing page; drop the losing variants and the switcher from main.
 - **Sub-shape B** — promote the winning variant to a real route; drop the throwaway route and the switcher from main.
 
-The full set of variants is the primary source, so it lands on the throwaway branch, not the bin — variant components and the switcher left in the main branch rot fast and confuse the next reader.
+The full set of variants is the primary source, so it lands on the throwaway
+branch or external copy, not the production path. Remove every losing variant,
+prototype route, and switcher from the project path before completion.
+
+*Completion: the winning decision is recorded for the owner, validated content
+is promoted, and project-local prototype residue is removed.*
+
+### 7. Continue the owner
+
+At the specialist-result boundary, read the shared
+[`continuation`](../../shared/continuation.md) reference and return the owner's
+complete continuation set in the live interaction.
+
+*Completion: the owner's ready-now and later actions, dependencies, and any
+deliberate stop are explicit.*
 
 ## Anti-patterns
 

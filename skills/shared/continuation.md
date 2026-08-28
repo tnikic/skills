@@ -39,6 +39,20 @@ names the skill that just ran is not a continuation set.
 Every field is present even when it has no entries. Use `None` for an empty
 ready-now list, later list, dependency list, or deliberate stop.
 
+## Specialist-result boundary
+
+Before a specialist starts, identify the **owner**: the issue, workflow, or
+artifact that requested the activity. At the specialist-result boundary, record
+the useful result on that owner in developer-facing language when it has a
+public record. Keep skill names, continuation fields, and internal procedure
+in the live interaction. Then return the owner's continuation set, preserving
+its current state, ready-now actions, later actions, dependencies, and
+deliberate stop. The specialist reports a result; it does not choose an
+unrelated route for the owner.
+
+When no public owner record exists, state that the result was returned to the
+owner in the current interaction and keep the same continuation contract.
+
 ## Fan-Out
 
 When a workflow exposes multiple independent next actions, return them as

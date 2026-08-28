@@ -15,6 +15,14 @@ This skill has you show commands, outputs, and captured artifacts. Redact every 
 
 If the redacted output is not enough to diagnose the bug, say so and ask the user for a safer artifact or the missing context.
 
+## Identify the owner
+
+Before building the feedback loop, identify the issue, PR, workflow, or
+artifact that requested the diagnosis. The owner receives the redacted
+reproduction, cause, fix, and regression evidence and controls the next
+continuation. If the diagnosis was requested only in the current interaction,
+name that interaction as the owner.
+
 ## Phase 1 — Build a feedback loop
 
 **This is the skill.** Everything else is mechanical. If you have a **tight** pass/fail signal for the bug — one that goes red on _this_ bug — you will find the cause; bisection, hypothesis-testing, and instrumentation all just consume it. If you don't have one, no amount of staring at code will save you.
@@ -138,3 +146,19 @@ Required before declaring done:
 - [ ] The hypothesis that turned out correct is stated in the commit / PR message — so the next debugger learns
 
 **Then ask: what would have prevented this bug?** If the answer involves architectural change (no good test seam, tangled callers, hidden coupling) hand off to the `/improve-codebase-architecture` skill with the specifics. Make the recommendation **after** the fix is in, not before — you have more information now than when you started.
+
+## Phase 7 — Return the result
+
+Record the useful diagnosis on the developer-facing owner record when one
+exists: the redacted symptom, confirmed cause, fix, regression evidence, and
+any architectural follow-up. Use the matching forge skill for an issue-backed
+owner. Keep secrets, skill names, and internal continuation procedure out of
+the record.
+
+At the specialist-result boundary, read the shared
+[`continuation`](../../shared/continuation.md) reference and return the owner's
+complete continuation set in the live interaction. The next action belongs to
+the owner, not to a generic diagnosis route.
+
+*Completion: the owner has the useful redacted result, the original cleanup
+checks pass, and the owner's ready-now and later actions are explicit.*

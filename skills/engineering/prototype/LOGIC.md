@@ -63,11 +63,27 @@ Send the user the file, or open it for them. They'll click through the walkthrou
 
 *Completion: the user has the file or an open path to it and the available scenarios are reported.*
 
-### 5. Capture the answer and the prototype
+### 5. Capture the answer and clean up
 
-Once the prototype has answered its question, capture the answer, then capture the prototype the way the [SKILL](SKILL.md) describes. The logic-specific mapping: the validated reducer / machine / function set lifts into the real module, while the HTML shell rides along to the throwaway branch that keeps the prototype as a primary source.
+Once the prototype has answered its question, capture the verdict and question
+on the developer-facing owner record. Promote the validated reducer, machine,
+or function set into the real module. Capture the HTML shell as a primary
+source only in the explicitly throwaway branch or external copy described by
+the [SKILL](SKILL.md), then remove the HTML file and every other project-local
+prototype residue before completion.
 
-*Completion: the validated decision is recorded, the logic is identified for promotion, and the HTML shell is isolated from the production path.*
+*Completion: the verdict is recorded for the owner, validated logic is
+identified for promotion, and no prototype residue remains in the production
+project path.*
+
+### 6. Continue the owner
+
+At the specialist-result boundary, read the shared
+[`continuation`](../../shared/continuation.md) reference and return the owner's
+complete continuation set in the live interaction.
+
+*Completion: the owner's ready-now and later actions, dependencies, and any
+deliberate stop are explicit.*
 
 ## Anti-patterns
 

@@ -26,7 +26,7 @@ Give each subagent a self-contained brief. Include:
 
 Do not rely on the subagent having any knowledge of the project structure — pass it everything it needs.
 
-For research subagents, add: investigate against **primary sources** — official docs, source code, specs, first-party APIs — not secondary write-ups. Follow every claim back to the source that owns it. Save findings where the repo keeps such notes; if no convention exists, use `docs/research/<topic-slug>.md`.
+For research subagents, add: investigate against **primary sources** — official docs, source code, specs, first-party APIs — not secondary write-ups. Follow every claim back to the source that owns it. Return structured findings to the caller; the `/research` skill writes the canonical record to the stable per-user XDG cache, while any scratch notes stay in OS temp.
 
 ### Spawn
 
@@ -44,7 +44,7 @@ The subagent returns its findings. The caller:
 ### Cleanup
 
 - If the subagent created a local branch, delete it after capturing findings in the comment or report.
-- Delete any files the subagent created (e.g. `docs/research/<topic>.md`) — the comment or report is the canonical record.
+- Delete any scratch files the subagent created — the caller's canonical record or owner record is the source of truth.
 - Branches stay local — never push them.
 
 ## Anti-pattern

@@ -26,6 +26,7 @@ assert_file "$wayfinder_skill"
 assert_file "$grill_with_docs_skill"
 assert_file "$issue_hierarchy"
 assert_file "$continuation"
+assert_file "$subagent_dispatch"
 
 assert_contains_many_normalized "$continuation" \
   'Current state' \
@@ -68,7 +69,11 @@ assert_contains_many_normalized "$continuation" \
   'exact continuation set belongs in the agent interaction' \
   'does not belong in an issue body or comment' \
   'Developer-facing issue records' \
-  'metadata such as'
+  'metadata such as' \
+  'Specialist-result boundary' \
+  'identify the **owner**' \
+  'useful result on that owner' \
+  'return the owner'
 assert_order_normalized "$continuation" \
   'One-ticket shortcut' \
   'exactly one implementation ticket' \
@@ -183,25 +188,49 @@ assert_contains_many_normalized "$prototype_skill" \
   'single shareable HTML demo' \
   'LOGIC.md' \
   'A UI prototype starts from one command' \
-  'A logic prototype is a self-contained HTML file'
+  'A logic prototype is a self-contained HTML file' \
+  'requesting owner' \
+  'Capture and clean up when done' \
+  'project-local prototype file, route, and switcher' \
+  'Return the owner'
 assert_contains_many_normalized "$prototype_logic" \
   'single, self-contained HTML file' \
   'Completion: the demo states the question' \
   'Completion: the logic is isolated' \
-  'Completion: the file opens without installation'
+  'Completion: the file opens without installation' \
+  'developer-facing owner record' \
+  'no prototype residue remains'
+assert_contains_many_normalized "$prototype_ui" \
+  'developer-facing owner record' \
+  'Remove every losing variant' \
+  'project-local prototype residue is removed' \
+  'Continue the owner'
 assert_order "$prototype_logic" \
   '### 1. State the question' \
   '### 2. Isolate the logic' \
   '### 3. Build the shareable HTML file' \
   '### 4. Hand it over' \
-  '### 5. Capture the answer and the prototype'
+  '### 5. Capture the answer and clean up'
 assert_contains_many_normalized "$research_skill" \
   'primary sources' \
   'researcher' \
   'must not invoke `research` recursively' \
   'return structured findings' \
-  'main agent owns this final file' \
-  'docs/research/<topic-slug>.md'
+  'stable per-user XDG cache' \
+  '${XDG_CACHE_HOME:-$HOME/.cache}/skills/research/<topic-slug>.md' \
+  'OS temp is scratch only' \
+  'issue-backed owner record' \
+  'owner continuation'
+assert_not_contains "$research_skill" 'docs/research/<topic-slug>.md'
+assert_contains_many_normalized "$subagent_dispatch" \
+  'canonical record to the stable per-user XDG cache' \
+  'scratch notes stay in OS temp'
+assert_not_contains "$subagent_dispatch" 'docs/research/<topic-slug>.md'
+assert_contains_many_normalized "$diagnosing_bugs_skill" \
+  'Identify the owner' \
+  'owner receives the redacted' \
+  'developer-facing owner record' \
+  "owner's complete continuation set"
 assert_contains_many_normalized "$merge_conflicts_skill" \
   'primary sources' \
   'Do not use `git merge --abort` or `git rebase --abort`' \
@@ -365,7 +394,10 @@ assert_contains_many_normalized "$review_skill" \
   'Minor caller repairs use targeted checks' \
   'Rerun all three axes only after a repair materially changes behavior, scope, or invocation mechanics' \
   'same fixed point and repeats the green precondition first' \
-  'does not edit the skill'
+  'does not edit the skill' \
+  'internal owner' \
+  'developer-facing owner record' \
+  "owner's complete continuation set"
 assert_contains_many "$review_skill" \
   'name: review-skill'
 assert_contains_many "$review_skill" \
@@ -422,6 +454,9 @@ assert_contains_many_normalized "$code_review_skill" \
   'Standards' \
   'Spec' \
   'Coverage' \
-  'All three axes run as **parallel sub-agents**'
+  'All three axes run as **parallel sub-agents**' \
+  'internal owner' \
+  'developer-facing owner record' \
+  "owner's complete continuation set"
 
 printf 'skill-workflow: ok\n'

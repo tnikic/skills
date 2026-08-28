@@ -3,7 +3,10 @@ name: code-review
 description: Review the changes since a fixed point (commit, branch, tag, or merge-base) along three axes — Standards (does the code follow this repo's documented coding standards?), Spec (does the code match what the originating issue/PRD asked for?), and Coverage (does the change have the right kinds of tests?). Runs all three reviews in parallel sub-agents and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to "review since X".
 ---
 
-Three-axis review of the diff between `HEAD` and a fixed point the user supplies:
+Three-axis review of the diff between `HEAD` and a fixed point the user supplies.
+Identify the internal owner before reviewing: the issue, PR, workflow, or
+artifact that requested the review. The owner receives the findings and
+controls the next continuation.
 
 - **Standards** — does the code conform to this repo's documented coding standards?
 - **Spec** — does the code faithfully implement the originating issue / PRD / spec?
@@ -22,6 +25,9 @@ Whatever the user said is the fixed point — a commit SHA, branch name, tag, `m
 Capture the diff command once: `git diff <fixed-point>...HEAD` (three-dot, so the comparison is against the merge-base). Also note the list of commits via `git log <fixed-point>..HEAD --oneline`.
 
 Before going further, confirm the fixed point resolves (`git rev-parse <fixed-point>`) and the diff is non-empty. A bad ref or empty diff should fail here — not inside three parallel sub-agents.
+
+*Completion: the owner, exact comparison, changed paths, and commit range are
+recorded.*
 
 ### 2. Identify the spec source
 
@@ -100,6 +106,17 @@ The Coverage sub-agent does **not** create Makefile targets. If it had to infer,
 Present the three reports under `## Standards`, `## Spec`, and `## Coverage` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings — the three axes are deliberately separate (see _Why three axes_).
 
 End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes — that's the reranking the separation exists to prevent.
+
+Record useful findings on the developer-facing owner record when the owner has
+one, using the matching forge skill. Keep the three-axis detail, citations,
+and unresolved risks, but leave skill names and internal continuation procedure
+out of public prose. At the specialist-result boundary, read the shared
+[`continuation`](../../shared/continuation.md) reference and return the owner's
+complete continuation set in the live interaction rather than choosing an
+unrelated review route.
+
+*Completion: the owner has the useful findings or received them in the current
+interaction, and its next continuation is explicit.*
 
 ## Why three axes
 

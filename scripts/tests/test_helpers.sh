@@ -15,6 +15,7 @@ wayfinder_skill="$repo_root/skills/engineering/wayfinder/SKILL.md"
 grill_with_docs_skill="$repo_root/skills/engineering/grill-with-docs/SKILL.md"
 issue_hierarchy="$repo_root/skills/shared/issue-hierarchy.md"
 continuation="$repo_root/skills/shared/continuation.md"
+subagent_dispatch="$repo_root/skills/shared/subagent-dispatch.md"
 capture_skill="$repo_root/skills/engineering/capture/SKILL.md"
 implement_skill="$repo_root/skills/engineering/implement/SKILL.md"
 implement_skill_work="$repo_root/skills/engineering/implement-skill/SKILL.md"
@@ -29,6 +30,7 @@ research_skill="$repo_root/skills/engineering/research/SKILL.md"
 merge_conflicts_skill="$repo_root/skills/engineering/resolving-merge-conflicts/SKILL.md"
 prototype_skill="$repo_root/skills/engineering/prototype/SKILL.md"
 prototype_logic="$repo_root/skills/engineering/prototype/LOGIC.md"
+prototype_ui="$repo_root/skills/engineering/prototype/UI.md"
 fail() {
   printf 'test[%s]: %s\n' "${TEST_CONCERN:-unknown}" "$1" >&2
   exit 1

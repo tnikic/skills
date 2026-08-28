@@ -19,14 +19,15 @@ skill.
 
 ## 1. Pin the review
 
-Use the fixed point the user supplies: a commit, branch, tag, or merge base.
-Capture the diff, commit list, and worktree status once. Confirm the fixed point
-resolves and the diff is non-empty before reviewing it. If the user supplied no
-fixed point, ask for one. Include uncommitted work only when the user
-explicitly names the worktree as the review target.
+Identify the internal owner first: the issue, workflow, or artifact that
+requested this review. Use the fixed point the user supplies: a commit, branch,
+tag, or merge base. Capture the diff, commit list, and worktree status once.
+Confirm the fixed point resolves and the diff is non-empty before reviewing it.
+If the user supplied no fixed point, ask for one. Include uncommitted work only
+when the user explicitly names the worktree as the review target.
 
-*Completion: the exact comparison, changed skill paths, and commit range are
-recorded.*
+*Completion: the owner, exact comparison, changed skill paths, and commit range
+are recorded.*
 
 ## 2. Identify the sources
 
@@ -130,6 +131,13 @@ apply repairs, update issue checkboxes, or commit changes during this review.
 Minor caller repairs use targeted checks. Rerun all three axes only after a
 repair materially changes behavior, scope, or invocation mechanics; that rerun
 uses the same fixed point and repeats the green precondition first.
+
+Record useful findings on the developer-facing owner record when the owner has
+one, using the matching forge skill. Keep skill names, continuation fields, and
+internal procedure in the live interaction. At the specialist-result boundary,
+read the shared [`continuation`](../../shared/continuation.md) reference and
+return the owner's complete continuation set rather than selecting a generic
+review route.
 
 *Completion: the user has an actionable, axis-separated review and can choose
 which findings to fix; no review-owned edits or unqualified reruns occurred.*
