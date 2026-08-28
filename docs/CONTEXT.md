@@ -5,7 +5,7 @@ Glossary of domain terms for the agent skills ecosystem.
 ## Skills
 
 - **bootstrap** — Skill that aligns any repo to the standard project shape (Makefile/justfile, CI, pre-commit hook, README) using a language profile.
-- **commit skill** — Universal choke point that gates quality (lint, fmt, typecheck) and docs (freshness check) before any `git commit`. Calls `conventional-commits` for the message; execution stays here.
+- **commit skill** — Universal choke point that gates quality (lint, fmt, typecheck) and docs (freshness check) before any `git commit`, then pushes it. Calls `conventional-commits` for the message; execution stays here.
 - **capture** (`/capture`) — User-invoked skill for filing bugs (forensic auto-capture) or ideas (lightweight) into the ticket pipeline. Front door to `triage` → `to-tickets` → `implement`.
 - **handoff** — Named invocation point for compacting the current session into a handoff document for a fresh agent. Used at context-limit boundaries.
 - **tdd** — Skill for test-driven development. After the skills refactor (map 31): feedback-first framing — runnable check before code, smallest provable slice first, E2E as final gate. Test list as transient external state. Cheating defenses. Refactoring in green only.

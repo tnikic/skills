@@ -94,17 +94,31 @@ assert_contains_many_normalized "$commit_skill" \
   'It never stages or commits in this mode.' \
   'isolate each accepted group' \
   'delegated skill owns presentation and approval' \
-  'amend-reword mode'
+  'amend-reword mode' \
+  'git push -u origin HEAD' \
+  'Do not delegate pushing back' \
+  'requested footer such as `Closes #N`' \
+  'Completion criterion: every staged file is agent-touched, generated, or has an explicit user decision.'
+assert_order_normalized "$commit_skill" \
+  '## 6. Commit' \
+  'Report the commit hash.' \
+  '## 7. Push' \
+  'git push -u origin HEAD'
 assert_contains_many_normalized "$conventional_commits_skill" \
   'message-only mode' \
   'return the approved message(s)' \
   'return the approved message(s) and accepted split' \
   'Do not run `git add`, `git commit`' \
+  'git push' \
   'route to `/commit` before' \
   'starting these steps' \
+  'including a request for a conventional commit' \
   'draft-only mode' \
-  'existing commit and diff instead'
+  'existing commit and diff instead' \
+  'Direct commit requests route through /commit.' \
+  'all applicable checks pass'
 assert_not_contains "$conventional_commits_skill" 'Run `git commit -m'
+assert_not_contains "$conventional_commits_skill" 'Run `git push -u origin HEAD'
 
 assert_contains_many_normalized "$handoff_skill" \
   'agent-handoff-XXXXXX.md' \
@@ -216,10 +230,16 @@ assert_contains_many_normalized "$to_spec_skill" \
 assert_not_contains "$to_spec_skill" 'Check with the user that these seams match their expectations.'
 assert_contains "$to_tickets_skill" 'child tasks'
 assert_contains "$wayfinder_skill" 'child task work items'
-assert_contains_normalized "$implement_skill" 'Create a single commit through `/commit`'
+assert_contains_many_normalized "$implement_skill" \
+  'Create a single commit through `/commit`' \
+  '`/commit` owns staging, safety, quality and documentation gates, message approval, local commit creation, and push.'
+assert_not_contains "$implement_skill" 'Push: `git push -u origin HEAD`'
 assert_contains "$wayfinder_skill" 'Run `/commit`'
 assert_contains "$grill_with_docs_skill" 'run `/commit`'
 assert_not_contains "$implement_skill" 'conventional-commits'
+assert_contains_many_normalized "$merge_conflicts_skill" \
+  'the gate owns commit creation and pushing' \
+  'Do not run `git commit` or `git push` directly.'
 
 assert_contains_many_normalized "$implement_skill_work" \
   'name: implement-skill' \

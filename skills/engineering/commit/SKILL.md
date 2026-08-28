@@ -1,11 +1,11 @@
 ---
 name: commit
-description: Universal commit gate. Stage, safety-check, run quality and docs gates, craft a conventional-commits message, and commit. Use when the user asks to commit, or when a skill has produced changes that need committing.
+description: Universal commit gate. Stage, safety-check, run quality and docs gates, craft a conventional-commits message, commit, and push. Use when the user asks to commit, or when a skill has produced changes that need committing.
 ---
 
 # Commit
 
-Universal choke point — every commit flows through here. Five steps, two hard blocks, one safety check.
+Universal choke point — every commit and push flows through here. The gate has two hard blocks and one safety check.
 
 ## Intent detection
 
@@ -13,19 +13,24 @@ Read the conversation to determine what the user wants. No flags.
 
 | User says | Behavior |
 |-----------|----------|
-| "commit" | Full flow: stage → safety → quality → docs → message → commit |
+| "commit" | Full flow: stage → safety → quality → docs → message → commit → push |
 | "commit just <files>" | Skip auto-stage. Safety check on already-staged files |
 | "commit with message '<msg>'" | Skip conventional-commits. Use the provided message |
 | "amend" / "amend that commit" | Amend flow: gates still run, keep existing message |
 | "amend and reword" | Amend flow: gates + regenerate message |
 
 When another skill invokes `/commit` after producing changes, it uses the "commit" path.
+When another workflow supplies a requested footer such as `Closes #N`, preserve it
+in the approved message and the resulting commit.
 
 ---
 
 ## 1. Stage
 
 Run `git add -A`. Skip if the user already staged files manually or specified specific files.
+
+*Completion criterion: every intended change is staged, or the explicitly
+specified staged paths are ready for the safety check.*
 
 ---
 
@@ -49,6 +54,9 @@ For unknown files, present them and ask:
 
 If the user chooses `n`, unstage the unknown files and proceed. If `d`, show `git diff --cached` for those files and ask again.
 
+*Completion criterion: every staged file is agent-touched, generated, or has an
+explicit user decision.*
+
 ---
 
 ## 3. Quality gate
@@ -66,6 +74,9 @@ Parse the output into a structured report:
 If any target fails, block the commit. Present the report. Do not proceed.
 
 If no command runner exists, skip the gate. The command-runner module will report this — relay its message.
+
+*Completion criterion: `check` passes, or the command-runner limitation is
+reported and the gate does not claim a green check.*
 
 ---
 
@@ -107,6 +118,9 @@ If auto-update cannot resolve the gap, block the commit:
   Please update CHANGELOG.md and re-run /commit.
 ```
 
+*Completion criterion: the staged documentation is fresh, or the commit is
+blocked with the stale section identified.*
+
 ---
 
 ## 5. Message
@@ -125,6 +139,9 @@ it returns approved message(s), proceed without asking for a second approval.
 User-provided and existing amend messages are already approved by the intent
 branch above.
 
+*Completion criterion: approved message(s) and any split groups are ready for
+the commit step.*
+
 ---
 
 ## 6. Commit
@@ -134,3 +151,16 @@ Run `git commit -m "<approved message>"`. If the approved plan splits the diff, 
 If amending: `git commit --amend -m "<message>"`.
 
 Report the commit hash.
+
+*Completion criterion: the approved local commit or commits exist and their
+hashes are reported.*
+
+## 7. Push
+
+After the local commit succeeds, run `git push -u origin HEAD`. If the push
+fails, report the failure and stop without claiming that the commit was
+published. Do not delegate pushing back to the workflow that requested the
+commit.
+
+*Completion criterion: the approved commit exists locally and has been pushed,
+or the push failure is reported without claiming publication.*

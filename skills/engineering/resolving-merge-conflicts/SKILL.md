@@ -33,6 +33,11 @@ Read the shared [`command-runner`](../../shared/command-runner.md) reference and
 
 ## 5. Finish safely
 
-Stage the resolved files and verify the staged diff. Route the merge or rebase commit through `/commit`; do not run `git commit` directly. If the commit gate is not available in the current session, leave the operation staged and report the exact command the user must run. After committing, verify that the merge or rebase is no longer in progress and report the resulting commit.
+Stage the resolved files and verify the staged diff. Route the merge or rebase
+commit through `/commit`; the gate owns commit creation and pushing. Do not run
+`git commit` or `git push` directly. If the commit gate is not available in the
+current session, leave the operation staged and report the exact command the
+user must run. After the gate completes, verify that the merge or rebase is no
+longer in progress and report the resulting commit.
 
 *Completion: the operation is complete through the commit gate, or the staged operation is ready for that gate with the limitation reported.*

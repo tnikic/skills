@@ -67,13 +67,15 @@ If neither the issue body nor comments contain any checkboxes, skip this step.
 
 *Completion: every satisfied body criterion is checked in the issue body, every satisfied comment-only criterion is checked in its source comment, and unsatisfied criteria are reported to the user with follow-up tickets offered.*
 
-## 4. Commit, push, and close
+## 4. Commit and close
 
 Create a single commit through `/commit`. Pass `Closes #N` as the requested
 footer (N is the issue number from step 1). Amend an earlier commit if one was
 already made.
 
-Push: `git push -u origin HEAD`. If the push fails, report the failure and stop — do not close the issue.
+`/commit` owns staging, safety, quality and documentation gates, message
+approval, local commit creation, and push. If the push fails, report the failure
+and stop — do not close the issue.
 
 Verify closure: poll the issue state every 3 seconds, up to 3 attempts. If the issue is now closed, stop. If still open after 3 attempts, close it manually via the forge skill's issue-close recipe.
 

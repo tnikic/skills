@@ -1,18 +1,19 @@
 ---
 name: conventional-commits
-description: Create well-formed Conventional Commits messages from staged changes. Analyzes the diff to determine type, scope, and body; presents the message for approval before handing execution to the universal commit gate. Supports auto-splitting multi-scope changes. Use when the user wants to commit changes, create a commit, or draft a commit message.
+description: Supply Conventional Commits message policy to the universal commit gate, or draft a message when explicitly requested. Direct commit requests route through /commit. Analyze type, scope, body, and footers; do not execute repository changes.
 ---
 
 # Conventional Commits
 
-Create commit messages that follow the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification — a structured format that communicates intent through typed, optionally scoped messages. Direct commit requests route through `/commit`; this skill owns message analysis and approval, not repository mutation.
+Create messages that follow the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification — a structured format that communicates intent through typed, optionally scoped messages. This skill owns message-policy analysis and approval, not staging, checks, commit creation, or pushing.
 
 ## Steps
 
-When a user invokes this skill directly for a commit, route to `/commit` before
-starting these steps. When the user explicitly asks only for a draft, run these
-steps in **draft-only mode**. Otherwise these steps run when `/commit` delegates
-in **message-only mode** or **amend-reword mode**.
+When a user invokes this skill directly for a commit, including a request for a
+conventional commit, route to `/commit` before starting these steps. When the
+user explicitly asks only for a draft, run these steps in **draft-only mode**.
+Otherwise these steps run when `/commit` delegates in **message-only mode** or
+**amend-reword mode**.
 
 ### 1. Detect changes
 
@@ -42,9 +43,12 @@ Two checks run against every new or modified file in the diff. Both must pass be
 
 **When invoked from `/commit`:** skip lint and format — the commit gate already ran the quality gate (`check` target). Run only the secrets scan.
 
-When either check fails, block the commit and report what was found. The user can override with "commit anyway" or "skip the checks."
+When an applicable check fails, return the finding to `/commit` and let that
+gate block the commit. The user can override with "commit anyway" or "skip the
+checks."
 
-*Completion criterion: both checks pass, or user explicitly overrides.*
+*Completion criterion: all applicable checks pass, or the user explicitly
+overrides a reported finding.*
 
 ### 3. Analyze the diff
 
@@ -117,8 +121,8 @@ Ask "Ready to commit?" The user can accept, edit the message inline, or reject. 
 ### 7. Return or delegate execution
 
 - **Message-only mode** — return the approved message(s) and accepted split
-  groups to `/commit`. Do not run `git add`, `git commit`, or any other staging
-  operation. `/commit` owns execution after its gates pass.
+  groups to `/commit`. Do not run `git add`, `git commit`, `git push`, or any
+  other repository mutation. `/commit` owns execution after its gates pass.
 - **Draft-only direct invocation** — return the approved message(s) without
   committing. A direct commit request was routed to `/commit` before this step.
 
