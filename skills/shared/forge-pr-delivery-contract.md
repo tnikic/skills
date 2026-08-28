@@ -36,14 +36,46 @@ head_sha: <current head commit>
 state: open | merged | closed
 ```
 
-`find` returns `record: null` when no open record matches. A matching record is
-identified by source branch, not by a provider-specific stack identifier.
-Multiple open records for one source branch are an actionable failure because
-the workflow cannot safely choose one.
+`find` returns `record: null` when no record matches. A matching record is
+identified by source branch as its branch identity, not by a provider-specific
+stack identifier. The
+adapter includes an existing record's normalized `state`, including `merged`
+or `closed`, so a rerun can reconcile lifecycle state without creating a second
+record. Multiple records for one source branch are an actionable failure
+because the workflow cannot safely choose one.
+
+The publication form of `find` may limit its query to open records before a
+create. Lifecycle reconciliation uses the all-state form for the same branch
+identity so a merged or closed record is still reused rather than duplicated.
 
 For stacked publication, `target_branch` is the default branch for a stack root
 or the selected predecessor branch for a later layer; the adapter returns that
 topology without choosing or simulating it.
+
+## Lifecycle And Reconciliation
+
+The workflow owns normalized-state reconciliation, sequencing, and the
+implementation-ready boundary. A ticket is `implementation-ready` only after
+validation has passed, the selected commit is pushed, and one normalized review
+record exists with `state: open`. The issue remains open at that boundary.
+
+Intermediate records target a stack branch and use `Related: #N` or `Refs: #N`.
+Only the final record whose change reaches the default branch may use `Closes
+#N` for the ticket and, when applicable, its parent spec. Closure is observed
+only after that final change reaches the default branch; publication never
+closes an issue early.
+
+On a rerun, `find` by source branch is the idempotent discovery step. An
+existing record is viewed and reconciled, or updated and retargeted by the
+forge adapter when the planned normalized state requires it. The workflow never
+creates a duplicate for a branch that already has a review record. After a
+predecessor is merged, the forge adapter performs native synchronization and
+returns the refreshed normalized records; the workflow then sequences the next
+layer.
+
+Human review, approval, and merge are outside this contract. The workflow may
+report the resulting `open`, `merged`, and later `closed` states, but it does
+not perform those human decisions.
 
 ## Publication Failure
 

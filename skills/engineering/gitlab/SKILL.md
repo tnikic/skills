@@ -165,6 +165,50 @@ glab api "projects/GROUP%2FREPO/issues/N/links"
 
 GitLab treats "blocked" as a workflow signal, not a hard gate — closing a blocker does not auto-close the blocked issue.
 
+## Native Stacked Merge Requests
+
+GitLab stacks are represented by native merge-request source and target branch
+relationships. The forge skill owns synchronization and branch maintenance
+through explicit GitLab API and Git operations; the workflow owns only the
+planned topology and normalized-state reconciliation.
+
+```bash
+# inspect the native topology before maintenance
+glab mr list -R "$R" -A -F json \
+  --jq '[.[] | {record_id:(.iid|tostring),source_branch:.source_branch,target_branch:.target_branch,state:.state}]'
+
+# after a lower layer is merged, rebase a downstream merge request natively
+glab api -X PUT "projects/$PROJECT/merge_requests/RECORD_ID/rebase"
+rebase_complete=false
+for attempt in 1 2 3 4 5; do
+  REBASE_STATE="$(glab mr view RECORD_ID -R "$R" -F json \
+    --jq '{rebase_in_progress,merge_error}')"
+  if jq -e '.rebase_in_progress == false and .merge_error == null' <<<"$REBASE_STATE" >/dev/null; then
+    rebase_complete=true
+    break
+  fi
+  sleep 2
+done
+if [ "$rebase_complete" != true ]; then
+  printf 'rebase did not complete; return publication-failed\n' >&2
+  exit 1
+fi
+
+# update a rebased source branch without overwriting unrelated remote work
+git -C "$REPO_DIR" fetch "$REMOTE"
+git -C "$REPO_DIR" push --force-with-lease "$REMOTE" "SOURCE_BRANCH"
+
+# retarget the review record through GitLab, then read its normalized state
+glab mr update RECORD_ID -R "$R" --target-branch TARGET_BRANCH
+glab mr view RECORD_ID -R "$R" -F json
+```
+
+Rebase completion and merge-request metadata are read back before the adapter
+returns. A conflict or failed branch update preserves the source branch and
+returns a retryable failure; it does not open another merge request. The native
+merge-request UI remains a human fallback and inspection path when automation
+is unavailable.
+
 ## Merge Requests And Delivery
 
 Workflow skills read the provider-neutral operations and results in
@@ -192,9 +236,17 @@ glab api -X POST "projects/GROUP%2FREPO/merge_requests" \
 glab mr list -R $R --source-branch SOURCE_BRANCH -F json \
   --jq 'if length > 1 then error("multiple open merge requests for source branch") elif length == 0 then {record:null} else .[0] | {record:{record_id:(.iid|tostring),url:.web_url,title,body:.description,source_branch:.source_branch,target_branch:.target_branch,head_sha:(.sha // .diff_refs.head_sha),state:"open"}} end'
 
+# lifecycle find — include merged and closed records when reconciling a rerun
+glab mr list -R $R --source-branch SOURCE_BRANCH -A -F json \
+  --jq 'if length > 1 then error("multiple merge requests for source branch") elif length == 0 then {record:null} else .[0] | {record:{record_id:(.iid|tostring),url:.web_url,title,body:.description,source_branch:.source_branch,target_branch:.target_branch,head_sha:(.sha // .diff_refs.head_sha),state:(if .state == "opened" then "open" elif .state == "merged" then "merged" else "closed" end)}} end'
+
 # REST find fallback — filter open records by branch identity, then normalize
 glab api "projects/GROUP%2FREPO/merge_requests?state=opened&source_branch=SOURCE_BRANCH" --paginate \
   --jq 'if length > 1 then error("multiple open merge requests for source branch") elif length == 0 then {record:null} else .[0] | {record:{record_id:(.iid|tostring),url:.web_url,title,body:.description,source_branch:.source_branch,target_branch:.target_branch,head_sha:(.sha // .diff_refs.head_sha),state:"open"}} end'
+
+# lifecycle REST find — include merged and closed records during reconciliation
+glab api "projects/GROUP%2FREPO/merge_requests?state=all&source_branch=SOURCE_BRANCH" --paginate \
+  --jq 'if length > 1 then error("multiple merge requests for source branch") elif length == 0 then {record:null} else .[0] | {record:{record_id:(.iid|tostring),url:.web_url,title,body:.description,source_branch:.source_branch,target_branch:.target_branch,head_sha:(.sha // .diff_refs.head_sha),state:(if .state == "opened" then "open" elif .state == "merged" then "merged" else "closed" end)}} end'
 
 # view — return the current provider response normalized to the shared record
 glab mr view RECORD_ID -R $R -F json \

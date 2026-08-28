@@ -122,6 +122,11 @@ gh stack sync --remote "$REMOTE"
 gh stack sync --prune --remote "$REMOTE"
 ```
 
+`gh stack sync` owns the stack's synchronization, rebasing, and branch updates;
+`gh stack submit` or `gh pr edit --base TARGET_BRANCH` owns native publication
+retargeting. The workflow supplies the planned source and target branches and
+reconciles the returned records; it does not reproduce stack state locally.
+
 `--prune` removes local branches for merged pull requests. A genuine local and
 remote stack divergence stops without pushing; resolve the reported choice and
 rerun the native operation. A sync rebase conflict restores the stack; run
@@ -148,7 +153,8 @@ means a rebase conflict, exit 6 means branch disambiguation is required, and
 exit 8 means another stack process holds the lock. Report the stated recovery
 action as retryable while preserving local state. The shared contract's
 `find` operation remains the safe reconciliation path before retrying an
-ambiguous publication.
+ambiguous publication. A rerun first discovers the source branch's existing
+record, including a merged or closed record, and never creates a duplicate.
 
 ## Conventions
 
@@ -255,6 +261,11 @@ gh pr view "$PR_URL" -R $R --json number,url,state,title,body,headRefName,baseRe
 gh pr list -R $R --head SOURCE_BRANCH --state open \
   --json number,url,state,title,body,headRefName,baseRefName,headRefOid \
   --jq 'if length > 1 then error("multiple open pull requests for source branch") elif length == 0 then {record:null} else .[0] | {record:{record_id:(.number|tostring),url,title,body,source_branch:.headRefName,target_branch:.baseRefName,head_sha:.headRefOid,state:"open"}} end'
+
+# lifecycle find — include merged and closed records when reconciling a rerun
+gh pr list -R $R --head SOURCE_BRANCH --state all \
+  --json number,url,state,title,body,headRefName,baseRefName,headRefOid \
+  --jq 'if length > 1 then error("multiple pull requests for source branch") elif length == 0 then {record:null} else .[0] | {record:{record_id:(.number|tostring),url,title,body,source_branch:.headRefName,target_branch:.baseRefName,head_sha:.headRefOid,state:(if .state == "OPEN" then "open" elif .state == "MERGED" then "merged" else "closed" end)}} end'
 
 # view — return the current provider response normalized to the shared record
 gh pr view RECORD_ID -R $R --json number,url,state,title,body,headRefName,baseRefName,headRefOid \

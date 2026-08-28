@@ -1,0 +1,47 @@
+{
+  "provider": "github",
+  "default_branch": "main",
+  "source_branch": "feat/93-lifecycle",
+  "references": {
+    "intermediate": "Related: #93",
+    "intermediate_closing": false,
+    "final": "Closes #93",
+    "final_closing": true
+  },
+  "readiness": [
+    {"name": "validated", "implementation": true, "validation": true},
+    {"name": "pushed", "commits": 1, "pushed": true, "head_sha": "gh93abc"},
+    {"name": "review-record", "exists": true, "state": "open"},
+    {"name": "implementation-ready", "issue_state": "open", "publication_state": "open"}
+  ],
+  "synchronization": {
+    "native": true,
+    "forge_owned": true,
+    "rebase": true,
+    "branch_update": true,
+    "retarget": true,
+    "workflow_policy": "normalized-state reconciliation and sequencing"
+  },
+  "recovery": {
+    "key": "branch identity",
+    "rerun": true,
+    "existing_branch_reused": true,
+    "existing_review_found": true,
+    "existing_review_reused": true,
+    "create_operations": 0,
+    "partial_publication": {
+      "publication_exists": "unknown",
+      "retryable": true,
+      "preserved_branch": true,
+      "preserved_issue": true
+    }
+  },
+  "lifecycle": [
+    {"name": "implementation-ready", "issue_state": "open", "publication_state": "open"},
+    {"name": "intermediate-merged", "target_branch": "feat/93-base", "default_branch_reached": false, "issue_state": "open", "publication_state": "merged"},
+    {"name": "synchronized", "native": true, "publication_state": "open"},
+    {"name": "final-merged", "target_branch": "main", "default_branch_reached": true, "issue_state": "open", "publication_state": "merged"},
+    {"name": "closed", "default_branch_reached": true, "issue_state": "closed", "publication_state": "merged"}
+  ],
+  "human_actions_outside_workflow": ["review", "approval", "merge"]
+}

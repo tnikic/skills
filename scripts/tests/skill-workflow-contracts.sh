@@ -821,6 +821,72 @@ assert_stack_route_fixture() {
 assert_stack_route_fixture "$pr_stack_fixture" github 'one pull request' '[102,103,104]'
 assert_stack_route_fixture "$gitlab_pr_stack_fixture" gitlab 'one merge request' '[202,203,204]'
 
+assert_lifecycle_recovery_fixture() {
+  local fixture="$1"
+  local provider="$2"
+
+  assert_file "$fixture"
+  [ "$(jq -r '.provider' "$fixture")" = "$provider" ] ||
+    fail "$fixture has the wrong lifecycle forge route"
+  [ "$(jq -r '.references.intermediate_closing' "$fixture")" = false ] ||
+    fail "$fixture made an intermediate reference closing"
+  [ "$(jq -r '.references.final_closing' "$fixture")" = true ] ||
+    fail "$fixture did not make the final reference closing"
+  [ "$(jq -r '.references.intermediate' "$fixture")" != "Closes #93" ] ||
+    fail "$fixture used a closing intermediate reference"
+  [ "$(jq -r '.references.final' "$fixture")" = "Closes #93" ] ||
+    fail "$fixture lost the final closing reference"
+
+  [ "$(jq -r '[.readiness[].name] | join(",")' "$fixture")" = \
+    'validated,pushed,review-record,implementation-ready' ] ||
+    fail "$fixture changed readiness order"
+  [ "$(jq -r '.readiness[0].implementation and .readiness[0].validation' "$fixture")" = true ] ||
+    fail "$fixture did not require implementation validation"
+  [ "$(jq -r '.readiness[1].commits == 1 and .readiness[1].pushed' "$fixture")" = true ] ||
+    fail "$fixture did not require one pushed commit"
+  [ "$(jq -r '.readiness[2].exists and .readiness[2].state == "open"' "$fixture")" = true ] ||
+    fail "$fixture did not require an open review record"
+  [ "$(jq -r '.readiness[3].issue_state == "open" and .readiness[3].publication_state == "open"' "$fixture")" = true ] ||
+    fail "$fixture did not preserve open implementation-ready state"
+
+  for field in native forge_owned rebase branch_update retarget; do
+    [ "$(jq -r --arg field "$field" '.synchronization[$field]' "$fixture")" = true ] ||
+      fail "$fixture does not prove forge-owned $field"
+  done
+  [ "$(jq -r '.synchronization.workflow_policy' "$fixture")" = \
+    'normalized-state reconciliation and sequencing' ] ||
+    fail "$fixture gave synchronization policy to the forge"
+
+  for field in rerun existing_branch_reused existing_review_found existing_review_reused; do
+    [ "$(jq -r --arg field "$field" '.recovery[$field]' "$fixture")" = true ] ||
+      fail "$fixture does not prove recovery field $field"
+  done
+  [ "$(jq -r '.recovery.key' "$fixture")" = 'branch identity' ] ||
+    fail "$fixture does not use branch identity recovery"
+  [ "$(jq -r '.recovery.create_operations' "$fixture")" = 0 ] ||
+    fail "$fixture duplicated publication during recovery"
+  jq -e '.recovery.partial_publication | .publication_exists == "unknown" and .retryable and .preserved_branch and .preserved_issue' "$fixture" >/dev/null ||
+    fail "$fixture does not preserve retryable partial-publication state"
+
+  for state in implementation-ready intermediate-merged synchronized final-merged closed; do
+    jq -e --arg state "$state" '.lifecycle[] | select(.name == $state)' "$fixture" >/dev/null ||
+      fail "$fixture is missing lifecycle state $state"
+  done
+  [ "$(jq -r '.lifecycle[1].default_branch_reached' "$fixture")" = false ] ||
+    fail "$fixture closed state before the default branch"
+  [ "$(jq -r '.lifecycle[3].target_branch' "$fixture")" = main ] ||
+    fail "$fixture lost the final default-branch target"
+  [ "$(jq -r '.lifecycle[3].default_branch_reached' "$fixture")" = true ] ||
+    fail "$fixture did not prove default-branch reachability"
+  [ "$(jq -r '.lifecycle[4].issue_state' "$fixture")" = closed ] ||
+    fail "$fixture did not tie closure to default-branch reachability"
+  [ "$(jq -r '.human_actions_outside_workflow | join(",")' "$fixture")" = 'review,approval,merge' ] ||
+    fail "$fixture put human decisions inside the workflow"
+}
+
+assert_lifecycle_recovery_fixture "$github_lifecycle_fixture" github
+assert_lifecycle_recovery_fixture "$gitlab_lifecycle_fixture" gitlab
+
 printf '%s\n' \
   'Direct invocation: /implement' \
   'Implementation and validation' \

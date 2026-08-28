@@ -34,7 +34,12 @@ assert_contains_many_normalized "$forge_contract" \
   'preserved_issue: true' \
   'stack root' \
   'selected predecessor branch' \
-  'adapter returns that topology'
+  'adapter returns that topology' \
+  'Lifecycle And Reconciliation' \
+  'implementation-ready' \
+  'Closes' \
+  'branch identity' \
+  'Human review, approval, and merge are outside'
 assert_not_contains "$forge_contract" 'gh '
 assert_not_contains "$forge_contract" 'glab '
 
@@ -86,6 +91,9 @@ assert_contains_many_normalized "$github_skill" \
   'gh stack view --json' \
   'gh stack sync --remote "$REMOTE"' \
   'gh stack sync --prune --remote "$REMOTE"' \
+  'lifecycle find' \
+  '--state all' \
+  'never creates a duplicate' \
   'tooling-unavailable' \
   'authentication-required' \
   'permission-denied' \
@@ -133,7 +141,12 @@ assert_contains_many_normalized "$gitlab_skill" \
   'projects/GROUP%2FREPO/merge_requests' \
   'publication_exists=unknown' \
   'bounded backoff' \
-  'branch identity'
+  'branch identity' \
+  'Native Stacked Merge Requests' \
+  'glab api -X POST' \
+  'glab api -X PUT' \
+  'push --force-with-lease' \
+  'merge-request UI remains a human fallback'
 assert_not_contains "$github_skill" 'then "{\\"record\\":null}"'
 assert_not_contains "$gitlab_skill" 'then "{\\"record\\":null}"'
 

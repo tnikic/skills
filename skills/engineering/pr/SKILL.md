@@ -129,9 +129,11 @@ the completed `/implement` result; include every ticket criterion in
 `Acceptance results`. Fill `Spec context` when a parent spec is relevant,
 `Stack position` as the ticket's position and total followed by
 `-> <target branch>`, and `Dependency context` with the resolved prerequisites
-or the actual blocker. In `Related records`, use
-`Related: #N` or `Refs: #N` for the open ticket. The intermediate publication
-reference is non-closing, so this body does not use `Closes #N`.
+or the actual blocker. In `Related records`, use `Related: #N` or `Refs: #N`
+when the target is an intermediate stack branch. When the target is the
+default branch and this is the final publication, use the appropriate
+`Closes #N` references for the ticket and applicable parent spec. Intermediate
+references remain non-closing.
 
 ### GitHub pull request
 
@@ -146,10 +148,12 @@ publication result.
 Ask the selected forge skill to run the provider-neutral `find` operation by
 source branch first. When it returns `record: null`, ask it to run one `create`
 operation with the ticket body, source branch, and the selected target branch.
-When it finds an existing record, reuse that record instead of creating
-another. The forge skill owns native synchronization, rebasing, branch updates,
-and retargeting; the workflow only reconciles the normalized result against its
-planned topology.
+When it finds an existing record, reuse it and reconcile it with `view`,
+`update`, or `retarget` as needed; never create another record for that branch.
+This branch-identity lookup is the recovery path after a partial or ambiguous
+publication. The forge skill owns native synchronization, rebasing, branch
+updates, and retargeting; the workflow only reconciles the normalized result
+against its planned topology.
 Consume the resulting normalized publication record; the workflow does not
 derive provider commands or response fields. Reconcile its `record_id`, `url`,
 `title`, `body`, `source_branch`, `target_branch`, `head_sha`, and `state` against
@@ -165,10 +169,11 @@ and recovery action, and retain `retryable: true`,
 exists or that the ticket is implementation-ready. A retry finds by source
 branch before any create operation.
 
-*Completion: exactly one open pull-request or merge-request record from the
-selected forge is represented by one normalized publication result, or a
+*Completion: exactly one pull-request or merge-request record from the selected
+forge is represented by one reconciled normalized publication result, or a
 retryable failure is reported with the branch and issue preserved and no
-publication claimed.*
+publication claimed; reruns cannot create a duplicate for an existing source
+branch.*
 
 ## 6. Return the implementation-ready boundary and merge order
 
@@ -177,8 +182,10 @@ Report `implementation-ready` only when `/implement` completed validation,
 normalized record whose state is `open`. Keep the ticket open at this
 boundary. The open issue plus the open review record is implementation-ready;
 `merged` is a separate review-record state, and `closed` is a later issue
-lifecycle state after the change reaches the default branch. Do not close the
-ticket or alter the parent spec from this workflow.
+lifecycle state after the final change reaches the default branch. Only the
+final default-branch publication carries closing references, and the workflow
+does not close the ticket or alter the parent spec before that merge-driven
+state is observed.
 
 Return the complete continuation set using the shared
 [`continuation`](../../shared/continuation.md) contract, with the current state,
@@ -188,7 +195,8 @@ Report the spec's required human merge order from the lowest branch to the
 highest branch. Human review and merge remain outside this workflow: do not
 approve, merge, or close records here. After a predecessor is merged, the
 matching forge skill reconciles the native stack and any target updates; the
-workflow does not invent ancestry or mark downstream tickets merged.
+workflow consumes the refreshed normalized state and sequences the next layer;
+it does not invent ancestry or mark downstream tickets merged.
 
 When the current ticket is implementation-ready and the next linear ticket has
 no open external blocker, expose that downstream implementation as a later or
@@ -196,7 +204,8 @@ ready-now continuation with the predecessor branch as its target. Separate
 specs may expose independent roots, but one spec's merge order never delays
 implementation in another spec.
 
-*Completion: the issue remains open, the implementation-ready state is
-reported only for an open normalized pull request or merge request, and merged
-or closed states remain distinguishable in the continuation set; the required
+*Completion: validation, push, and an open normalized review record are all
+proven before `implementation-ready` is reported; the issue remains open;
+intermediate and final references have the correct closing behavior; merged or
+closed states remain distinguishable in the continuation set; the required
 human merge order and any independent downstream continuation are reported.*
