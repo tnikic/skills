@@ -58,6 +58,31 @@ assert_not_contains() {
   ! grep -Fq -- "$text" "$file" || fail "$file unexpectedly contains $text"
 }
 
+normalize_whitespace() {
+  tr '[:space:]' ' ' | awk '{$1=$1}1'
+}
+
+assert_contains_normalized() {
+  local file="$1"
+  local text="$2"
+  local normalized needle
+  normalized="$(normalize_whitespace < "$file")"
+  needle="$(printf '%s' "$text" | normalize_whitespace)"
+  case "$normalized" in
+    *"$needle"*) ;;
+    *) fail "$file is missing $text" ;;
+  esac
+}
+
+assert_contains_many_normalized() {
+  local file="$1"
+  shift
+  local text
+  for text in "$@"; do
+    assert_contains_normalized "$file" "$text"
+  done
+}
+
 assert_order() {
   local file="$1"
   shift
@@ -68,5 +93,20 @@ assert_order() {
     [ -n "$line" ] || fail "$file is missing ordered step $text"
     [ "$line" -gt "$previous" ] || fail "$file has out-of-order step $text"
     previous="$line"
+  done
+}
+
+assert_order_normalized() {
+  local file="$1"
+  shift
+  local normalized remaining text needle
+  normalized="$(normalize_whitespace < "$file")"
+  remaining="$normalized"
+  for text in "$@"; do
+    needle="$(printf '%s' "$text" | normalize_whitespace)"
+    case "$remaining" in
+      *"$needle"*) remaining="${remaining#*"$needle"}" ;;
+      *) fail "$file is missing ordered step $text" ;;
+    esac
   done
 }

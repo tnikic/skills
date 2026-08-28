@@ -57,26 +57,64 @@ When the skill changes an existing workflow, preserve its existing guarantees
 unless the request explicitly changes them. Do not add a second skill or
 duplicate a rule when an existing skill or shared reference owns the behavior.
 
+Before declaring the implementation complete, read every changed document as
+an agent would, following each new or changed pointer and checking every
+branch's completion criterion. Inspect the diff for stale wording, duplicated
+rules, broken relative links, and frontmatter that does not match the chosen
+invocation.
+
 *Completion: every requested behavior is represented once, every changed
-pointer reaches the right material, and unrelated content is preserved.*
+pointer reaches the right material, every changed branch was inspected, and
+unrelated content is preserved.*
 
-## 4. Verify
+## 4. Establish green before review
 
-Read every changed document as an agent would, following each new or changed
-pointer and checking every branch's completion criterion. Inspect the diff for
-stale wording, duplicated rules, broken relative links, and frontmatter that
-does not match the chosen invocation. Run the project's `check` and `test`
-targets through the shared
-[`command-runner`](../../shared/command-runner.md). It detects Make or Just and
-reports when no runner is configured.
+Run the project's `check` target and then its `test` target through the shared
+[`command-runner`](../../shared/command-runner.md). Both must pass before any
+review starts. If either target fails, repair the implementation and repeat
+this gate; review only a green worktree. If no command runner is configured,
+relay the command-runner message, record the limitation, and stop before
+review rather than claiming a green worktree.
 
-For a substantial change, run `/review-skill` against the fixed point before
-calling it complete. Fix clear findings; surface judgement calls to the user.
+*Completion: the implementation passes both standard targets in sequence, and
+the worktree is green before review begins; or, when no runner is configured,
+the workflow stops with that unresolved limitation recorded and no review
+claimed.*
 
-*Completion: all reachable references were inspected, the diff is clean, and
-the applicable repository checks pass.*
+## 5. Review and repair
 
-## 5. Report the result
+A substantial change alters a skill's process, branch behavior,
+frontmatter/invocation, or a reachable shared reference. A wording-only or
+test-only correction is minor when those remain unchanged. For a substantial
+change, invoke `/review-skill` once against the fixed point after the green
+gate. This is the normal three-axis checkpoint: Standards, Spec, and Coverage
+run in parallel in a fresh review context. Fix clear findings directly;
+surface judgement calls to the user.
+
+After a repair, classify its impact before verifying it. Use targeted checks
+for wording-only or test-only corrections, and do not repeat the full review
+for those corrections. Repeat the full three-axis review only when a repair
+materially changes behavior, scope, or invocation mechanics. For that material
+repair, pass the green gate again before the rerun. A justified rerun uses the
+same fixed point and happens after the repaired worktree is green.
+
+*Completion: a substantial change has one normal review on the green
+implementation, a minor correction has targeted verification, every clear
+finding was repaired or a judgement call was surfaced, and any review rerun
+was justified by a material change.*
+
+## 6. Final verification
+
+After all review repairs and any justified review rerun, run the project's
+`check` target and then its `test` target through the shared command runner.
+These final full checks are mandatory even when targeted checks passed. They
+form a freshness boundary for the post-review worktree; `/commit` retains its
+independent staged-diff quality gate and may repeat its own checks.
+
+*Completion: the final standard targets pass in sequence after every repair,
+and the independent commit gate remains available.*
+
+## 7. Report the result
 
 Report the changed skill paths, the invocation decision, the behavior added or
 changed, verification commands and outcomes, and any unresolved limitation.
