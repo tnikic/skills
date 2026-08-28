@@ -30,7 +30,7 @@ The complete group of durable records produced by a workflow, including its prim
 A small, issue-backed description of the implementation work that follows a design discussion. It may contain one implementation ticket or several related tickets.
 
 **Continuation set**:
-The ordered set of next actions a workflow exposes at its boundary. It may fan out into independent actions, such as publishing a spec now while recording non-blocking follow-up maps for later.
+The ordered set of next actions a workflow exposes at its boundary.
 
 **Spec overflow**:
 The exceptional condition where a spec exceeds the issue tracker's body limit. The spec remains one issue record; useful sections move into ordered comments rather than creating additional specs.
@@ -65,7 +65,7 @@ A spec that exists as a `kind:spec` issue record and is ready to enter the ticke
 A planning state in which the known work can be expressed as one spec, while any remaining fog is either non-blocking or assigned to separate uncharted maps.
 
 **One-ticket shortcut**:
-The direct route from a planning workflow to `/to-tickets` when the agreed implementation landscape contains exactly one implementation ticket. It still creates an issue record before `/implement` runs.
+A continuation route for exactly one implementation ticket; it creates the issue record before implementation.
 
 **Owner**:
 The workflow or artifact that requested a specialist activity and receives its findings or verdict. The owner controls whether that result advances to another continuation.
@@ -105,8 +105,8 @@ The original issue record that preserves the user's intent and history while lin
 - **issue hierarchy** — Parent/child and blocked-by/blocking relationships between tickets; queried by wayfinder, to-tickets, and implement.
 - **forge hierarchy capability** — The forge-specific mapping behind the shared issue hierarchy: GitHub uses child issues, while GitLab uses task work items parented under issues. Consumers use the matching forge recipe rather than assuming one issue type.
 - **ticket pipeline** — capture → triage → to-tickets → implement; the journey of a bug or idea to a merged change. Front door is `capture`. Other planning routes can enter the pipeline through `/grilling`, `/wayfinder`, or `/to-spec`.
-- **small-work route** — `/grill-with-docs` → `/to-tickets` → `/implement`; the normal path when grilling settles exactly one bounded implementation ticket.
-- **multi-ticket route** — `/grill-with-docs` or `/wayfinder` → `/to-spec` → `/to-tickets` → `/implement`; the path when implementation requires multiple tickets or a richer requirements artifact.
+- **small-work route** — The one-ticket continuation route for exactly one bounded implementation ticket.
+- **multi-ticket route** — The continuation route for multiple tickets or a richer requirements artifact.
 - **map continuation** — a Wayfinder outcome that reports a spec-ready route, an optional one-ticket shortcut, one or more uncharted follow-up maps, or a deliberate stop. Wayfinder does not call `/implement` directly.
 - **triage route** — `/triage` classifies an intake record as clarification-needed, bounded implementation, published spec, human-owned, or rejected/already implemented, then points to the matching continuation without mislabeling unfinished planning as a spec.
 
@@ -125,6 +125,7 @@ The original issue record that preserves the user's intent and history while lin
 
 - **command-runner** — Single source of truth for detecting and invoking the project's command runner (Makefile or justfile). Skills that need to run project targets read from here rather than reimplementing detection.
 - **issue-hierarchy** — Shared relationship contract for ticket workflows; forge skills provide the commands, while GitHub uses child issues and GitLab uses task work items under issues.
+- **continuation** — Shared internal routing contract. When `/grill-with-docs` or `/grilling` reaches the bounded one-ticket or multi-ticket branch, `/wayfinder` reaches a map, spec-ready, or follow-up-map branch, `/triage` reaches a classification or deliberate-stop branch, `/to-spec` or `/to-tickets` reaches a publication or planning boundary, `/research`, `/prototype`, `/diagnosing-bugs`, `/code-review`, or `/review-skill` reaches a specialist-result boundary, or `/commit` or `/implement` reaches a commit/implementation boundary, read [`continuation`](../skills/shared/continuation.md) to report ready-now and later actions, dependencies, fan-out, deliberate stops, or one- versus multi-ticket routes.
 - **issue-template** — Canonical template for agent-grabbable tickets (`## What to build`, `## Acceptance criteria`, `## Blocked by`). Used by `to-tickets` (creates), `implement` and `triage` (consume).
 - **label-taxonomy** — Single source of truth for every label scope, value, and color token. Also carries the usage instruction (how to pass `--color`).
 - **color-palette** — Hex values for every color token referenced by the label taxonomy.

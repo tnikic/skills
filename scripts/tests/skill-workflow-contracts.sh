@@ -25,6 +25,69 @@ assert_file "$to_tickets_skill"
 assert_file "$wayfinder_skill"
 assert_file "$grill_with_docs_skill"
 assert_file "$issue_hierarchy"
+assert_file "$continuation"
+
+assert_contains_many "$continuation" \
+  'Current state' \
+  '`ready` means at least one action can start now.' \
+  '`blocked` means a dependency prevents every action' \
+  'dependency is' \
+  'issue or task' \
+  '`pending` means the workflow is waiting for a human or external result' \
+  'including when that result is' \
+  'listed as a dependency' \
+  '`complete` means its declared result is achieved.' \
+  'Ready now' \
+  'Later' \
+  'Dependencies' \
+  'Deliberate stop' \
+  'multiple independent next actions' \
+  'separate ready-now or later entries' \
+  'owner or responsible party' \
+  'expected result' \
+  'dependency condition' \
+  'later work must not delay' \
+  'one actionable result now and non-blocking later work' \
+  'One-ticket shortcut' \
+  'Multi-ticket route' \
+  'exactly one implementation ticket.' \
+  'when implementation needs multiple tickets or a' \
+  'richer requirements artifact' \
+  'settled implementation landscape' \
+  'Use the shortest route that preserves the required issue record' \
+  'destination skills own their publication' \
+  'Route to `/to-tickets`' \
+  'route to `/to-spec`' \
+  'Then expose `/implement`' \
+  'issue record exists before' \
+  'Every field is present even when it has no entries.' \
+  'Use `None` for an empty' \
+  'ready-now list, later list' \
+  'dependency list, or deliberate stop' \
+  'Classify a human or external wait as `pending`, not `blocked`.' \
+  'exact continuation set belongs in the agent interaction' \
+  'does not belong in an issue body or comment' \
+  'Developer-facing issue records' \
+  'metadata such as'
+assert_order "$continuation" \
+  'One-ticket shortcut' \
+  'exactly one implementation ticket' \
+  'Route to `/to-tickets`' \
+  'Then expose `/implement`'
+assert_order "$continuation" \
+  'Multi-ticket route' \
+  'route to `/to-spec`' \
+  'specification, then `/to-tickets`' \
+  '`/implement` for those tickets'
+assert_contains_many "$context" \
+  'read [`continuation`](../skills/shared/continuation.md)' \
+  'bounded one-ticket or multi-ticket branch' \
+  'map, spec-ready, or follow-up-map branch' \
+  'classification or deliberate-stop branch' \
+  'publication or planning boundary' \
+  'specialist-result boundary' \
+  'commit/implementation boundary'
+assert_contains "$context" 'commit/implementation boundary, read [`continuation`](../skills/shared/continuation.md)'
 
 assert_contains_many "$commit_skill" \
   'message-only mode' \
