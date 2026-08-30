@@ -14,21 +14,9 @@ records describe the work and decisions.
 
 ## Route the plan
 
-The delegated `/grilling` session distinguishes the bounded routes:
-
-- **One-ticket** — exactly one implementation ticket remains. Continue to
-  `/to-tickets` now, then `/implement` after the issue record exists.
-- **Multi-ticket** — multiple implementation tickets or a richer requirements
-  artifact remain. Continue to `/to-spec` now, then `/to-tickets`, and expose
-  `/implement` only after those tickets exist.
-- **Too large** — unresolved threads exceed one session. Create an uncharted
-  Wayfinder map now; run `/wayfinder` on that map when the planning session is
-  resumed.
-
-Return the complete continuation set with current state, ready-now actions,
-later actions, dependencies, and deliberate stop. Use `None` for an empty
-field. The too-large branch is a map continuation, not a direct implementation
-route.
+Return the complete continuation set from the delegated `/grilling` session.
+The shared continuation contract owns route selection, including the
+one-ticket, multi-ticket, too-large, and deliberate-stop branches.
 
 ## During the session
 

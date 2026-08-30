@@ -150,17 +150,17 @@ No `source:` or other marker labels. Triage reads the body, not the source.
 
 ## Post
 
+### Label provisioning
+
+Before creating the issue, use the matching forge skill's label provisioning
+recipe to ensure every selected label exists with its taxonomy color. See
+[`label-taxonomy.md`](../../shared/label-taxonomy.md) for the correct scope and
+color. The forge skill owns the idempotent label operation.
+
 Create the issue on the target repo with the matching forge skill's
 issue-create recipe. Pass the generated title, body, target repo, and the
 labels selected above. Do not derive or run a forge command in `/capture`.
 
 Use a descriptive title derived from the user's first sentence. Capitalize the first word, no period at the end.
-
-### Label colors
-
-After creation, use the matching forge skill's label-create recipe to ensure
-the labels have the taxonomy colors. See [`label-taxonomy.md`](../../shared/label-taxonomy.md)
-for the correct scope and color. For idea mode, use `type:enhancement`
-instead of `type:bug`. The forge skill owns the idempotent label operation.
 
 After posting, tell the user the issue number and URL.

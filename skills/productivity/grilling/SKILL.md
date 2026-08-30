@@ -36,23 +36,7 @@ The session is done when the frontier is empty: every branch of the design tree 
 
 ## Route the plan
 
-Choose the route from the settled implementation landscape:
-
-Return the complete continuation set with current state, ready-now actions,
-later actions, dependencies, and deliberate stop. Use `None` for an empty
-field.
-
-- **One-ticket** — exactly one implementation ticket remains. Report `/to-tickets`
-  as ready now so the issue record is created; report `/implement` later, after
-  that record exists.
-- **Multi-ticket** — multiple implementation tickets or a richer requirements
-  artifact remain. Report `/to-spec` as ready now; report `/to-tickets` later,
-  after the specification is published, and `/implement` after those tickets
-  exist.
-- **Too large** — the work still has unresolved threads that exceed one
-  session. Report creation of an uncharted Wayfinder map as ready now; report
-  running `/wayfinder` on that map later.
-
-The one-ticket and multi-ticket branches preserve the issue record before
-implementation. The too-large branch records the unresolved landscape before
-any implementation planning begins.
+Classify the settled implementation landscape and use the shared continuation
+contract to return its complete continuation set. The shared route policy owns
+one-ticket, multi-ticket, too-large, and deliberate-stop selection; this skill
+only supplies the settled landscape.

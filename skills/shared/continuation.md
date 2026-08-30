@@ -62,7 +62,8 @@ later work must not delay the ready action.
 
 ## Route Selection
 
-Use the shortest route that preserves the required issue record:
+Use the shortest route that preserves the required issue record. Classify the
+settled implementation landscape before choosing a route:
 
 - **One-ticket shortcut** - when the settled implementation landscape contains
   exactly one implementation ticket.
@@ -74,9 +75,21 @@ Use the shortest route that preserves the required issue record:
   specification, then `/to-tickets` to plan its implementation tickets, then
   `/implement` for those tickets.
 
+- **Too-large route** - when unresolved threads exceed one session, create an
+  uncharted Wayfinder map now. Run `/wayfinder` on that map when the planning
+  session resumes. Do not route directly to implementation while the landscape
+  is still unresolved.
+
+- **Deliberate stop** - when the declared result is achieved and no further
+  action is requested, report `complete`, put `None` in ready now, later, and
+  dependencies, and state why the workflow stops. A deliberate stop is not a
+  blocked or pending result.
+
 This reference defines when each route is selected and the order of its
 continuations. The destination skills own their publication, ticket, and
-implementation procedures; consumers do not duplicate those rules here.
+implementation procedures; consumers classify their local result but do not
+duplicate these generic routes. Workflows with domain-specific outcomes, such
+as Wayfinder map continuations, retain those local artifact semantics.
 
 ## Internal And Public Records
 

@@ -4,10 +4,12 @@ Single source of truth for detecting and invoking the project's command runner. 
 
 ## Detection
 
-Given a target name (e.g., `check`, `test`, `lint`, `fmt`), detect the runner and return the command:
+Given a target name (e.g., `check`, `test`, `lint`, `fmt`), detect the runner,
+confirm that the target is declared, and return the command:
 
-- `make <target>` — if a `Makefile` exists in the repo root
-- `just <target>` — if a `justfile` exists in the repo root
+- `make <target>` — if a `Makefile` exists in the repo root and declares the target
+- `just <target>` — if a `justfile` exists in the repo root and declares the target
+- Skip — if the runner exists but does not declare the target; report "Target not declared: `<target>`"
 - Skip — if neither exists; report "No command runner configured — run /bootstrap to add one"
 
 A repo with both a Makefile and justfile is an error — report it and stop.

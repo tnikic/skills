@@ -20,12 +20,12 @@ Makefile
 | Target | Runs |
 |--------|------|
 | `lint` | `go tool golangci-lint run ./...` |
-| `fmt` | `gofumpt -w .` |
+| `fmt` | `go tool gofumpt -w .` |
 | `vet` | `go vet ./...` |
 | `vulncheck` | `go tool govulncheck ./...` |
 | `tidy` | `go mod tidy -diff` |
 | `gitleaks` | `gitleaks detect --no-git` |
-| `check` | `fmt` → `vet` → `lint` → `gitleaks` |
+| `check` | `files="$$(go tool gofumpt -l .)" && test -z "$$files"` → `vet` → `lint` → `gitleaks` |
 | `test` | `go test -race -cover ./...` → `vulncheck` |
 | `build` | `go build -trimpath -o bin/ ./...` |
 | `clean` | `rm -rf bin/` |
