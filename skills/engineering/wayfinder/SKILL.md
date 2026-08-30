@@ -136,22 +136,20 @@ Ruling something out of scope is a scoping act, not a step on the route. When a 
 When the frontier is empty, read the shared
 [`continuation`](../../shared/continuation.md) reference and report a
 continuation set in the agent interaction; the map body and comments remain
-developer-facing. Select exactly one outcome:
+developer-facing. Select exactly one map-specific outcome. Use the shared
+continuation contract for the generic route selected by that outcome:
 
 - **Spec-ready** — the known implementation landscape needs multiple tickets
-  or a richer requirements artifact. `/to-spec` is ready now; `/to-tickets`
-  follows the published specification, and `/implement` follows those tickets.
-- **One-ticket shortcut** — exactly one implementation ticket remains.
-  `/to-tickets` is ready now; `/implement` is later, after the issue record is
-  created. This shortcut is not valid for zero or multiple implementation
-  tickets.
+  or a richer requirements artifact.
+- **One-ticket shortcut** — exactly one implementation ticket remains. This
+  shortcut is not valid for zero or multiple implementation tickets.
 - **Decision captured** — the destination is a decision recorded in domain docs
   or an ADR. The current state is `complete`, ready now and later are `None`,
   and the deliberate stop names the captured decision.
 - **Follow-up map** — unresolved, in-scope fog remains beyond this session.
-  With human approval, create an uncharted map now; `/wayfinder` on that map is
-  later when the follow-up is picked up. If it is intentionally deferred,
-  report that deliberate stop instead.
+  With human approval, create an uncharted map now. If it is intentionally
+  deferred, return `pending` with human approval as the dependency rather than
+  reporting a deliberate stop.
 
 Wayfinder never places `/implement` in the ready-now route. Implementation is
 only exposed later through the ticket or specification that owns it.

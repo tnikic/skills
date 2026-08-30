@@ -42,13 +42,13 @@ Look for the originating spec, in this order:
 
 Anything in the repo that documents how code should be written, such as `CODING_STANDARDS.md` or `CONTRIBUTING.md`.
 
-Also locate the project's linter and formatter — detect the command runner and run the `lint`, `fmt`, and `check` targets (see [`command-runner.md`](../../shared/command-runner.md) for detection logic and standard targets). The Standards sub-agent will run these on the changed files.
+Also locate the project's linter and formatter. Use [`command-runner.md`](../../shared/command-runner.md) to detect the runner and confirm target availability. Run each declared standards target that applies (`lint`, `fmt`, and `check`); report an undeclared target as unavailable instead of inventing a command. The Standards sub-agent will run the available targets on the changed files.
 
 On top of whatever the repo documents, the Standards axis always carries the **smell baseline** below — a fixed set of Fowler code smells (_Refactoring_, ch.3) that applies even when a repo documents nothing. Two rules bind it:
 
 - **The repo overrides.** A documented repo standard always wins; where it endorses something the baseline would flag, suppress the smell.
 - **Always a judgement call.** Each smell is a labelled heuristic ("possible Feature Envy"), never a hard violation.
-- **Run the linter and formatter.** Use the shared [`command-runner`](../../shared/command-runner.md) to execute the project's `lint`, `fmt`, and `check` targets on the changed files. Report violations. Tooling-caught issues are noted but not re-litigated as smells.
+- **Run the linter and formatter.** Use the shared [`command-runner`](../../shared/command-runner.md) to execute each declared `lint`, `fmt`, and `check` target on the changed files. Report unavailable targets and violations. Tooling-caught issues are noted but not re-litigated as smells.
 
 Each smell reads *what it is* → *how to fix*; match it against the diff:
 

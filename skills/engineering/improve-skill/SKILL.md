@@ -25,16 +25,19 @@ reachable pointers, sibling skills that compete for the same invocation, the
 domain glossary, and applicable ADRs. Check recent changes when they reveal
 the area where maintenance friction is highest.
 
-If the user names no skill, run a portfolio scan:
+If the user names no skill, run a portfolio scan. If the user names multiple
+skills, run the same scan scoped to that named set:
 
-1. Inventory every skill directory under `skills/` and inspect its frontmatter
-   and main `SKILL.md`.
+1. Inventory every skill directory under `skills/` (or every named skill
+   directory in scoped multi-skill mode) and inspect its frontmatter and main
+   `SKILL.md`.
 2. Check recent changes, competing invocation patterns, and obvious pointer,
    hierarchy, completion, pruning, and architecture friction. Follow reachable
    references only for likely candidates; the portfolio pass stays lightweight.
 3. Run the lightweight audits in parallel with fresh review agents, batching
-   skills if necessary, then consolidate systemic findings and rank the
-   candidate improvements.
+   skills if necessary. Follow the shared
+   [`subagent-dispatch`](../../shared/subagent-dispatch.md) briefing contract,
+   then consolidate systemic findings and rank the candidate improvements.
 4. Present the ranked candidates using the format in step 3, recommend one, and
    ask which skill and candidate to explore. Do not edit during the scan.
 
@@ -44,7 +47,7 @@ skill.
 *Completion for a named skill: the review target, reachable document set,
 invocation mode, and governing decisions are known.*
 
-*Completion for a portfolio scan: every skill directory was inventoried and
+*Completion for a portfolio scan: every in-scope skill directory was inventoried and
 lightly audited, systemic findings were consolidated, ranked candidates were
 presented, and the user has a bounded selection to make.*
 

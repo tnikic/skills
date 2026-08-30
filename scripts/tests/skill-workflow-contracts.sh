@@ -62,6 +62,10 @@ assert_contains_many_normalized "$continuation" \
   'route to `/to-spec`' \
   'Then expose `/implement`' \
   'issue record exists before' \
+  'Too-large route' \
+  'uncharted Wayfinder map' \
+  'Deliberate stop' \
+  'do not duplicate these generic routes' \
   'Every field is present even when it has no entries.' \
   'Use `None` for an empty' \
   'ready-now list, later list' \
@@ -228,27 +232,16 @@ assert_contains_many_normalized "$triage_skill" \
   'Do not infer external-PR scope from repository activity alone.'
 assert_contains_many_normalized "$grilling_skill" \
   'shared [`continuation`](../../shared/continuation.md)' \
-  'One-ticket' \
-  'exactly one implementation ticket remains' \
-  'Multi-ticket' \
-  'Too large' \
-  'uncharted Wayfinder map' \
-  'Return the complete continuation set'
+  'Classify the settled implementation landscape' \
+  'shared continuation contract' \
+  'one-ticket, multi-ticket, too-large, and deliberate-stop selection'
 assert_order_normalized "$grilling_skill" \
-  'One-ticket' \
-  '`/to-tickets`' \
-  '`/implement` later' \
-  'Multi-ticket' \
-  '`/to-spec`' \
-  'Too large' \
-  'uncharted Wayfinder map'
+  'Classify the settled implementation landscape' \
+  'one-ticket, multi-ticket, too-large, and deliberate-stop selection'
 assert_contains_many_normalized "$grill_with_docs_skill" \
-  'One-ticket' \
-  'Multi-ticket' \
-  'Too large' \
-  'uncharted Wayfinder map' \
   'complete continuation set' \
-  'The too-large branch is a map continuation'
+  'shared continuation contract' \
+  'one-ticket, multi-ticket, too-large, and deliberate-stop branches'
 assert_contains_many_normalized "$triage_skill" \
   '`kind:spec` only for a published specification' \
   'Clarification needed' \
@@ -260,6 +253,8 @@ assert_contains_many_normalized "$triage_skill" \
   'Do not apply `kind:spec`'
 assert_contains_many_normalized "$wayfinder_skill" \
   'shared [`continuation`](../../shared/continuation.md)' \
+  'map-specific outcome' \
+  'generic route selected by that outcome' \
   'Uncharted map' \
   'Charted map' \
   'Spec-ready' \
@@ -464,20 +459,36 @@ fi
 assert_contains_many_normalized "$capture_skill" \
   'All forge calls follow the recipes' \
   'matching forge skill' \
-  'does not run forge commands directly'
+  'does not run forge commands directly' \
+  'label provisioning recipe'
+assert_order_normalized "$capture_skill" \
+  'Before creating the issue' \
+  'label provisioning recipe' \
+  'Create the issue on the target repo'
 assert_not_contains "$capture_skill" 'gh issue create'
 assert_not_contains "$capture_skill" 'gh label create'
 assert_not_contains "$capture_skill" 'glab issue create'
 assert_not_contains "$capture_skill" 'glab label create'
+assert_not_contains "$capture_skill" 'After creation'
+assert_contains_many_normalized "$github_skill" \
+  'Labels must exist before use' \
+  'Create every label from the taxonomy before the first issue references it.'
+assert_contains_many_normalized "$gitlab_skill" \
+  'List labels as JSON first' \
+  'lookup/create-or-edit sequence is idempotent' \
+  'extract its `id`' \
+  'pass that ID to `glab label edit`'
 
 assert_contains_many_normalized "$improve_skill" \
   'name: improve-skill' \
   'disable-model-invocation: true' \
   'writing-for-agents' \
   'command-runner.md' \
-  'If the user names no skill, run a portfolio scan:' \
+  'If the user names no skill, run a portfolio scan' \
+  'If the user names multiple skills' \
   'Inventory every skill directory under `skills/`' \
   'Run the lightweight audits in parallel' \
+  'subagent-dispatch' \
   'Do not edit during the scan.' \
   '## 2. Explore the skill' \
   '## 3. Present candidates' \
@@ -551,6 +562,16 @@ assert_contains_many_normalized "$implement_skill" \
   'A ticket is unblocked only when every blocker is closed;' \
   'inspect each blocker state, while any open blocker excludes the candidate.'
 
+assert_not_contains "$implement_skill" 'Presume satisfied unless you know'
+assert_contains_many_normalized "$implement_skill" \
+  'explicit evidence' \
+  'evidence is unavailable'
+assert_contains_many_normalized "$go_profile" \
+  'go tool gofumpt -w .' \
+  'go tool gofumpt -l .' \
+  'test -z' \
+  'gofumpt -l .'
+
 assert_not_contains "$implement_skill" 'Unassigned and unblocked — sort by priority then age.'
 assert_not_contains "$implement_skill" 'If none, assigned to @me and unblocked.'
 
@@ -574,6 +595,14 @@ assert_contains_many_normalized "$code_review_skill" \
   'internal owner' \
   'developer-facing owner record' \
   "owner's complete continuation set"
+assert_contains_many_normalized "$code_review_skill" \
+  'confirm target availability' \
+  'Run each declared standards target' \
+  'report an undeclared target as unavailable'
+assert_contains_many_normalized "$command_runner" \
+  'confirm that the target is declared' \
+  'Target not declared' \
+  'No command runner configured'
 
 # Integration fixtures exercise the boundary contracts, rather than only
 # checking that each route's vocabulary appears somewhere in its skill.

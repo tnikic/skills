@@ -52,7 +52,7 @@ uses the encoded project path.
 - **Always target the project explicitly**: `-R GROUP/REPO` (or `OWNER/REPO`, or a full URL). Without it, glab uses the current git remote — which is the wrong project when the task targets another one.
 - **Machine-readable output**: pass the JSON output flag (`-O json` on issues, `-F json` on MRs) and read the JSON. Never parse human-readable output.
 - **Structured labels**: use the taxonomy in [`label-taxonomy.md`](../../shared/label-taxonomy.md) — every label is `scope:name` with a `--color` hex from [`color-palette.md`](../../shared/color-palette.md).
-- **Labels must exist before use**: `glab issue create --label X` fails if X doesn't exist. Create it first (recipe below) — that call is idempotent.
+- **Labels must exist before use**: `glab issue create --label X` fails if X doesn't exist. List labels as JSON first; edit an existing label's color or create a missing label. This lookup/create-or-edit sequence is idempotent.
 - In the recipes, `R=GROUP/REPO` — set it once per session, then copy recipes verbatim.
 
 ## Projects
@@ -69,11 +69,11 @@ glab repo delete GROUP/REPO                    # permanent, cannot be undone
 glab label create -n scope:name -c HEX -d "description" -R $R
 ```
 
-Create every label from the taxonomy before the first issue references it. Verify:
+Create every missing label from the taxonomy before the first issue references it. For an existing label, list labels as JSON, extract its `id`, and pass that ID to `glab label edit`; `-n` means `--new-name`, not the label name. Reconcile existing labels so their colors match. Verify:
 
 ```bash
-glab label list -R $R
-glab label edit -n scope:name -c HEX -R $R
+glab label list -R $R -F json
+glab label edit --label-id LABEL_ID --color "#HEX" -R $R
 glab label delete scope:name -R $R
 ```
 

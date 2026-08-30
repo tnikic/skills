@@ -55,7 +55,7 @@ If the review comes back clean, report it briefly.
 
 ### 3a. Check acceptance criteria
 
-Read the issue body and all comments for unchecked boxes (`- [ ]` or `* [ ]`). For each, judge whether the implementation satisfied it. Presume satisfied unless you know a criterion was skipped, blocked, or impossible.
+Read the issue body and all comments for unchecked boxes (`- [ ]` or `* [ ]`). For each, inspect the implementation, tests, review findings, and validation results for explicit evidence that the criterion is satisfied. Check a criterion only when that evidence exists; leave it unchecked when evidence is unavailable, even if the implementation appears likely to satisfy it.
 
 Treat the issue body as the canonical source for body checkboxes. Update the original issue body in place via the forge skill's issue-edit recipe, preserving all unrelated text and replacing only satisfied `- [ ]` or `* [ ]` markers with checked markers. Record each criterion only in its source container.
 
